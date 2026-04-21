@@ -4,6 +4,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "admin";
 
+// ─── Supabase helpers ────────────────────────────────────────
 async function sbFetch(path, params = {}) {
   const url = new URL(`${SUPABASE_URL}/rest/v1/${path}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -17,6 +18,23 @@ async function sbFetch(path, params = {}) {
   });
   if (!res.ok) throw new Error(`Supabase error: ${res.status}`);
   return res.json();
+}
+
+async function sbPost(path, body) {
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Supabase insert error: ${res.status}`);
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows[0] : rows;
 }
 
 async function sbPatch(path, id, body) {
@@ -33,6 +51,20 @@ async function sbPatch(path, id, body) {
   });
   if (!res.ok) throw new Error(`Supabase patch error: ${res.status}`);
   return res.json();
+}
+
+async function sbDelete(path, id) {
+  const url = `${SUPABASE_URL}/rest/v1/${path}?id=eq.${id}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase delete error: ${res.status}`);
+  return true;
 }
 
 async function uploadCover(file, userId) {
@@ -54,14 +86,16 @@ async function uploadCover(file, userId) {
 
 const CATEGORIES = [
   { id: "boardgames", label: "🎲 Board Games" },
-  { id: "larp",       label: "⚔️ LARP" },
-  { id: "festival",   label: "🎪 Festival" },
-  { id: "rpg",        label: "🎭 RPG" },
-  { id: "cosplay",    label: "👗 Cosplay" },
-  { id: "other",      label: "🃏 Other" },
+  { id: "larp", label: "⚔️ LARP" },
+  { id: "festival", label: "🎪 Festival" },
+  { id: "rpg", label: "🎭 RPG" },
+  { id: "cosplay", label: "👗 Cosplay" },
+  { id: "other", label: "🃏 Other" },
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
+
+const STATUSES = ["published", "pending", "cancelled"];
 
 function fmt(iso) {
   if (!iso) return "";
@@ -82,7 +116,6 @@ function ImagePositioner({ src, position, onChange }) {
     setDragging(true);
     setStart({ mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y });
   }
-
   function onMouseMove(e) {
     if (!dragging || !start || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -92,7 +125,6 @@ function ImagePositioner({ src, position, onChange }) {
     const ny = Math.max(0, Math.min(100, start.py - dy));
     setPos({ x: Math.round(nx), y: Math.round(ny) });
   }
-
   function onMouseUp() {
     if (dragging) { setDragging(false); onChange(pos); }
   }
@@ -155,24 +187,25 @@ function ImagePositioner({ src, position, onChange }) {
   );
 }
 
-// ─── Event Edit Form ──────────────────────────────────────────
-function EventEditor({ event, onSave, onCancel }) {
+// ─── Event Edit / Create Form ────────────────────────────────
+function EventEditor({ event, isNew, onSave, onCancel }) {
   const [form, setForm] = useState({
-    title:            event.title || "",
-    description:      event.description || "",
-    category:         event.category || "boardgames",
-    location_city:    event.location_city || "Nicosia",
+    title: event.title || "",
+    description: event.description || "",
+    category: event.category || "boardgames",
+    location_city: event.location_city || "Nicosia",
     location_address: event.location_address || "",
-    date_start:       fmt(event.date_start),
-    date_end:         fmt(event.date_end),
+    date_start: fmt(event.date_start),
+    date_end: fmt(event.date_end),
     max_participants: event.max_participants || "",
-    external_url:     event.external_url || "",
-    cover_image_url:  event.cover_image_url || "",
-    cover_position:   event.cover_position || { x: 50, y: 50 },
+    external_url: event.external_url || "",
+    cover_image_url: event.cover_image_url || "",
+    cover_position: event.cover_position || { x: 50, y: 50 },
+    status: event.status || "pending",
   });
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving]       = useState(false);
-  const [error, setError]         = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const fileRef = useRef();
 
   function set(field, value) {
@@ -195,27 +228,35 @@ function EventEditor({ event, onSave, onCancel }) {
   }
 
   async function handleSave() {
+    if (!form.title.trim()) { setError("Title is required"); return; }
     setSaving(true);
     setError(null);
     try {
       const payload = {
-        title:            form.title,
-        description:      form.description,
-        category:         form.category,
-        location_city:    form.location_city,
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        location_city: form.location_city,
         location_address: form.location_address,
-        date_start:       form.date_start ? new Date(form.date_start).toISOString() : null,
-        date_end:         form.date_end   ? new Date(form.date_end).toISOString()   : null,
+        date_start: form.date_start ? new Date(form.date_start).toISOString() : null,
+        date_end: form.date_end ? new Date(form.date_end).toISOString() : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
-        external_url:     form.external_url || null,
-        cover_image_url:  form.cover_image_url || null,
-        cover_position:   form.cover_position,
-        updated_at:       new Date().toISOString(),
+        external_url: form.external_url || null,
+        cover_image_url: form.cover_image_url || null,
+        cover_position: form.cover_position,
+        status: form.status,
+        updated_at: new Date().toISOString(),
       };
-      await sbPatch("events", event.id, payload);
-      onSave({ ...event, ...payload });
+      if (isNew) {
+        payload.created_at = new Date().toISOString();
+        const created = await sbPost("events", payload);
+        onSave(created, true);
+      } else {
+        await sbPatch("events", event.id, payload);
+        onSave({ ...event, ...payload }, false);
+      }
     } catch (err) {
-      setError("Save failed: " + err.message);
+      setError((isNew ? "Create failed: " : "Save failed: ") + err.message);
     } finally {
       setSaving(false);
     }
@@ -228,13 +269,11 @@ function EventEditor({ event, onSave, onCancel }) {
     color: "#e8e6f0", fontFamily: "inherit",
     fontSize: 14, width: "100%", outline: "none",
   };
-
   const label = { fontSize: 11, color: "#6b6890", fontWeight: 600,
     textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4, display: "block" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
       {/* Cover image */}
       <div>
         <span style={label}>Cover Image</span>
@@ -333,6 +372,14 @@ function EventEditor({ event, onSave, onCancel }) {
         </div>
       </div>
 
+      {/* Status */}
+      <div>
+        <span style={label}>Status</span>
+        <select style={inp} value={form.status} onChange={e => set("status", e.target.value)}>
+          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
       {error && (
         <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontSize: 13 }}>
           {error}
@@ -345,7 +392,7 @@ function EventEditor({ event, onSave, onCancel }) {
           background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
           border: "none", color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
         }}>
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? (isNew ? "Creating…" : "Saving…") : (isNew ? "Create event" : "Save changes")}
         </button>
         <button onClick={onCancel} style={{
           padding: "10px 20px", borderRadius: 10, cursor: "pointer",
@@ -358,9 +405,22 @@ function EventEditor({ event, onSave, onCancel }) {
 }
 
 // ─── Event Row ────────────────────────────────────────────────
-function EventRow({ event, onEdit }) {
+function EventRow({ event, onEdit, onDelete }) {
   const statusColor = { published: "#10b981", pending: "#f59e0b", cancelled: "#ef4444" };
   const date = event.date_start ? event.date_start.slice(0, 10) : "—";
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    const ok = window.confirm(`Delete "${event.title}"?\n\nThis cannot be undone.`);
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      await onDelete(event);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 16,
@@ -405,13 +465,19 @@ function EventRow({ event, onEdit }) {
         background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)",
         color: "#a78bfa", fontSize: 12, fontFamily: "inherit", flexShrink: 0,
       }}>Edit</button>
+      <button onClick={handleDelete} disabled={deleting} title="Delete event" style={{
+        padding: "6px 10px", borderRadius: 8, cursor: deleting ? "wait" : "pointer",
+        background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
+        color: "#ef4444", fontSize: 12, fontFamily: "inherit", flexShrink: 0,
+        opacity: deleting ? 0.6 : 1,
+      }}>{deleting ? "…" : "🗑"}</button>
     </div>
   );
 }
 
 // ─── Login Screen ─────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
-  const [pw, setPw]   = useState("");
+  const [pw, setPw] = useState("");
   const [err, setErr] = useState(false);
 
   function attempt() {
@@ -460,13 +526,14 @@ function LoginScreen({ onLogin }) {
 
 // ─── Main Admin Panel ─────────────────────────────────────────
 export default function AdminPanel() {
-  const [authed, setAuthed]     = useState(false);
-  const [events, setEvents]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [editing, setEditing]   = useState(null);
-  const [search, setSearch]     = useState("");
+  const [authed, setAuthed] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);   // existing event object
+  const [creating, setCreating] = useState(false); // boolean
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [saved, setSaved]       = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (!authed) return;
@@ -476,11 +543,31 @@ export default function AdminPanel() {
       .catch(() => setLoading(false));
   }, [authed]);
 
-  function handleSaved(updated) {
-    setEvents(evs => evs.map(e => e.id === updated.id ? updated : e));
+  function flash(msg, color = "#10b981") {
+    setToast({ msg, color });
+    setTimeout(() => setToast(null), 2500);
+  }
+
+  function handleSaved(updated, wasNew) {
+    if (wasNew) {
+      setEvents(evs => [updated, ...evs]);
+      flash("✓ Event created");
+    } else {
+      setEvents(evs => evs.map(e => e.id === updated.id ? updated : e));
+      flash("✓ Saved");
+    }
     setEditing(null);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setCreating(false);
+  }
+
+  async function handleDelete(event) {
+    try {
+      await sbDelete("events", event.id);
+      setEvents(evs => evs.filter(e => e.id !== event.id));
+      flash("Event deleted", "#ef4444");
+    } catch (err) {
+      flash("Delete failed: " + err.message, "#ef4444");
+    }
   }
 
   if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
@@ -490,6 +577,9 @@ export default function AdminPanel() {
     if (search && !e.title?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const inEditor = editing || creating;
+  const editorEvent = editing || { cover_position: { x: 50, y: 50 } };
 
   return (
     <div style={{ minHeight: "100vh", background: "#0d0d14", fontFamily: "'Outfit', sans-serif", color: "#e8e6f0" }}>
@@ -512,8 +602,8 @@ export default function AdminPanel() {
             <span style={{ fontSize: 12, color: "#4a4868", padding: "2px 8px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 999 }}>Admin</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {saved && (
-              <span style={{ fontSize: 13, color: "#10b981", animation: "fadeIn 0.3s ease" }}>✓ Saved</span>
+            {toast && (
+              <span style={{ fontSize: 13, color: toast.color }}>{toast.msg}</span>
             )}
             <a href="/" style={{ fontSize: 13, color: "#6b6890", textDecoration: "none" }}>← Back to site</a>
           </div>
@@ -521,20 +611,26 @@ export default function AdminPanel() {
       </header>
 
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
-
-        {editing ? (
-          /* ── Edit view ── */
+        {inEditor ? (
+          /* ── Edit / Create view ── */
           <div>
-            <button onClick={() => setEditing(null)} style={{
+            <button onClick={() => { setEditing(null); setCreating(false); }} style={{
               background: "none", border: "none", color: "#6b6890",
               fontSize: 13, cursor: "pointer", fontFamily: "inherit",
               marginBottom: 20, display: "flex", alignItems: "center", gap: 6,
             }}>← Back to events</button>
+
             <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, color: "#fff", marginBottom: 24 }}>
-              Editing: {editing.title}
+              {creating ? "New event" : `Editing: ${editing.title}`}
             </h2>
+
             <div style={{ background: "#16162a", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 28 }}>
-              <EventEditor event={editing} onSave={handleSaved} onCancel={() => setEditing(null)} />
+              <EventEditor
+                event={editorEvent}
+                isNew={creating}
+                onSave={handleSaved}
+                onCancel={() => { setEditing(null); setCreating(false); }}
+              />
             </div>
           </div>
         ) : (
@@ -544,6 +640,11 @@ export default function AdminPanel() {
               <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 24, color: "#fff" }}>
                 Events <span style={{ color: "#4a4868", fontSize: 16, fontFamily: "inherit" }}>{events.length}</span>
               </h1>
+              <button onClick={() => setCreating(true)} style={{
+                padding: "10px 18px", borderRadius: 10, cursor: "pointer",
+                background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
+                border: "none", color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "inherit",
+              }}>+ New event</button>
             </div>
 
             {/* Filters */}
@@ -579,7 +680,14 @@ export default function AdminPanel() {
               ) : filtered.length === 0 ? (
                 <div style={{ padding: 40, textAlign: "center", color: "#4a4868" }}>No events found</div>
               ) : (
-                filtered.map(ev => <EventRow key={ev.id} event={ev} onEdit={setEditing} />)
+                filtered.map(ev => (
+                  <EventRow
+                    key={ev.id}
+                    event={ev}
+                    onEdit={setEditing}
+                    onDelete={handleDelete}
+                  />
+                ))
               )}
             </div>
           </div>
