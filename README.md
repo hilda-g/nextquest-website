@@ -1,4 +1,4 @@
-# NextQuest — Cyprus Geek \& Board games Events
+# NextQuest — Cyprus Geek \&  games Events
 
 Live events aggregator connected to Supabase + Telegram Bot.
 
