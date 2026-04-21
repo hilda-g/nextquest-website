@@ -1,4 +1,4 @@
-# NextQuest — Cyprus Geek Events
+# NextQuest — Cyprus Geek \& Board games Events
 
 Live events aggregator connected to Supabase + Telegram Bot.
 
@@ -7,9 +7,9 @@ Live events aggregator connected to Supabase + Telegram Bot.
 1. Copy `.env.example` to `.env` and fill in your Supabase credentials:
 
 ```
-   VITE\_SUPABASE\_URL=https://YOUR\_PROJECT\_ID.supabase.co
-   VITE\_SUPABASE\_ANON\_KEY=your\_anon\_key
-   VITE\_BOT\_USERNAME=nextquest\_bot
+   VITE\\\_SUPABASE\\\_URL=https://YOUR\\\_PROJECT\\\_ID.supabase.co
+   VITE\\\_SUPABASE\\\_ANON\\\_KEY=your\\\_anon\\\_key
+   VITE\\\_BOT\\\_USERNAME=nextquest\\\_bot
    ```
 
 2. Install and run:
@@ -26,7 +26,7 @@ Live events aggregator connected to Supabase + Telegram Bot.
 * Build command: `npm run build`
 * Publish directory: `dist`
 * Add env vars in Netlify dashboard (Settings → Environment variables)
-* `public/\_redirects` handles SPA routing automatically
+* `public/\\\_redirects` handles SPA routing automatically
 
 ### Vercel
 
