@@ -38,7 +38,9 @@ function mapEvent(row) {
     organizer:        String(row.organizer_tg_id),
     maxParticipants:  row.max_participants,
     currentParticipants: 0,           // Supabase schema has no counter yet; subscriptions count used below
-    cover:            row.cover_image_url || "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
+    cover: (row.cover_image_url && row.cover_image_url.startsWith("http"))
+      ? row.cover_image_url
+      : "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     externalUrl:      row.external_url || `https://t.me/${BOT_USERNAME}?start=event_${row.id}`,
     status:           row.status,
     multiDay:         !!(row.date_end && row.date_end !== row.date_start),
