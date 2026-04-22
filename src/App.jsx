@@ -38,7 +38,14 @@ function mapEvent(row) {
     externalUrl: row.external_url || `https://t.me/${BOT_USERNAME}?start=event_${row.id}`,
     status:   row.status,
     multiDay: !!(row.date_end && row.date_end !== row.date_start),
-    isPast:   new Date(row.date_start) < new Date(),
+    // isPast = true only if the event START day is strictly before today's calendar date
+    // (an event happening today at 11:00 is still "upcoming" even if it's now 13:00)
+    isPast:   (() => {
+      const start = new Date(row.date_start);
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      return start < todayMidnight;
+    })(),
   };
 }
 
@@ -303,7 +310,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
               key={ev.id}
               onClick={() => onSelect(ev)}
               style={{
-                display: "flex", alignItems: "flex-start", gap: 12,
+                display: "flex", alignItems: "center", gap: 12,
                 background: "rgba(255,255,255,0.03)",
                 border: `1px solid rgba(255,255,255,0.06)`,
                 borderLeft: `3px solid ${getCatColor(ev.category)}`,
@@ -313,17 +320,42 @@ function CalendarTab({ events, lang, t, onSelect }) {
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
               onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
             >
-              <div style={{ flexShrink: 0, textAlign: "center", width: 40 }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#e8e6f0", lineHeight: 1 }}>
-                  {ev.multiDay && ev.dateEnd ? `${ev.dateStart.getDate()}–${ev.dateEnd.getDate()}` : ev.dateStart.getDate()}
-                </div>
-                <div style={{ fontSize: 10, color: "#5a5878", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                  {(lang === "en" ? ev.dateStart.toLocaleString("en-GB", { month: "short" }) : t.monthNames[ev.dateStart.getMonth()].slice(0, 3))}
-                </div>
+              <div style={{ flexShrink: 0, textAlign: "center", minWidth: 48 }}>
+                {ev.multiDay && ev.dateEnd && (
+                  ev.dateStart.getMonth() === ev.dateEnd.getMonth()
+                    ? (
+                      // Same month: "29–30 / APR"
+                      <>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#e8e6f0", lineHeight: 1.1, whiteSpace: "nowrap" }}>
+                          {ev.dateStart.getDate()}–{ev.dateEnd.getDate()}
+                        </div>
+                        <div style={{ fontSize: 10, color: "#5a5878", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                          {lang === "en" ? ev.dateStart.toLocaleString("en-GB", { month: "short" }) : t.monthNames[ev.dateStart.getMonth()].slice(0, 3)}
+                        </div>
+                      </>
+                    ) : (
+                      // Different months: "29 APR – 1 MAY"
+                      <div style={{ fontSize: 11, fontWeight: 800, color: "#e8e6f0", lineHeight: 1.35, whiteSpace: "nowrap" }}>
+                        {ev.dateStart.getDate()} {lang === "en" ? ev.dateStart.toLocaleString("en-GB", { month: "short" }) : t.monthNames[ev.dateStart.getMonth()].slice(0, 3)}
+                        <br />
+                        – {ev.dateEnd.getDate()} {lang === "en" ? ev.dateEnd.toLocaleString("en-GB", { month: "short" }) : t.monthNames[ev.dateEnd.getMonth()].slice(0, 3)}
+                      </div>
+                    )
+                )}
+                {!(ev.multiDay && ev.dateEnd) && (
+                  <>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: "#e8e6f0", lineHeight: 1 }}>
+                      {ev.dateStart.getDate()}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#5a5878", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                      {lang === "en" ? ev.dateStart.toLocaleString("en-GB", { month: "short" }) : t.monthNames[ev.dateStart.getMonth()].slice(0, 3)}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#e8e6f0", marginBottom: 4, lineHeight: 1.3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#e8e6f0", marginBottom: 4, lineHeight: 1.3, textAlign: "left" }}>
                   {ev.status === "cancelled" && <span style={{ color: "#ef4444", marginRight: 6 }}>✕</span>}
                   {ev.title}
                 </div>
@@ -463,9 +495,12 @@ export default function NextQuest() {
 
   // ── Filter logic ──────────────────────────────────────────────
   const now = new Date();
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
 
   const filtered = events.filter(e => {
-    const isPast = e.isPast || e.dateStart < now;
+    // Use day-based past check: today's events are always "upcoming"
+    const isPast = e.dateStart < todayMidnight;
     if (tab === "upcoming" && isPast)  return false;
     if (tab === "archive"  && !isPast) return false;
     if (tab === "calendar") {
@@ -480,10 +515,10 @@ export default function NextQuest() {
     return true;
   });
 
-  // Count badges for tabs
-  const upcomingCount = events.filter(e => !e.isPast && e.dateStart >= now && e.status !== "cancelled").length;
-  const calendarCount = events.filter(e => !e.isPast && e.status !== "cancelled").length;
-  const archiveCount  = events.filter(e => (e.isPast || e.dateStart < now)).length;
+  // Count badges for tabs (day-based: today counts as upcoming)
+  const upcomingCount = events.filter(e => e.dateStart >= todayMidnight && e.status !== "cancelled").length;
+  const calendarCount = events.filter(e => e.dateStart >= todayMidnight && e.status !== "cancelled").length;
+  const archiveCount  = events.filter(e => e.dateStart < todayMidnight).length;
 
   const pct = e => e.maxParticipants ? Math.round((e.currentParticipants / e.maxParticipants) * 100) : 0;
 
@@ -738,17 +773,18 @@ export default function NextQuest() {
 
                     {/* Card body */}
                     <div style={{ padding: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                         <span style={{ fontSize: 12, color: "#5a5878", fontWeight: 600 }}>
                           {formatDate(event.dateStart, lang)}
                           {event.multiDay && event.dateEnd
                             ? ` — ${formatDate(event.dateEnd, lang)}`
                             : ` · ${formatTime(event.dateStart)}`}
                         </span>
+                        <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
                         <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
                       </div>
 
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3 }}>{event.title}</h3>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
 
                       {event.maxParticipants && (
                         <>
