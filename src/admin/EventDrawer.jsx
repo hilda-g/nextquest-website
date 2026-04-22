@@ -156,18 +156,15 @@ function validate(form, isEdit) {
 }
 
 // ─── Main Drawer ──────────────────────────────────────────────
-export default function EventDrawer({ event, onSave, onClose, uploadCover }) {
+export default function EventDrawer({ event, onSave, onClose }) {
   const isEdit = !!event?.id;
 
   const [form, setForm]         = useState(EMPTY_FORM);
   const [errors, setErrors]     = useState({});
   const [dirty, setDirty]       = useState(false);
   const [saving, setSaving]     = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadPct, setUploadPct] = useState(0);
   const [multiDay, setMultiDay] = useState(false);
   const [visible, setVisible]   = useState(false);
-  const fileRef  = useRef(null);
   const initialForm = useRef(null);
 
   useEffect(() => {
@@ -223,29 +220,6 @@ export default function EventDrawer({ event, onSave, onClose, uploadCover }) {
     setTimeout(onClose, 300);
   }
 
-  async function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setErrors(err => ({ ...err, cover: "Image must be under 5MB" }));
-      return;
-    }
-    setUploading(true);
-    setUploadPct(0);
-    const fakeProgress = setInterval(() => setUploadPct(p => Math.min(p + 15, 85)), 200);
-    try {
-      const url = await uploadCover(file, event?.id || "new");
-      clearInterval(fakeProgress);
-      setUploadPct(100);
-      setTimeout(() => { setUploadPct(0); setUploading(false); }, 500);
-      set("cover_image_url", url);
-    } catch (err) {
-      clearInterval(fakeProgress);
-      setErrors(e => ({ ...e, cover: "Upload failed: " + err.message }));
-      setUploading(false);
-    }
-  }
-
   async function handleSave() {
     const errs = validate(form, isEdit);
     if (Object.keys(errs).length > 0) {
@@ -264,7 +238,7 @@ export default function EventDrawer({ event, onSave, onClose, uploadCover }) {
         date_end:         (multiDay && form.date_end) ? new Date(form.date_end).toISOString() : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
         external_url:     form.external_url || null,
-        cover_image_url:  form.cover_image_url || null,
+        cover_image_url: form.cover_image_url || "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
         cover_position:   form.cover_position,
         status:           isEdit ? form.status : "pending",
         timezone:         "Asia/Nicosia",
@@ -374,48 +348,20 @@ export default function EventDrawer({ event, onSave, onClose, uploadCover }) {
               </div>
             )}
 
-            {/* Upload progress */}
-            {uploading && (
-              <div style={{ marginTop: 10 }}>
-                <div style={{ height: 3, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%", borderRadius: 999,
-                    background: "linear-gradient(90deg, #7c3aed, #a78bfa)",
-                    width: `${uploadPct}%`, transition: "width 0.3s ease",
-                  }} />
-                </div>
-                <div style={{ fontSize: 11, color: "#6b6890", marginTop: 4 }}>Uploading… {uploadPct}%</div>
-              </div>
+            {form.cover_image_url && (
+              <button onClick={() => set("cover_image_url", "")} style={{
+                marginTop: 12, padding: "8px 12px", borderRadius: 9, cursor: "pointer",
+                background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+                color: "#ef4444", fontSize: 12, fontFamily: "inherit",
+              }}>Remove</button>
             )}
-
-            {errors.cover && (
-              <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 6 }}>{errors.cover}</div>
-            )}
-
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{
-                flex: 1, padding: "8px 0", borderRadius: 9, cursor: "pointer",
-                background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)",
-                color: "#a78bfa", fontSize: 12, fontFamily: "inherit",
-              }}>
-                {uploading ? "Uploading…" : "📁 Upload image"}
-              </button>
-              {form.cover_image_url && (
-                <button onClick={() => set("cover_image_url", "")} style={{
-                  padding: "8px 12px", borderRadius: 9, cursor: "pointer",
-                  background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-                  color: "#ef4444", fontSize: 12, fontFamily: "inherit",
-                }}>Remove</button>
-              )}
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
 
             <div style={{ marginTop: 10 }}>
               <input
                 style={{ ...inp(false), fontSize: 12 }}
                 value={form.cover_image_url}
                 onChange={e => set("cover_image_url", e.target.value)}
-                placeholder="Or paste image URL (https://...)"
+                placeholder="Paste image URL (https://...)"
               />
             </div>
           </div>
@@ -536,19 +482,6 @@ export default function EventDrawer({ event, onSave, onClose, uploadCover }) {
               />
             </Field>
           </div>
-
-          {/* No cover warning */}
-          {!form.cover_image_url && (
-            <div style={{
-              padding: "10px 14px", borderRadius: 10,
-              background: "rgba(245,158,11,0.08)",
-              border: "1px solid rgba(245,158,11,0.2)",
-              fontSize: 12, color: "#fcd34d",
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              ⚠️ No cover image — events with covers get more attention
-            </div>
-          )}
 
           {/* Global error */}
           {errors._global && (

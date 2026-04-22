@@ -53,7 +53,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 
       {open && (
         <div style={{
-          position: "absolute", right: 0, top: 36, zIndex: 50,
+          position: "absolute", right: 0, top: 36, zIndex: 1000,
           background: "#1e1e32", border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: 12, padding: "6px 0", minWidth: 180,
           boxShadow: "0 16px 48px rgba(0,0,0,0.5)",

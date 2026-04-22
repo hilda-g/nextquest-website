@@ -310,7 +310,7 @@ export default function AdminPanel() {
         <div style={{
           background: "#10101c",
           border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 16, overflow: "hidden",
+          borderRadius: 16, overflow: "visible", position: "relative",
         }}>
           {ev.loading ? (
             /* Skeleton */
@@ -378,7 +378,6 @@ export default function AdminPanel() {
           event={drawerEvent}
           onSave={handleSave}
           onClose={() => setDrawerEvent(null)}
-          uploadCover={ev.uploadCover}
         />
       )}
 
