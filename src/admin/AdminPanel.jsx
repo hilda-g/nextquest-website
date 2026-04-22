@@ -34,19 +34,7 @@ export default function AdminPanel() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [restoreTarget, setRestoreTarget] = useState(null);
 
-  // ── Login ──────────────────────────────────────────────────
-  if (!auth.isAuthenticated) {
-    return (
-      <LoginScreen
-        onLogin={auth.login}
-        loading={auth.loading}
-        error={auth.error}
-        lockInfo={auth.lockInfo}
-      />
-    );
-  }
-
-  // ── Filter events ──────────────────────────────────────────
+  // ── Filter events (must be before any early return) ────────
   const filtered = useMemo(() => {
     return ev.events.filter(e => {
       const isDeleted = !!e.deleted_at;
@@ -64,6 +52,18 @@ export default function AdminPanel() {
       return true;
     });
   }, [ev.events, tab, search]);
+
+  // ── Login ──────────────────────────────────────────────────
+  if (!auth.isAuthenticated) {
+    return (
+      <LoginScreen
+        onLogin={auth.login}
+        loading={auth.loading}
+        error={auth.error}
+        lockInfo={auth.lockInfo}
+      />
+    );
+  }
 
   // ── Actions ────────────────────────────────────────────────
   async function handleSave(payload) {
