@@ -71,7 +71,7 @@ export default function AdminPanel() {
       await ev.updateEvent(drawerEvent.id, payload);
       toasts.success("Changes saved");
     } else {
-      await ev.createEvent(payload);
+      await ev.createEvent({ ...payload, organizer_tg_id: 218915869 });
       toasts.success("Event created");
     }
   }
