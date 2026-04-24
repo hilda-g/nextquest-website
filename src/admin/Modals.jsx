@@ -411,7 +411,7 @@ export function ViewEventModal({ event, onClose }) {
               color: "#06b6d4", borderRadius: 8, padding: "8px 16px", fontSize: 13,
               fontFamily: "inherit", fontWeight: 600, cursor: "pointer",
               textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6,
-            }}>📅 В календарь</a>
+            }}>📅 В Google календарь</a>
           </div>
         </div>
       </div>
