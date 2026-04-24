@@ -876,7 +876,7 @@ export default function NextQuest() {
                 </div>
 
                 {selected.description && (
-                  <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>{selected.description}</p>
+                  <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>{selected.description}</p>
                 )}
 
                 {selected.maxParticipants && (
