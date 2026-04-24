@@ -66,19 +66,19 @@ function inputStyle(error) {
 // ─── Image Repositioner ───────────────────────────────────────
 function ImagePositioner({ src, position, onChange }) {
   const ref      = useRef(null);
-  const [pos, setPos]   = useState(position || { x: 50, y: 50 });
-  const [zoom, setZoom] = useState(1);
-  const [zoomInput, setZoomInput] = useState("100"); // editable text in the input
+  const [pos, setPos]         = useState(position || { x: 50, y: 50 });
+  const [zoom, setZoom]       = useState(1);
+  const [zoomInput, setZoomInput]     = useState("100");
   const [editingZoom, setEditingZoom] = useState(false);
   const dragging = useRef(false);
   const start    = useRef(null);
 
   useEffect(() => setPos(position || { x: 50, y: 50 }), [position]);
 
-  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
   function applyZoom(raw) {
-    const z = clamp(Math.round(raw), 100, 300) / 100;
+    // Min 30% so the image can be smaller than the frame (zoom out fully)
+    // Max 300% for detailed crop
+    const z = Math.max(0.3, Math.min(3, Math.round(raw) / 100));
     setZoom(z);
     setZoomInput(String(Math.round(z * 100)));
   }
@@ -138,7 +138,10 @@ function ImagePositioner({ src, position, onChange }) {
               value={zoomInput}
               onChange={e => setZoomInput(e.target.value)}
               onBlur={commitZoomInput}
-              onKeyDown={e => { if (e.key === "Enter") commitZoomInput(); if (e.key === "Escape") { setZoomInput(String(Math.round(zoom * 100))); setEditingZoom(false); } }}
+              onKeyDown={e => {
+                if (e.key === "Enter")  commitZoomInput();
+                if (e.key === "Escape") { setZoomInput(String(Math.round(zoom * 100))); setEditingZoom(false); }
+              }}
               style={{
                 width: 52, textAlign: "center", padding: "2px 4px",
                 background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.5)",
@@ -149,13 +152,12 @@ function ImagePositioner({ src, position, onChange }) {
           ) : (
             <span
               onClick={() => setEditingZoom(true)}
-              title="Click to type a zoom value"
+              title="Click to type a zoom value (30–300)"
               style={{
                 width: 52, textAlign: "center", fontSize: 12, color: "#a09cbc",
                 cursor: "text", padding: "2px 4px", borderRadius: 6,
                 border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.04)",
-                userSelect: "none",
+                background: "rgba(255,255,255,0.04)", userSelect: "none",
               }}
             >{Math.round(zoom * 100)}%</span>
           )}
@@ -173,10 +175,14 @@ function ImagePositioner({ src, position, onChange }) {
           position: "relative", height: 180, borderRadius: 12,
           overflow: "hidden", cursor: "grab",
           border: "2px dashed rgba(167,139,250,0.35)", userSelect: "none",
+          background: "#0d0d14",
         }}
       >
         <img src={src} alt="" style={{
-          position: "absolute", width: "100%", height: "100%",
+          position: "absolute",
+          // Use fixed 100% size + scale() so zoom below 100% shrinks the image
+          // inside the frame (shows the dark background around it)
+          width: "100%", height: "100%",
           left: "50%", top: "50%",
           transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3}px), calc(-50% + ${(pos.y - 50) * 0.3}px)) scale(${zoom})`,
           objectFit: "cover", pointerEvents: "none",
