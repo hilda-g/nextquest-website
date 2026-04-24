@@ -774,6 +774,15 @@ export default function NextQuest() {
                     {/* Card body */}
                     <div style={{ padding: 16 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" style={{ verticalAlign: "middle", flexShrink: 0 }}>
+                          <rect x="1" y="2" width="14" height="13" rx="2" fill="white"/>
+                          <rect x="1" y="2" width="14" height="5" rx="2" fill="#ef4444"/>
+                          <rect x="1" y="5" width="14" height="2" fill="#ef4444"/>
+                          <line x1="1.5" y1="10" x2="14.5" y2="10" stroke="#d1d5db" strokeWidth="0.5"/>
+                          <line x1="1.5" y1="13" x2="14.5" y2="13" stroke="#d1d5db" strokeWidth="0.5"/>
+                          <line x1="5.5" y1="7" x2="5.5" y2="14.5" stroke="#d1d5db" strokeWidth="0.5"/>
+                          <line x1="10.5" y1="7" x2="10.5" y2="14.5" stroke="#d1d5db" strokeWidth="0.5"/>
+                        </svg>
                         <span style={{ fontSize: 12, color: "#5a5878", fontWeight: 600 }}>
                           {formatDate(event.dateStart, lang)}
                           {event.multiDay && event.dateEnd
