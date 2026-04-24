@@ -119,7 +119,7 @@ export default function AdminPanel() {
           "Content-Type": "application/json",
           "X-Webhook-Secret": NOTIFIER_SECRET,
         },
-        body: JSON.stringify({ event_id: String(postTarget.id) }),
+        body: JSON.stringify({ record: postTarget }),
       });
 
       if (!res.ok) {
