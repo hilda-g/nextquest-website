@@ -854,7 +854,17 @@ export default function NextQuest() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-                    <span>🗓</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                      <rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/>
+                      <rect x="1" y="2" width="14" height="5" rx="2" fill="#ef4444"/>
+                      <rect x="9" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/>
+                      <rect x="5" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/>
+                      <rect x="3" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
+                      <rect x="7" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
+                      <rect x="11" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
+                      <rect x="3" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/>
+                      <rect x="7" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/>
+                    </svg>
                     <span>
                       {formatDate(selected.dateStart, lang)}
                       {selected.multiDay && selected.dateEnd ? ` — ${formatDate(selected.dateEnd, lang)}` : ` · ${formatTime(selected.dateStart)}`}
