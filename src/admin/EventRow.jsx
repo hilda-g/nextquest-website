@@ -64,6 +64,18 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
         }}>
           {!isDeleted && (
             <>
+              <a
+                href={`${import.meta.env.VITE_SITE_URL || "https://nextquest.today"}/events/${event.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                style={{ ...menuItem(), display: "block", textDecoration: "none" }}
+              >
+                👁 View event
+              </a>
+
+              <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
+
               <button onClick={() => { onEdit(event); setOpen(false); }} style={menuItem()}>
                 ✏️ Edit event
               </button>
