@@ -66,9 +66,9 @@ function inputStyle(error) {
 // ─── Image Repositioner ───────────────────────────────────────
 function ImagePositioner({ src, position, onChange }) {
   const ref      = useRef(null);
-  const [pos, setPos]         = useState(position || { x: 50, y: 50 });
-  const [zoom, setZoom]       = useState(1);
-  const [zoomInput, setZoomInput]     = useState("100");
+  const [pos, setPos]             = useState(position || { x: 50, y: 50 });
+  const [zoom, setZoom]           = useState(1);
+  const [zoomInput, setZoomInput] = useState("100");
   const [editingZoom, setEditingZoom] = useState(false);
   const dragging = useRef(false);
   const start    = useRef(null);
@@ -76,8 +76,7 @@ function ImagePositioner({ src, position, onChange }) {
   useEffect(() => setPos(position || { x: 50, y: 50 }), [position]);
 
   function applyZoom(raw) {
-    // Min 30% so the image can be smaller than the frame (zoom out fully)
-    // Max 300% for detailed crop
+    // Range: 30% (zoomed out, full image visible) – 300% (tight crop)
     const z = Math.max(0.3, Math.min(3, Math.round(raw) / 100));
     setZoom(z);
     setZoomInput(String(Math.round(z * 100)));
@@ -122,6 +121,26 @@ function ImagePositioner({ src, position, onChange }) {
     color: "#a09cbc", fontSize: 16, display: "flex",
     alignItems: "center", justifyContent: "center", fontFamily: "inherit", flexShrink: 0,
   };
+
+  // When zoom >= 1: objectFit cover fills the frame, scale() zooms further in.
+  // When zoom < 1:  objectFit contain keeps the full image visible (no clipping),
+  //                 scale() shrinks it. overflow:hidden stays on so the border is clean.
+  const imgStyle = zoom >= 1
+    ? {
+        position: "absolute", width: "100%", height: "100%",
+        left: "50%", top: "50%",
+        transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3 * zoom}px), calc(-50% + ${(pos.y - 50) * 0.3 * zoom}px)) scale(${zoom})`,
+        objectFit: "cover", pointerEvents: "none", transformOrigin: "center center",
+      }
+    : {
+        position: "absolute",
+        // objectFit:contain – image fits entirely inside the frame, no cropping
+        maxWidth: `${zoom * 100}%`, maxHeight: `${zoom * 100}%`,
+        width: "auto", height: "auto",
+        left: "50%", top: "50%",
+        transform: `translate(calc(-50% + ${(pos.x - 50) * zoom}px), calc(-50% + ${(pos.y - 50) * zoom}px))`,
+        objectFit: "contain", pointerEvents: "none",
+      };
 
   return (
     <div>
@@ -178,16 +197,7 @@ function ImagePositioner({ src, position, onChange }) {
           background: "#0d0d14",
         }}
       >
-        <img src={src} alt="" style={{
-          position: "absolute",
-          // Use fixed 100% size + scale() so zoom below 100% shrinks the image
-          // inside the frame (shows the dark background around it)
-          width: "100%", height: "100%",
-          left: "50%", top: "50%",
-          transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3}px), calc(-50% + ${(pos.y - 50) * 0.3}px)) scale(${zoom})`,
-          objectFit: "cover", pointerEvents: "none",
-          transformOrigin: "center center",
-        }} />
+        <img src={src} alt="" style={imgStyle} />
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(to top, rgba(13,13,20,0.55) 0%, transparent 50%)",
