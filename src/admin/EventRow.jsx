@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const CATEGORIES = {
   boardgames: "🎲 Board Games",
@@ -9,38 +9,50 @@ const CATEGORIES = {
   other:      "🃏 Other",
 };
 
-const STATUS_CONFIG = {
-  published: { label: "Published", color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)"  },
-  pending:   { label: "Pending",   color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.25)" },
-  cancelled: { label: "Cancelled", color: "#ef4444", bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.25)"  },
-  deleted:   { label: "Deleted",   color: "#6b7280", bg: "rgba(107,114,128,0.12)",border: "rgba(107,114,128,0.25)"},
+const STATUS_STYLES = {
+  published: { color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)" },
+  pending:   { color: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.3)"  },
+  cancelled: { color: "#ef4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.3)"   },
+  deleted:   { color: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.3)" },
 };
 
 function StatusBadge({ status }) {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.deleted;
+  const s = STATUS_STYLES[status] || STATUS_STYLES.pending;
   return (
     <span style={{
       fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999,
-      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-      letterSpacing: "0.04em", flexShrink: 0,
-    }}>{cfg.label}</span>
+      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+      flexShrink: 0, textTransform: "capitalize", letterSpacing: "0.04em",
+    }}>{status}</span>
   );
 }
 
-// ─── Three-dot menu ──────────────────────────────────────────
+function menuItem(color) {
+  return {
+    display: "block", width: "100%", textAlign: "left",
+    padding: "8px 16px", background: "none", border: "none",
+    cursor: "pointer", fontSize: 13, color: color || "#a09cbc",
+    fontFamily: "inherit", transition: "background 0.1s",
+  };
+}
+
+// ─── ThreeDotMenu ─────────────────────────────────────────────
 function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
-    function handler(e) {
+    function onClick(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
-    if (open) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   return (
+    // BUG 3 FIX: position: "relative" here + zIndex: 1000 on dropdown
+    // so the menu always renders above the list container even when
+    // the list has overflow: "hidden" on its rows.
     <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
       <button
         onClick={() => setOpen(o => !o)}
@@ -55,7 +67,10 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 
       {open && (
         <div style={{
-          position: "absolute", right: 0, top: 36, zIndex: 1000,
+          position: "absolute", right: 0, top: 36,
+          // BUG 3 FIX: raised from zIndex 50 → 1000 so it renders above
+          // the rounded list container that has overflow: "visible"
+          zIndex: 1000,
           background: "#1e1e32", border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: 12, padding: "6px 0", minWidth: 180,
           boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
@@ -66,7 +81,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
             <>
               <button
                 onClick={() => { onViewEvent(event); setOpen(false); }}
-                style={{ ...menuItem(), display: "block", width: "100%", textAlign: "left" }}
+                style={menuItem()}
               >
                 👁 View event
               </button>
@@ -99,7 +114,6 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
-              {/* ── Create Post ─────────────────────────────── */}
               <button
                 onClick={() => { onCreatePost(event); setOpen(false); }}
                 style={menuItem("#06b6d4")}
@@ -131,17 +145,6 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
       `}</style>
     </div>
   );
-}
-
-function menuItem(color) {
-  return {
-    display: "block", width: "100%", textAlign: "left",
-    padding: "8px 16px", background: "none", border: "none",
-    cursor: "pointer", fontSize: 13, color: color || "#a09cbc",
-    fontFamily: "inherit", transition: "background 0.1s",
-    onMouseEnter: e => e.target.style.background = "rgba(255,255,255,0.05)",
-    onMouseLeave: e => e.target.style.background = "none",
-  };
 }
 
 // ─── EventRow ────────────────────────────────────────────────
@@ -185,20 +188,6 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
 
       {/* Status */}
       <StatusBadge status={isDeleted ? "deleted" : event.status} />
-
-      {/* Edit button */}
-      {!isDeleted && (
-        <button
-          onClick={() => onEdit(event)}
-          style={{
-            padding: "6px 14px", borderRadius: 8, cursor: "pointer",
-            background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
-            color: "#a78bfa", fontSize: 12, fontFamily: "inherit", flexShrink: 0, transition: "background 0.15s",
-          }}
-          onMouseEnter={e => e.target.style.background = "rgba(167,139,250,0.15)"}
-          onMouseLeave={e => e.target.style.background = "rgba(167,139,250,0.08)"}
-        >Edit</button>
-      )}
 
       {/* Three-dot menu */}
       <ThreeDotMenu

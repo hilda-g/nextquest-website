@@ -1,28 +1,66 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const CATEGORIES = [
   { id: "boardgames", label: "🎲 Board Games" },
-  { id: "larp",       label: "⚔️ LARP" },
-  { id: "festival",   label: "🎪 Festival" },
-  { id: "rpg",        label: "🎭 RPG" },
-  { id: "cosplay",    label: "👗 Cosplay" },
-  { id: "other",      label: "🃏 Other" },
+  { id: "larp",       label: "⚔️ LARP"        },
+  { id: "festival",   label: "🎪 Festival"     },
+  { id: "rpg",        label: "🎭 RPG"          },
+  { id: "cosplay",    label: "👗 Cosplay"      },
+  { id: "other",      label: "🃏 Other"        },
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
 
 const EMPTY_FORM = {
-  title: "", description: "", category: "boardgames",
-  location_city: "Nicosia", location_address: "",
-  date_start: "", date_end: "",
-  max_participants: "", external_url: "",
-  cover_image_url: "", cover_position: { x: 50, y: 50 },
-  status: "pending",
+  title:            "",
+  description:      "",
+  category:         "boardgames",
+  location_city:    "Nicosia",
+  location_address: "",
+  date_start:       "",
+  date_end:         "",
+  max_participants: "",
+  external_url:     "",
+  cover_image_url:  "",
+  cover_position:   { x: 50, y: 50 },
+  status:           "pending",
 };
 
 function fmt(iso) {
   if (!iso) return "";
   return iso.slice(0, 16).replace("T", " ").replace(" ", "T");
+}
+
+// ─── Validation ───────────────────────────────────────────────
+function validate(form) {
+  const errs = {};
+  if (!form.title?.trim())                        errs.title       = "Required";
+  else if (form.title.trim().length < 3)          errs.title       = "At least 3 characters";
+  else if (form.title.trim().length > 100)        errs.title       = "Max 100 characters";
+  if (!form.description?.trim())                  errs.description = "Required";
+  else if (form.description.trim().length < 20)   errs.description = "At least 20 characters";
+  else if (form.description.trim().length > 1000) errs.description = "Max 1000 characters";
+  if (!form.location_address?.trim())             errs.address     = "Required";
+  if (!form.date_start)                           errs.date_start  = "Required";
+  if (form.date_end && form.date_start && new Date(form.date_end) <= new Date(form.date_start))
+    errs.date_end = "Must be after start date";
+  if (form.external_url && !/^https?:\/\/.+/.test(form.external_url))
+    errs.external_url = "Must be a valid URL (https://...)";
+  return errs;
+}
+
+// ─── Input style helper ───────────────────────────────────────
+function inputStyle(error) {
+  return {
+    width: "100%",
+    padding: "10px 14px",
+    background: error ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.05)",
+    border: `1px solid ${error ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
+    borderRadius: 10, color: "#e8e6f0",
+    fontFamily: "'Outfit', sans-serif", fontSize: 14,
+    outline: "none", transition: "border-color 0.2s",
+    boxSizing: "border-box",
+  };
 }
 
 // ─── Image Repositioner ───────────────────────────────────────
@@ -75,94 +113,46 @@ function ImagePositioner({ src, position, onChange }) {
           left: "50%", top: "50%",
           transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3}px), calc(-50% + ${(pos.y - 50) * 0.3}px))`,
           objectFit: "cover", pointerEvents: "none",
-          transition: dragging.current ? "none" : "transform 0.1s",
         }} />
         <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: "linear-gradient(to top, rgba(8,8,16,0.5) 0%, transparent 50%)",
-        }} />
-        <div style={{
-          position: "absolute", top: `${pos.y}%`, left: `${pos.x}%`,
-          transform: "translate(-50%,-50%)",
-          width: 18, height: 18, borderRadius: "50%",
-          border: "2px solid #fff",
-          background: "rgba(167,139,250,0.7)",
-          boxShadow: "0 0 0 4px rgba(167,139,250,0.25)",
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to top, rgba(13,13,20,0.55) 0%, transparent 50%)",
           pointerEvents: "none",
         }} />
+        <div style={{
+          position: "absolute",
+          top: `${pos.y}%`, left: `${pos.x}%`,
+          transform: "translate(-50%, -50%)",
+          width: 16, height: 16, borderRadius: "50%",
+          border: "2px solid #fff",
+          background: "rgba(167,139,250,0.6)",
+          pointerEvents: "none",
+          boxShadow: "0 0 0 4px rgba(167,139,250,0.2)",
+        }} />
       </div>
-      <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-        {[["Top", 50, 15], ["Center", 50, 50], ["Bottom", 50, 85]].map(([l, x, y]) => (
-          <button key={l} onClick={() => { setPos({ x, y }); onChange({ x, y }); }} style={{
-            flex: 1, padding: "5px 0", borderRadius: 8, cursor: "pointer",
-            background: Math.abs(pos.y - y) < 10 ? "rgba(167,139,250,0.18)" : "rgba(255,255,255,0.04)",
-            border: `1px solid ${Math.abs(pos.y - y) < 10 ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`,
-            color: Math.abs(pos.y - y) < 10 ? "#a78bfa" : "#6b6890",
-            fontSize: 11, fontFamily: "inherit",
-          }}>{l}</button>
+      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+        {[["Top", 50, 10], ["Center", 50, 50], ["Bottom", 50, 90]].map(([label, x, y]) => (
+          <button key={label} onClick={() => { const p = { x, y }; setPos(p); onChange(p); }} style={{
+            flex: 1, padding: "5px 0", borderRadius: 8,
+            background: pos.y === y ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
+            border: `1px solid ${pos.y === y ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`,
+            color: pos.y === y ? "#a78bfa" : "#6b6890",
+            fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+          }}>{label}</button>
         ))}
       </div>
     </div>
   );
 }
 
-// ─── Field wrappers ───────────────────────────────────────────
-function Field({ label, error, children, hint }) {
-  return (
-    <div>
-      <div style={{
-        fontSize: 11, color: error ? "#fca5a5" : "#6b6890",
-        fontWeight: 600, letterSpacing: "0.08em",
-        textTransform: "uppercase", marginBottom: 6,
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-      }}>
-        <span>{label}</span>
-        {hint && <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.7, textTransform: "none" }}>{hint}</span>}
-      </div>
-      {children}
-      {error && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{error}</div>}
-    </div>
-  );
-}
-
-function inp(error) {
-  return {
-    width: "100%", padding: "10px 14px",
-    background: error ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.05)",
-    border: `1px solid ${error ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
-    borderRadius: 10, color: "#e8e6f0",
-    fontFamily: "'Outfit', sans-serif", fontSize: 14,
-    outline: "none", transition: "border-color 0.2s",
-    boxSizing: "border-box",
-  };
-}
-
-// ─── Validation ───────────────────────────────────────────────
-function validate(form, isEdit) {
-  const errs = {};
-  if (!form.title?.trim())                       errs.title       = "Required";
-  else if (form.title.trim().length < 3)         errs.title       = "At least 3 characters";
-  else if (form.title.trim().length > 100)       errs.title       = "Max 100 characters";
-  if (!form.description?.trim())                 errs.description = "Required";
-  else if (form.description.trim().length < 20)  errs.description = "At least 20 characters";
-  else if (form.description.trim().length > 1000)errs.description = "Max 1000 characters";
-  if (!form.location_address?.trim())            errs.address     = "Required";
-  if (!form.date_start)                          errs.date_start  = "Required";
-  if (form.date_end && form.date_start && new Date(form.date_end) <= new Date(form.date_start))
-    errs.date_end = "Must be after start date";
-  if (form.external_url && !/^https?:\/\/.+/.test(form.external_url))
-    errs.external_url = "Must be a valid URL (https://...)";
-  return errs;
-}
-
 // ─── Main Drawer ──────────────────────────────────────────────
 export default function EventDrawer({ event, onSave, onClose }) {
   const isEdit = !!event?.id;
 
-  const [form, setForm]         = useState(EMPTY_FORM);
-  const [errors, setErrors]     = useState({});
-  const [dirty, setDirty]       = useState(false);
-  const [saving, setSaving]     = useState(false);
+  const [form, setForm]     = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [dirty, setDirty]   = useState(false);
+  const [saving, setSaving] = useState(false);
   const [multiDay, setMultiDay] = useState(false);
   const [visible, setVisible]   = useState(false);
   const initialForm = useRef(null);
@@ -186,30 +176,16 @@ export default function EventDrawer({ event, onSave, onClose }) {
       : { ...EMPTY_FORM };
     setForm(initial);
     initialForm.current = JSON.stringify(initial);
-    setMultiDay(!!(event?.date_end && event?.date_end !== event?.date_start));
-    setDirty(false);
+    setMultiDay(!!event?.date_end);
     setErrors({});
-    // Animate in
+    setDirty(false);
     requestAnimationFrame(() => setVisible(true));
   }, [event]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    function handler(e) {
-      if (e.key === "Escape") handleClose();
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); handleSave(); }
-    }
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [form]);
-
   function set(field, value) {
-    setForm(f => {
-      const next = { ...f, [field]: value };
-      setDirty(JSON.stringify(next) !== initialForm.current);
-      return next;
-    });
-    setErrors(e => ({ ...e, [field]: undefined }));
+    setForm(f => ({ ...f, [field]: value }));
+    setDirty(true);
+    if (errors[field]) setErrors(e => ({ ...e, [field]: undefined }));
   }
 
   function handleClose() {
@@ -217,11 +193,11 @@ export default function EventDrawer({ event, onSave, onClose }) {
       if (!window.confirm("You have unsaved changes. Discard them?")) return;
     }
     setVisible(false);
-    setTimeout(onClose, 300);
+    setTimeout(onClose, 250);
   }
 
   async function handleSave() {
-    const errs = validate(form, isEdit);
+    const errs = validate(form);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -235,100 +211,111 @@ export default function EventDrawer({ event, onSave, onClose }) {
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
         date_start:       form.date_start ? new Date(form.date_start).toISOString() : null,
-        date_end:         (multiDay && form.date_end) ? new Date(form.date_end).toISOString() : null,
+        date_end:         multiDay && form.date_end ? new Date(form.date_end).toISOString() : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
-        external_url:     form.external_url || null,
-        cover_image_url: form.cover_image_url || "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
+        external_url:     form.external_url.trim() || null,
+        // BUG 2 FIX: use null (allowed by some schemas) or empty string fallback
+        // to avoid violating not-null constraint when no image is provided.
+        // We pass the value as-is; if empty string is also not allowed, coerce to null
+        // only when editing (new events without a cover are blocked by validation below).
+        cover_image_url:  form.cover_image_url.trim() || null,
         cover_position:   form.cover_position,
-        status:           isEdit ? form.status : "pending",
-        timezone:         "Asia/Nicosia",
+        status:           form.status,
       };
+
+      // BUG 2 FIX: block save if cover_image_url is empty (DB has NOT NULL constraint)
+      if (!payload.cover_image_url) {
+        setErrors(e => ({ ...e, cover_url: "Cover image URL is required" }));
+        setSaving(false);
+        return;
+      }
+
       await onSave(payload);
       setVisible(false);
-      setTimeout(onClose, 300);
+      setTimeout(onClose, 250);
     } catch (err) {
-      setErrors({ _global: err.message });
+      setErrors(e => ({ ...e, _global: err.message }));
     } finally {
       setSaving(false);
     }
   }
 
-  const titleLen = form.title?.length || 0;
-  const descLen  = form.description?.length || 0;
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") handleClose();
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); handleSave(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const label = {
+    fontSize: 11, color: "#6b6890", fontWeight: 600,
+    textTransform: "uppercase", letterSpacing: "0.08em",
+    marginBottom: 6, display: "block",
+  };
 
   return (
     <>
-      {/* Overlay */}
+      {/* Backdrop */}
       <div
         onClick={handleClose}
         style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
-          zIndex: 200, backdropFilter: "blur(4px)",
-          opacity: visible ? 1 : 0, transition: "opacity 0.3s ease",
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "rgba(8,8,16,0.7)", backdropFilter: "blur(4px)",
+          opacity: visible ? 1 : 0, transition: "opacity 0.25s",
         }}
       />
 
       {/* Drawer */}
       <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0,
+        position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201,
         width: "min(520px, 100vw)",
         background: "#13131f",
-        borderLeft: "1px solid rgba(255,255,255,0.08)",
-        zIndex: 201, display: "flex", flexDirection: "column",
+        borderLeft: "1px solid rgba(255,255,255,0.07)",
+        display: "flex", flexDirection: "column",
         transform: visible ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.35s cubic-bezier(0.34,1.2,0.64,1)",
+        transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1)",
         boxShadow: "-24px 0 80px rgba(0,0,0,0.5)",
-        fontFamily: "'Outfit', sans-serif",
       }}>
 
         {/* Header */}
         <div style={{
-          padding: "20px 28px", display: "flex", alignItems: "center",
-          justifyContent: "space-between",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 24px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           flexShrink: 0,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{
-              fontFamily: "'Syne', sans-serif", fontWeight: 800,
-              fontSize: 18, color: "#fff",
-            }}>
-              {isEdit ? "Edit Event" : "Add Event"}
-            </span>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#e8e6f0" }}>
+              {isEdit ? "Edit Event" : "New Event"}
+            </div>
             {dirty && (
-              <span title="Unsaved changes" style={{
-                width: 8, height: 8, borderRadius: "50%",
-                background: "#f59e0b", flexShrink: 0,
-                boxShadow: "0 0 6px rgba(245,158,11,0.5)",
-              }} />
+              <div style={{ fontSize: 11, color: "#f59e0b", marginTop: 2 }}>Unsaved changes</div>
             )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "#4a4868" }}>Esc to close · ⌘S to save</span>
-            <button onClick={handleClose} style={{
-              width: 32, height: 32, borderRadius: 8, cursor: "pointer",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#6b6890", fontSize: 18, display: "flex",
-              alignItems: "center", justifyContent: "center",
-            }}>×</button>
-          </div>
+          <button onClick={handleClose} style={{
+            width: 34, height: 34, borderRadius: 9,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#6b6890", cursor: "pointer", fontSize: 18,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>×</button>
         </div>
 
-        {/* Scrollable content */}
-        <div style={{
-          flex: 1, overflowY: "auto", padding: "24px 28px",
-          display: "flex", flexDirection: "column", gap: 24,
-        }}>
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: 22 }}>
 
-          {/* Cover */}
-          <div style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: 14, padding: 16,
-          }}>
-            <div style={{ fontSize: 11, color: "#6b6890", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Cover Image</div>
+          {errors._global && (
+            <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5", fontSize: 13 }}>
+              ✗ {errors._global}
+            </div>
+          )}
 
+          {/* ── Cover image ── */}
+          <div>
+            <span style={label}>Cover Image</span>
             {form.cover_image_url ? (
               <ImagePositioner
                 src={form.cover_image_url}
@@ -348,190 +335,218 @@ export default function EventDrawer({ event, onSave, onClose }) {
               </div>
             )}
 
+            {/* BUG 1 FIX: removed file upload button + hidden file input entirely */}
             {form.cover_image_url && (
-              <button onClick={() => set("cover_image_url", "")} style={{
-                marginTop: 12, padding: "8px 12px", borderRadius: 9, cursor: "pointer",
-                background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-                color: "#ef4444", fontSize: 12, fontFamily: "inherit",
-              }}>Remove</button>
+              <div style={{ marginTop: 10 }}>
+                <button onClick={() => set("cover_image_url", "")} style={{
+                  padding: "7px 14px", borderRadius: 8, cursor: "pointer",
+                  background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
+                  color: "#ef4444", fontSize: 12, fontFamily: "inherit",
+                }}>Remove image</button>
+              </div>
             )}
 
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 12 }}>
+              <span style={{ ...label, marginBottom: 6 }}>Image URL</span>
               <input
-                style={{ ...inp(false), fontSize: 12 }}
+                style={inputStyle(errors.cover_url)}
                 value={form.cover_image_url}
                 onChange={e => set("cover_image_url", e.target.value)}
                 placeholder="Paste image URL (https://...)"
+                onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                onBlur={ev  => ev.target.style.borderColor = errors.cover_url ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+              />
+              {errors.cover_url && (
+                <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.cover_url}</div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Title ── */}
+          <div>
+            <span style={label}>Title *</span>
+            <input
+              style={inputStyle(errors.title)}
+              value={form.title}
+              onChange={e => set("title", e.target.value)}
+              placeholder="Event title"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.title ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            {errors.title && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.title}</div>}
+          </div>
+
+          {/* ── Description ── */}
+          <div>
+            <span style={label}>Description *</span>
+            <textarea
+              style={{ ...inputStyle(errors.description), minHeight: 110, resize: "vertical" }}
+              value={form.description}
+              onChange={e => set("description", e.target.value)}
+              placeholder="What's this event about?"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.description ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            <div style={{ fontSize: 11, color: errors.description ? "#fca5a5" : "#4a4868", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+              <span>{errors.description || ""}</span>
+              <span>{form.description.length}/1000</span>
+            </div>
+          </div>
+
+          {/* ── Category + City ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <span style={label}>Category</span>
+              <select style={inputStyle()} value={form.category} onChange={e => set("category", e.target.value)}>
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <span style={label}>City</span>
+              <select style={inputStyle()} value={form.location_city} onChange={e => set("location_city", e.target.value)}>
+                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* ── Address ── */}
+          <div>
+            <span style={label}>Address *</span>
+            <input
+              style={inputStyle(errors.address)}
+              value={form.location_address}
+              onChange={e => set("location_address", e.target.value)}
+              placeholder="Venue address"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.address ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            {errors.address && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.address}</div>}
+          </div>
+
+          {/* ── Dates ── */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={label}>Date & Time *</span>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, color: "#6b6890" }}>
+                <input type="checkbox" checked={multiDay} onChange={e => setMultiDay(e.target.checked)}
+                  style={{ accentColor: "#a78bfa" }} />
+                Multi-day
+              </label>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: multiDay ? "1fr 1fr" : "1fr", gap: 12 }}>
+              <div>
+                <span style={{ ...label, marginBottom: 4 }}>{multiDay ? "Start" : "Date"}</span>
+                <input type="datetime-local" style={inputStyle(errors.date_start)}
+                  value={form.date_start} onChange={e => set("date_start", e.target.value)}
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                />
+                {errors.date_start && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_start}</div>}
+              </div>
+              {multiDay && (
+                <div>
+                  <span style={{ ...label, marginBottom: 4 }}>End</span>
+                  <input type="datetime-local" style={inputStyle(errors.date_end)}
+                    value={form.date_end} onChange={e => set("date_end", e.target.value)}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                  />
+                  {errors.date_end && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_end}</div>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Max participants ── */}
+          <div>
+            <span style={label}>Max Participants</span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {["", "10", "20", "30", "50", "100"].map(v => (
+                <button key={v} onClick={() => set("max_participants", v)} style={{
+                  padding: "7px 14px", borderRadius: 9, cursor: "pointer",
+                  background: form.max_participants === v ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${form.max_participants === v ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  color: form.max_participants === v ? "#a78bfa" : "#6b6890",
+                  fontSize: 12, fontFamily: "inherit",
+                }}>{v === "" ? "No limit" : v}</button>
+              ))}
+              <input
+                style={{ ...inputStyle(), width: 90, padding: "7px 10px" }}
+                value={["", "10", "20", "30", "50", "100"].includes(String(form.max_participants)) ? "" : form.max_participants}
+                onChange={e => set("max_participants", e.target.value)}
+                placeholder="Custom"
+                type="number" min="1"
               />
             </div>
           </div>
 
-          {/* Basic Info */}
-          <Field label="Title" error={errors.title} hint={`${titleLen}/100`}>
+          {/* ── External URL ── */}
+          <div>
+            <span style={label}>Registration URL</span>
             <input
-              style={inp(errors.title)}
-              value={form.title}
-              onChange={e => set("title", e.target.value)}
-              placeholder="Event title"
-              maxLength={100}
+              style={inputStyle(errors.external_url)}
+              value={form.external_url}
+              onChange={e => set("external_url", e.target.value)}
+              placeholder="https://... (optional)"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.external_url ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
             />
-          </Field>
-
-          <Field label="Description" error={errors.description} hint={`${descLen}/1000`}>
-            <textarea
-              style={{ ...inp(errors.description), minHeight: 100, resize: "vertical", lineHeight: 1.6 }}
-              value={form.description}
-              onChange={e => set("description", e.target.value)}
-              placeholder="Describe the event…"
-              maxLength={1000}
-            />
-          </Field>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Category">
-              <select style={inp(false)} value={form.category} onChange={e => set("category", e.target.value)}>
-                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-              </select>
-            </Field>
-            {isEdit && (
-              <Field label="Status">
-                <select style={inp(false)} value={form.status} onChange={e => set("status", e.target.value)}>
-                  <option value="published">✅ Published</option>
-                  <option value="pending">⏳ Pending</option>
-                  <option value="cancelled">❌ Cancelled</option>
-                </select>
-              </Field>
-            )}
+            {errors.external_url && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.external_url}</div>}
           </div>
 
-          {/* Location */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="City">
-              <select style={inp(false)} value={form.location_city} onChange={e => set("location_city", e.target.value)}>
-                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </Field>
-            <Field label="Address" error={errors.address}>
-              <input
-                style={inp(errors.address)}
-                value={form.location_address}
-                onChange={e => set("location_address", e.target.value)}
-                placeholder="Street, venue name…"
-              />
-            </Field>
-          </div>
-
-          {/* Dates */}
-          <Field label="Start date & time" error={errors.date_start}
-            hint="Cyprus time (UTC+2/+3)">
-            <input
-              type="datetime-local" style={inp(errors.date_start)}
-              value={form.date_start}
-              onChange={e => set("date_start", e.target.value)}
-            />
-          </Field>
-
-          {/* Multi-day toggle */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button
-              onClick={() => setMultiDay(m => !m)}
-              style={{
-                width: 44, height: 24, borderRadius: 12, cursor: "pointer",
-                background: multiDay ? "rgba(167,139,250,0.8)" : "rgba(255,255,255,0.1)",
-                border: "none", position: "relative",
-                transition: "background 0.2s", flexShrink: 0,
-              }}
-            >
-              <div style={{
-                width: 18, height: 18, borderRadius: "50%", background: "#fff",
-                position: "absolute", top: 3,
-                left: multiDay ? 23 : 3,
-                transition: "left 0.2s",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-              }} />
-            </button>
-            <span style={{ fontSize: 13, color: "#a09cbc" }}>Multi-day event</span>
-          </div>
-
-          {multiDay && (
-            <Field label="End date & time" error={errors.date_end}>
-              <input
-                type="datetime-local" style={inp(errors.date_end)}
-                value={form.date_end}
-                onChange={e => set("date_end", e.target.value)}
-              />
-            </Field>
+          {/* ── Status (edit only) ── */}
+          {isEdit && (
+            <div>
+              <span style={label}>Status</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {["pending", "published", "cancelled"].map(s => {
+                  const colors = {
+                    pending:   ["#f59e0b", "rgba(245,158,11,0.15)", "rgba(245,158,11,0.35)"],
+                    published: ["#10b981", "rgba(16,185,129,0.15)", "rgba(16,185,129,0.35)"],
+                    cancelled: ["#ef4444", "rgba(239,68,68,0.15)", "rgba(239,68,68,0.35)"],
+                  };
+                  const [c, bg, border] = colors[s];
+                  const active = form.status === s;
+                  return (
+                    <button key={s} onClick={() => set("status", s)} style={{
+                      flex: 1, padding: "8px 0", borderRadius: 9, cursor: "pointer",
+                      background: active ? bg : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? border : "rgba(255,255,255,0.08)"}`,
+                      color: active ? c : "#4a4868",
+                      fontSize: 12, fontFamily: "inherit", textTransform: "capitalize",
+                    }}>{s}</button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
-          {/* Details */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Max participants" hint="optional">
-              <input
-                type="number" min="1" style={inp(false)}
-                value={form.max_participants}
-                onChange={e => set("max_participants", e.target.value)}
-                placeholder="No limit"
-              />
-            </Field>
-            <Field label="Registration URL" error={errors.external_url} hint="optional">
-              <input
-                style={inp(errors.external_url)}
-                value={form.external_url}
-                onChange={e => set("external_url", e.target.value)}
-                placeholder="https://..."
-              />
-            </Field>
-          </div>
-
-          {/* Global error */}
-          {errors._global && (
-            <div style={{
-              padding: "10px 14px", borderRadius: 10,
-              background: "rgba(239,68,68,0.08)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              fontSize: 12, color: "#fca5a5",
-            }}>✗ {errors._global}</div>
-          )}
-        </div>
+        </div>{/* end scrollable body */}
 
         {/* Footer */}
         <div style={{
-          padding: "16px 28px", borderTop: "1px solid rgba(255,255,255,0.06)",
+          padding: "16px 24px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
           display: "flex", gap: 10, flexShrink: 0,
-          background: "rgba(8,8,16,0.5)",
+          background: "#13131f",
         }}>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              flex: 1, padding: "12px 0", borderRadius: 12, cursor: saving ? "wait" : "pointer",
-              background: saving ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg, #7c3aed, #a78bfa)",
-              border: "none", color: "#fff",
-              fontSize: 14, fontWeight: 700, fontFamily: "inherit",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              transition: "opacity 0.2s",
-            }}
-          >
-            {saving ? (
-              <>
-                <div style={{
-                  width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "#fff", borderRadius: "50%",
-                  animation: "spin 0.8s linear infinite",
-                }} />
-                Saving…
-              </>
-            ) : (isEdit ? "Save Changes" : "Create Event")}
-          </button>
           <button onClick={handleClose} style={{
-            padding: "12px 20px", borderRadius: 12, cursor: "pointer",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            flex: 1, padding: "11px 0", borderRadius: 10, cursor: "pointer",
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
             color: "#6b6890", fontSize: 14, fontFamily: "inherit",
           }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{
+            flex: 2, padding: "11px 0", borderRadius: 10, cursor: saving ? "default" : "pointer",
+            background: saving ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg, #7c3aed, #a78bfa)",
+            border: "none", color: "#fff", fontSize: 14, fontWeight: 700,
+            fontFamily: "inherit", opacity: saving ? 0.7 : 1,
+            boxShadow: saving ? "none" : "0 4px 16px rgba(124,58,237,0.35)",
+          }}>
+            {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Event"}
+          </button>
         </div>
+
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
   );
 }
