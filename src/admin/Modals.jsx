@@ -313,7 +313,8 @@ export function ViewEventModal({ event, onClose }) {
         }}>
           {cover && (
             <img src={cover} alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block",
+                objectPosition: event.cover_position ? `${event.cover_position.x}% ${event.cover_position.y}%` : "50% 50%" }}
               onError={e => { e.target.style.display = "none"; }}
             />
           )}

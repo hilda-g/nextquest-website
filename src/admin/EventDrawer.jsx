@@ -72,11 +72,17 @@ function ImagePositioner({ src, position, onChange }) {
   const [editingZoom, setEditingZoom] = useState(false);
   const dragging = useRef(false);
   const start    = useRef(null);
+  // Keep a ref to the latest pos so onUp always fires the correct value
+  // (avoids stale closure bug where onChange(pos) captured an old snapshot)
+  const latestPos = useRef(pos);
 
-  useEffect(() => setPos(position || { x: 50, y: 50 }), [position]);
+  useEffect(() => {
+    const p = position || { x: 50, y: 50 };
+    setPos(p);
+    latestPos.current = p;
+  }, [position]);
 
   function applyZoom(raw) {
-    // Range: 30% (zoomed out, full image visible) – 300% (tight crop)
     const z = Math.max(0.3, Math.min(3, Math.round(raw) / 100));
     setZoom(z);
     setZoomInput(String(Math.round(z * 100)));
@@ -97,10 +103,14 @@ function ImagePositioner({ src, position, onChange }) {
     const ny = Math.max(0, Math.min(100, start.current.py - dy));
     const p  = { x: Math.round(nx), y: Math.round(ny) };
     setPos(p);
+    latestPos.current = p;   // always up to date, no stale closure
   }
 
   function onUp() {
-    if (dragging.current) { dragging.current = false; onChange(pos); }
+    if (dragging.current) {
+      dragging.current = false;
+      onChange(latestPos.current);  // use ref, not stale state
+    }
   }
 
   function onWheel(e) {
@@ -122,9 +132,8 @@ function ImagePositioner({ src, position, onChange }) {
     alignItems: "center", justifyContent: "center", fontFamily: "inherit", flexShrink: 0,
   };
 
-  // When zoom >= 1: objectFit cover fills the frame, scale() zooms further in.
-  // When zoom < 1:  objectFit contain keeps the full image visible (no clipping),
-  //                 scale() shrinks it. overflow:hidden stays on so the border is clean.
+  // zoom >= 1: cover + scale() crops into the image
+  // zoom <  1: image shrinks to fit fully inside the frame, no clipping
   const imgStyle = zoom >= 1
     ? {
         position: "absolute", width: "100%", height: "100%",
@@ -134,7 +143,6 @@ function ImagePositioner({ src, position, onChange }) {
       }
     : {
         position: "absolute",
-        // objectFit:contain – image fits entirely inside the frame, no cropping
         maxWidth: `${zoom * 100}%`, maxHeight: `${zoom * 100}%`,
         width: "auto", height: "auto",
         left: "50%", top: "50%",
