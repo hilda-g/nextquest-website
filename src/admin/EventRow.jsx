@@ -10,10 +10,10 @@ const CATEGORIES = {
 };
 
 const STATUS_CONFIG = {
-  published: { label: "Published", color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)" },
+  published: { label: "Published", color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.25)"  },
   pending:   { label: "Pending",   color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.25)" },
   cancelled: { label: "Cancelled", color: "#ef4444", bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.25)"  },
-  deleted:   { label: "Deleted",   color: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)" },
+  deleted:   { label: "Deleted",   color: "#6b7280", bg: "rgba(107,114,128,0.12)",border: "rgba(107,114,128,0.25)"},
 };
 
 function StatusBadge({ status }) {
@@ -27,12 +27,15 @@ function StatusBadge({ status }) {
   );
 }
 
-function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange }) {
+// ─── Three-dot menu ──────────────────────────────────────────
+function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
-    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
     if (open) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
@@ -44,9 +47,8 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
         style={{
           width: 32, height: 32, borderRadius: 8, cursor: "pointer",
           background: open ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          color: "#6b6890", fontSize: 16,
-          display: "flex", alignItems: "center", justifyContent: "center",
+          border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890",
+          fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
           transition: "background 0.15s",
         }}
       >⋮</button>
@@ -60,7 +62,6 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
           animation: "popIn 0.15s cubic-bezier(0.34,1.56,0.64,1)",
           fontFamily: "'Outfit', sans-serif",
         }}>
-
           {!isDeleted && (
             <>
               <button onClick={() => { onEdit(event); setOpen(false); }} style={menuItem()}>
@@ -89,6 +90,16 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
+              {/* ── Create Post ─────────────────────────────── */}
+              <button
+                onClick={() => { onCreatePost(event); setOpen(false); }}
+                style={menuItem("#06b6d4")}
+              >
+                📢 Create Post
+              </button>
+
+              <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
+
               <button onClick={() => { onDelete(event); setOpen(false); }} style={menuItem("#ef4444")}>
                 🗑 Delete event
               </button>
@@ -106,7 +117,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
       <style>{`
         @keyframes popIn {
           from { opacity: 0; transform: scale(0.9) translateY(-4px); }
-          to   { opacity: 1; transform: scale(1)   translateY(0); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
     </div>
@@ -116,61 +127,46 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 function menuItem(color) {
   return {
     display: "block", width: "100%", textAlign: "left",
-    padding: "8px 16px", background: "none",
-    border: "none", cursor: "pointer",
-    fontSize: 13, color: color || "#a09cbc",
-    fontFamily: "inherit",
-    transition: "background 0.1s",
+    padding: "8px 16px", background: "none", border: "none",
+    cursor: "pointer", fontSize: 13, color: color || "#a09cbc",
+    fontFamily: "inherit", transition: "background 0.1s",
     onMouseEnter: e => e.target.style.background = "rgba(255,255,255,0.05)",
     onMouseLeave: e => e.target.style.background = "none",
   };
 }
 
-export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange }) {
+// ─── EventRow ────────────────────────────────────────────────
+export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost }) {
   const isDeleted = !!event.deleted_at;
-  const date = event.date_start ? event.date_start.slice(0, 10) : "—";
-  const cover = event.cover_image_url;
-  const position = event.cover_position || { x: 50, y: 50 };
+  const date      = event.date_start ? event.date_start.slice(0, 10) : "—";
+  const cover     = event.cover_image_url;
+  const position  = event.cover_position || { x: 50, y: 50 };
 
   return (
     <div
       style={{
         display: "flex", alignItems: "center", gap: 14,
-        padding: "13px 20px",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
-        opacity: isDeleted ? 0.5 : 1,
-        transition: "background 0.15s, opacity 0.2s",
+        padding: "13px 20px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+        opacity: isDeleted ? 0.5 : 1, transition: "background 0.15s, opacity 0.2s",
       }}
       onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
     >
       {/* Thumbnail */}
       <div style={{
-        width: 52, height: 52, borderRadius: 10,
-        background: "#1a1a2e", flexShrink: 0, overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.06)",
+        width: 52, height: 52, borderRadius: 10, background: "#1a1a2e",
+        flexShrink: 0, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)",
       }}>
         {cover ? (
-          <img src={cover} alt="" style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            objectPosition: `${position.x}% ${position.y}%`,
-          }} />
+          <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${position.x}% ${position.y}%` }} />
         ) : (
-          <div style={{
-            width: "100%", height: "100%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18, color: "#4a4868",
-          }}>🖼</div>
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#4a4868" }}>🖼</div>
         )}
       </div>
 
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: 14, fontWeight: 600, color: "#e8e6f0",
-          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-          marginBottom: 3,
-        }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8e6f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 3 }}>
           {event.title}
         </div>
         <div style={{ fontSize: 12, color: "#4a4868" }}>
@@ -187,11 +183,8 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
           onClick={() => onEdit(event)}
           style={{
             padding: "6px 14px", borderRadius: 8, cursor: "pointer",
-            background: "rgba(167,139,250,0.08)",
-            border: "1px solid rgba(167,139,250,0.2)",
-            color: "#a78bfa", fontSize: 12,
-            fontFamily: "inherit", flexShrink: 0,
-            transition: "background 0.15s",
+            background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
+            color: "#a78bfa", fontSize: 12, fontFamily: "inherit", flexShrink: 0, transition: "background 0.15s",
           }}
           onMouseEnter={e => e.target.style.background = "rgba(167,139,250,0.15)"}
           onMouseLeave={e => e.target.style.background = "rgba(167,139,250,0.08)"}
@@ -206,6 +199,7 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
         onDelete={onDelete}
         onRestore={onRestore}
         onStatusChange={onStatusChange}
+        onCreatePost={onCreatePost}
       />
     </div>
   );
