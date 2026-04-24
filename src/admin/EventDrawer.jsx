@@ -66,11 +66,22 @@ function inputStyle(error) {
 // ─── Image Repositioner ───────────────────────────────────────
 function ImagePositioner({ src, position, onChange }) {
   const ref      = useRef(null);
-  const [pos, setPos] = useState(position || { x: 50, y: 50 });
+  const [pos, setPos]   = useState(position || { x: 50, y: 50 });
+  const [zoom, setZoom] = useState(1);
+  const [zoomInput, setZoomInput] = useState("100"); // editable text in the input
+  const [editingZoom, setEditingZoom] = useState(false);
   const dragging = useRef(false);
   const start    = useRef(null);
 
   useEffect(() => setPos(position || { x: 50, y: 50 }), [position]);
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function applyZoom(raw) {
+    const z = clamp(Math.round(raw), 100, 300) / 100;
+    setZoom(z);
+    setZoomInput(String(Math.round(z * 100)));
+  }
 
   function onDown(e) {
     dragging.current = true;
@@ -93,15 +104,71 @@ function ImagePositioner({ src, position, onChange }) {
     if (dragging.current) { dragging.current = false; onChange(pos); }
   }
 
+  function onWheel(e) {
+    e.preventDefault();
+    applyZoom(zoom * 100 + (e.deltaY < 0 ? 10 : -10));
+  }
+
+  function commitZoomInput() {
+    const parsed = parseInt(zoomInput, 10);
+    if (!isNaN(parsed)) applyZoom(parsed);
+    else setZoomInput(String(Math.round(zoom * 100)));
+    setEditingZoom(false);
+  }
+
+  const btnStyle = {
+    width: 28, height: 28, borderRadius: 7, cursor: "pointer",
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    color: "#a09cbc", fontSize: 16, display: "flex",
+    alignItems: "center", justifyContent: "center", fontFamily: "inherit", flexShrink: 0,
+  };
+
   return (
     <div>
-      <div style={{ fontSize: 11, color: "#6b6890", marginBottom: 6 }}>
-        Drag to reposition · Focus: {pos.x}% {pos.y}%
+      {/* Top bar: hint left, zoom controls right */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <span style={{ fontSize: 11, color: "#6b6890" }}>
+          Drag to reposition · Focus: {pos.x}% {pos.y}%
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <button style={btnStyle} onClick={() => applyZoom(zoom * 100 - 10)}>−</button>
+          {editingZoom ? (
+            <input
+              autoFocus
+              value={zoomInput}
+              onChange={e => setZoomInput(e.target.value)}
+              onBlur={commitZoomInput}
+              onKeyDown={e => { if (e.key === "Enter") commitZoomInput(); if (e.key === "Escape") { setZoomInput(String(Math.round(zoom * 100))); setEditingZoom(false); } }}
+              style={{
+                width: 52, textAlign: "center", padding: "2px 4px",
+                background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.5)",
+                borderRadius: 6, color: "#e8e6f0", fontSize: 12,
+                fontFamily: "inherit", outline: "none",
+              }}
+            />
+          ) : (
+            <span
+              onClick={() => setEditingZoom(true)}
+              title="Click to type a zoom value"
+              style={{
+                width: 52, textAlign: "center", fontSize: 12, color: "#a09cbc",
+                cursor: "text", padding: "2px 4px", borderRadius: 6,
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.04)",
+                userSelect: "none",
+              }}
+            >{Math.round(zoom * 100)}%</span>
+          )}
+          <button style={btnStyle} onClick={() => applyZoom(zoom * 100 + 10)}>+</button>
+        </div>
       </div>
+
+      {/* Canvas */}
       <div
         ref={ref}
         onMouseDown={onDown} onMouseMove={onMove}
         onMouseUp={onUp} onMouseLeave={onUp}
+        onWheel={onWheel}
         style={{
           position: "relative", height: 180, borderRadius: 12,
           overflow: "hidden", cursor: "grab",
@@ -109,10 +176,11 @@ function ImagePositioner({ src, position, onChange }) {
         }}
       >
         <img src={src} alt="" style={{
-          position: "absolute", width: "130%", height: "130%",
+          position: "absolute", width: "100%", height: "100%",
           left: "50%", top: "50%",
-          transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3}px), calc(-50% + ${(pos.y - 50) * 0.3}px))`,
+          transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3}px), calc(-50% + ${(pos.y - 50) * 0.3}px)) scale(${zoom})`,
           objectFit: "cover", pointerEvents: "none",
+          transformOrigin: "center center",
         }} />
         <div style={{
           position: "absolute", inset: 0,
@@ -130,6 +198,8 @@ function ImagePositioner({ src, position, onChange }) {
           boxShadow: "0 0 0 4px rgba(167,139,250,0.2)",
         }} />
       </div>
+
+      {/* Preset buttons */}
       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
         {[["Top", 50, 10], ["Center", 50, 50], ["Bottom", 50, 90]].map(([label, x, y]) => (
           <button key={label} onClick={() => { const p = { x, y }; setPos(p); onChange(p); }} style={{
