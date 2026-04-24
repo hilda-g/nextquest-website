@@ -5,7 +5,7 @@ import { useToasts, ToastContainer } from "./Toast.jsx";
 import LoginScreen from "./LoginScreen.jsx";
 import EventDrawer from "./EventDrawer.jsx";
 import EventRow    from "./EventRow.jsx";
-import { DeleteModal, RestoreModal, CreatePostModal } from "./Modals.jsx";
+import { DeleteModal, RestoreModal, CreatePostModal, ViewEventModal } from "./Modals.jsx";
 
 // channel_notifier URL + secret come from .env
 // Add to your .env:
@@ -41,6 +41,7 @@ export default function AdminPanel() {
   const [deleteTarget,  setDeleteTarget]  = useState(null);
   const [restoreTarget, setRestoreTarget] = useState(null);
   const [postTarget,    setPostTarget]    = useState(null);  // event to preview/post
+  const [viewTarget,    setViewTarget]    = useState(null);  // event to view
 
   // ── Filter events ────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -262,6 +263,7 @@ export default function AdminPanel() {
                 onRestore={setRestoreTarget}
                 onStatusChange={handleStatusChange}
                 onCreatePost={setPostTarget}
+                onViewEvent={setViewTarget}
               />
             ))
           )}
@@ -281,6 +283,7 @@ export default function AdminPanel() {
       <DeleteModal     event={deleteTarget}  onConfirm={handleDelete}     onClose={() => setDeleteTarget(null)}  />
       <RestoreModal    event={restoreTarget} onConfirm={handleRestore}    onClose={() => setRestoreTarget(null)} />
       <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onClose={() => setPostTarget(null)}    />
+      <ViewEventModal  event={viewTarget}                                 onClose={() => setViewTarget(null)}    />
 
       {/* ── Toasts ── */}
       <ToastContainer toasts={toasts.toasts} onRemove={toasts.removeToast} />

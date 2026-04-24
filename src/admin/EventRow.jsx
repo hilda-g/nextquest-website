@@ -28,7 +28,7 @@ function StatusBadge({ status }) {
 }
 
 // ─── Three-dot menu ──────────────────────────────────────────
-function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost }) {
+function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -64,15 +64,12 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
         }}>
           {!isDeleted && (
             <>
-              <a
-                href={`${import.meta.env.VITE_SITE_URL || "https://nextquest.today"}/events/${event.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                style={{ ...menuItem(), display: "block", textDecoration: "none" }}
+              <button
+                onClick={() => { onViewEvent(event); setOpen(false); }}
+                style={{ ...menuItem(), display: "block", width: "100%", textAlign: "left" }}
               >
                 👁 View event
-              </a>
+              </button>
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
@@ -148,7 +145,7 @@ function menuItem(color) {
 }
 
 // ─── EventRow ────────────────────────────────────────────────
-export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost }) {
+export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent }) {
   const isDeleted = !!event.deleted_at;
   const date      = event.date_start ? event.date_start.slice(0, 10) : "—";
   const cover     = event.cover_image_url;
@@ -212,6 +209,7 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
         onRestore={onRestore}
         onStatusChange={onStatusChange}
         onCreatePost={onCreatePost}
+        onViewEvent={onViewEvent}
       />
     </div>
   );

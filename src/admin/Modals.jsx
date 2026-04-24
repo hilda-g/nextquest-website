@@ -233,3 +233,187 @@ export function CreatePostModal({ event, onConfirm, onClose }) {
     </ConfirmModal>
   );
 }
+
+// ─── View Event Modal ─────────────────────────────────────────
+// Renders the event exactly as it appears on the public site.
+// Props:
+//   event    – raw event object from Supabase (or null to hide)
+//   onClose  – () => void
+
+const SITE_BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "nextquest_bot";
+
+const CAT_COLORS = {
+  boardgames: "#f97316", larp: "#8b5cf6", festival: "#ec4899",
+  rpg: "#06b6d4", cosplay: "#10b981", other: "#6b7280",
+};
+const CAT_LABELS = {
+  boardgames: "🎲 Board Games", larp: "⚔️ LARP", festival: "🎪 Festival",
+  rpg: "🎭 RPG", cosplay: "👗 Cosplay", other: "🃏 Other",
+};
+
+function fmtDate(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+}
+function fmtTime(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+}
+function makeGCalUrl(ev) {
+  const fmt = d => new Date(d).toISOString().replace(/[-:]/g, "").replace(".000", "");
+  const end = ev.date_end || ev.date_start;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${fmt(ev.date_start)}/${fmt(end)}&location=${encodeURIComponent(`${ev.location_city ?? ""}, ${ev.location_address ?? ""}`)}`;
+}
+
+export function ViewEventModal({ event, onClose }) {
+  useEffect(() => {
+    function handler(e) { if (e.key === "Escape") onClose(); }
+    if (event) window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [event, onClose]);
+
+  if (!event) return null;
+
+  const color       = CAT_COLORS[event.category] ?? "#6b7280";
+  const catLabel    = CAT_LABELS[event.category]  ?? event.category;
+  const cover       = event.cover_image_url;
+  const isMulti     = !!(event.date_end && event.date_end !== event.date_start);
+  const isCancelled = event.status === "cancelled";
+  const dateStr     = isMulti
+    ? `${fmtDate(event.date_start)} — ${fmtDate(event.date_end)}`
+    : `${fmtDate(event.date_start)} · ${fmtTime(event.date_start)}`;
+  const externalUrl = event.external_url ||
+    `https://t.me/${SITE_BOT_USERNAME}?start=event_${event.id}`;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 300,
+        background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 20, animation: "fadeIn 0.2s ease",
+        fontFamily: "'Outfit', sans-serif",
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: "min(560px, 100%)", background: "#16162a",
+          border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
+          maxHeight: "90vh", overflowY: "auto",
+          animation: "slideUp 0.3s ease",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+        }}
+      >
+        {/* ── Cover ── */}
+        <div style={{
+          position: "relative", height: 220,
+          borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e",
+        }}>
+          {cover && (
+            <img src={cover} alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              onError={e => { e.target.style.display = "none"; }}
+            />
+          )}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(to top, rgba(22,22,42,1) 0%, transparent 50%)",
+          }} />
+
+          {/* Close */}
+          <button onClick={onClose} style={{
+            position: "absolute", top: 16, right: 16,
+            background: "rgba(0,0,0,0.5)", border: "none", color: "#fff",
+            borderRadius: 8, width: 36, height: 36, cursor: "pointer",
+            fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+          }}>✕</button>
+
+          {/* Badges */}
+          <div style={{ position: "absolute", bottom: 16, left: 20, display: "flex", gap: 8 }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", padding: "4px 12px",
+              borderRadius: 999, fontSize: 12, fontWeight: 600,
+              background: color + "22", color, border: `1px solid ${color}44`,
+            }}>{catLabel}</span>
+            {isMulti && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", padding: "4px 12px",
+                borderRadius: 999, fontSize: 12, fontWeight: 600,
+                background: "rgba(255,255,255,0.1)", color: "#e8e6f0",
+              }}>Многодневное</span>
+            )}
+            {isCancelled && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", padding: "4px 12px",
+                borderRadius: 999, fontSize: 12, fontWeight: 600,
+                background: "rgba(239,68,68,0.15)", color: "#ef4444",
+              }}>Отменено</span>
+            )}
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div style={{ padding: 24 }}>
+          <h2 style={{
+            fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800,
+            color: "#fff", marginBottom: 16, lineHeight: 1.2,
+          }}>{event.title}</h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
+              <span>🗓</span><span>{dateStr}</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
+              <span>📍</span>
+              <span>Место: {event.location_city}{event.location_address ? `, ${event.location_address}` : ""}</span>
+            </div>
+          </div>
+
+          {event.description && (
+            <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+              {event.description}
+            </p>
+          )}
+
+          {event.max_participants && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: "#4a4868", marginBottom: 6 }}>
+                0/{event.max_participants} участников
+              </div>
+              <div style={{ height: 4, borderRadius: 999, background: "rgba(255,255,255,0.08)" }}>
+                <div style={{ height: "100%", width: "0%", borderRadius: 999, background: color }} />
+              </div>
+            </div>
+          )}
+
+          {/* ── Action buttons — same as public site ── */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button style={{
+              border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.08)",
+              color: "#a78bfa", borderRadius: 8, padding: "8px 16px", fontSize: 13,
+              fontFamily: "inherit", fontWeight: 600, cursor: "not-allowed", opacity: 0.6,
+            }} title="Not available in admin preview">🔔 Напомнить</button>
+
+            {!isCancelled && (
+              <a href={externalUrl} target="_blank" rel="noopener noreferrer" style={{
+                background: "linear-gradient(135deg, #7c3aed, #a78bfa)", color: "#fff",
+                border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 14,
+                fontFamily: "inherit", fontWeight: 700, cursor: "pointer",
+                textDecoration: "none", display: "inline-flex", alignItems: "center",
+              }}>Регистрация →</a>
+            )}
+
+            <a href={makeGCalUrl(event)} target="_blank" rel="noopener noreferrer" style={{
+              background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.25)",
+              color: "#06b6d4", borderRadius: 8, padding: "8px 16px", fontSize: 13,
+              fontFamily: "inherit", fontWeight: 600, cursor: "pointer",
+              textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6,
+            }}>📅 В календарь</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
