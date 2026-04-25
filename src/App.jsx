@@ -208,7 +208,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
     d === now.getDate() && calMonth === now.getMonth() && calYear === now.getFullYear();
 
   return (
-    <div>
+    <div style={{ minWidth: 0, width: "100%" }}>
       {/* Category legend */}
       <div className="nq-cal-legend" style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px", marginBottom: 20 }}>
         {CATEGORIES.map(c => (
@@ -596,6 +596,11 @@ export default function NextQuest() {
         .cal-nav-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #a09cbc; border-radius: 8px; padding: 6px 14px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.15s; line-height: 1; }
         .cal-nav-btn:hover { background: rgba(255,255,255,0.1); color: #e8e6f0; }
 
+        /* Prevent any horizontal overflow globally */
+        .nq-cal-grid, .nq-cal-hdr { width: 100%; box-sizing: border-box; }
+        .nq-cal-cell { min-width: 0; box-sizing: border-box; overflow: hidden; }
+        .nq-controls, .nq-main { box-sizing: border-box; width: 100%; }
+
         /* ── MOBILE RESPONSIVE ─────────────────────────────────── */
         @media (max-width: 640px) {
 
@@ -687,6 +692,8 @@ export default function NextQuest() {
         fontFamily: "'Outfit', sans-serif",
         color: "#e8e6f0",
         position: "relative",
+        overflowX: "hidden",
+        width: "100%",
       }}>
 
         {/* ── STICKY HEADER ── */}
