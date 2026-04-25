@@ -178,7 +178,7 @@ function eventsForDay(events, year, month, day) {
 }
 
 // ─── CALENDAR TAB COMPONENT ──────────────────────────────────
-function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter, cityFilter, setCityFilter }) {
+function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFilters, toggleCity }) {
   const now  = new Date();
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
@@ -202,8 +202,8 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter, cityF
     const monthStart = new Date(calYear, calMonth, 1);
     const monthEnd   = new Date(calYear, calMonth + 1, 0, 23, 59, 59);
     if (!(s <= monthEnd && end >= monthStart)) return false;
-    if (catFilter !== "all" && e.category !== catFilter) return false;
-    if (cityFilter !== "all" && e.city !== cityFilter)   return false;
+    if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
+    if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
     return true;
   }).sort((a, b) => a.dateStart - b.dateStart);
 
@@ -214,25 +214,25 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter, cityF
     <div style={{ minWidth: 0, width: "100%" }}>
       {/* Category filters — same design as Upcoming */}
       <div className="nq-cal-legend nq-filters-cat" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-        <button className={`filter-btn${catFilter === "all" ? " active" : ""}`} onClick={() => setCatFilter("all")}>{t.all}</button>
+        <button className={`filter-btn${catFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCat("all")}>{t.all}</button>
         {CATEGORIES.map(c => (
           <button
             key={c.id}
-            className={`filter-btn${catFilter === c.id ? " active" : ""}`}
-            onClick={() => setCatFilter(catFilter === c.id ? "all" : c.id)}
-            style={catFilter === c.id ? { borderColor: c.color + "66", color: c.color } : {}}
+            className={`filter-btn${catFilters.has(c.id) ? " active" : ""}`}
+            onClick={() => toggleCat(c.id)}
+            style={catFilters.has(c.id) ? { borderColor: c.color + "66", color: c.color } : {}}
           >{c.label}</button>
         ))}
       </div>
 
       {/* City filters — same design as Upcoming */}
       <div className="nq-filters-city" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-        <button className={`filter-btn${cityFilter === "all" ? " active" : ""}`} onClick={() => setCityFilter("all")}>🌍 {t.allCities}</button>
+        <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>🌍 {t.allCities}</button>
         {CITIES.map(city => (
           <button
             key={city}
-            className={`filter-btn${cityFilter === city ? " active" : ""}`}
-            onClick={() => setCityFilter(cityFilter === city ? "all" : city)}
+            className={`filter-btn${cityFilters.has(city) ? " active" : ""}`}
+            onClick={() => toggleCity(city)}
           >📍 {city}</button>
         ))}
       </div>
@@ -264,8 +264,8 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter, cityF
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
           const allDayEvents = eventsForDay(events, calYear, calMonth, day);
           const dayEvents = allDayEvents.filter(e => {
-            if (catFilter !== "all" && e.category !== catFilter) return false;
-            if (cityFilter !== "all" && e.city !== cityFilter)   return false;
+            if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
+            if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
             return true;
           });
           const today     = isToday(day);
@@ -467,8 +467,25 @@ export default function NextQuest() {
   });
   const [tab, setTab]               = useState("upcoming");
   const [search, setSearch]         = useState("");
-  const [catFilter, setCatFilter]   = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
+  const [catFilters, setCatFilters]   = useState(new Set());
+  const [cityFilters, setCityFilters] = useState(new Set());
+
+  const toggleCat = (id) => {
+    if (id === "all") { setCatFilters(new Set()); return; }
+    setCatFilters(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const toggleCity = (city) => {
+    if (city === "all") { setCityFilters(new Set()); return; }
+    setCityFilters(prev => {
+      const next = new Set(prev);
+      next.has(city) ? next.delete(city) : next.add(city);
+      return next;
+    });
+  };
   const [selected, setSelected]     = useState(null);
   const [subscribed, setSubscribed] = useState({});
   const [events, setEvents]         = useState([]);
@@ -537,8 +554,8 @@ export default function NextQuest() {
       // But we still respect search
     }
     if (e.status === "cancelled" && tab !== "archive") return false;
-    if (catFilter !== "all" && e.category !== catFilter) return false;
-    if (cityFilter !== "all" && e.city !== cityFilter)  return false;
+    if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
+    if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
     const q = search.toLowerCase();
     if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
     return true;
@@ -778,22 +795,22 @@ export default function NextQuest() {
           {tab !== "calendar" && (
             <>
               <div className="nq-filters-cat" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                <button className={`filter-btn${catFilter === "all" ? " active" : ""}`} onClick={() => setCatFilter("all")}>{t.all}</button>
+                <button className={`filter-btn${catFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCat("all")}>{t.all}</button>
                 {CATEGORIES.map(c => (
                   <button key={c.id}
-                    className={`filter-btn${catFilter === c.id ? " active" : ""}`}
-                    onClick={() => setCatFilter(catFilter === c.id ? "all" : c.id)}
-                    style={catFilter === c.id ? { borderColor: c.color + "66", color: c.color } : {}}>
+                    className={`filter-btn${catFilters.has(c.id) ? " active" : ""}`}
+                    onClick={() => toggleCat(c.id)}
+                    style={catFilters.has(c.id) ? { borderColor: c.color + "66", color: c.color } : {}}>
                     {c.label}
                   </button>
                 ))}
               </div>
               <div className="nq-filters-city" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className={`filter-btn${cityFilter === "all" ? " active" : ""}`} onClick={() => setCityFilter("all")}>🌍 {t.allCities}</button>
+                <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>🌍 {t.allCities}</button>
                 {CITIES.map(city => (
                   <button key={city}
-                    className={`filter-btn${cityFilter === city ? " active" : ""}`}
-                    onClick={() => setCityFilter(cityFilter === city ? "all" : city)}>
+                    className={`filter-btn${cityFilters.has(city) ? " active" : ""}`}
+                    onClick={() => toggleCity(city)}>
                     📍 {city}
                   </button>
                 ))}
@@ -812,10 +829,10 @@ export default function NextQuest() {
               lang={lang}
               t={t}
               onSelect={setSelected}
-              catFilter={catFilter}
-              setCatFilter={setCatFilter}
-              cityFilter={cityFilter}
-              setCityFilter={setCityFilter}
+              catFilters={catFilters}
+              toggleCat={toggleCat}
+              cityFilters={cityFilters}
+              toggleCity={toggleCity}
             />
           )}
 
