@@ -210,7 +210,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
   return (
     <div>
       {/* Category legend */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px", marginBottom: 20 }}>
+      <div className="nq-cal-legend" style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px", marginBottom: 20 }}>
         {CATEGORIES.map(c => (
           <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#9996b8" }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
@@ -229,17 +229,17 @@ function CalendarTab({ events, lang, t, onSelect }) {
       </div>
 
       {/* Day-of-week headers */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 3 }}>
+      <div className="nq-cal-hdr" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 3 }}>
         {t.dayNames.map(d => (
           <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 700, color: "#4a4868", padding: "3px 0", letterSpacing: "0.07em", textTransform: "uppercase" }}>{d}</div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 24 }}>
+      <div className="nq-cal-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 24 }}>
         {/* Leading empty slots */}
         {Array.from({ length: firstDaySlot }).map((_, i) => (
-          <div key={`e${i}`} style={{ minHeight: 64, background: "rgba(255,255,255,0.01)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.03)" }} />
+          <div key={`e${i}`} className="nq-cal-cell" style={{ minHeight: 64, background: "rgba(255,255,255,0.01)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.03)" }} />
         ))}
 
         {/* Day cells */}
@@ -249,6 +249,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
           return (
             <div
               key={day}
+              className="nq-cal-cell"
               style={{
                 minHeight: 64,
                 background: today ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.025)",
@@ -259,7 +260,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
               }}
               onClick={() => dayEvents.length === 1 && onSelect(dayEvents[0])}
             >
-              <div style={{
+              <div className="nq-cal-day-num" style={{
                 fontSize: 11, fontWeight: 700, marginBottom: 3, lineHeight: 1,
                 color: today ? "#a78bfa" : "#5a5878",
                 ...(today ? {
@@ -271,6 +272,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
               {dayEvents.slice(0, 2).map((ev, idx) => (
                 <div
                   key={idx}
+                  className="nq-cal-event-pill"
                   onClick={e => { e.stopPropagation(); onSelect(ev); }}
                   style={{
                     fontSize: 9, fontWeight: 700, whiteSpace: "nowrap",
@@ -285,7 +287,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
               ))}
 
               {dayEvents.length > 2 && (
-                <div style={{ fontSize: 9, color: "#4a4868", paddingLeft: 4 }}>+{dayEvents.length - 2}</div>
+                <div className="nq-cal-overflow" style={{ fontSize: 9, color: "#4a4868", paddingLeft: 4 }}>+{dayEvents.length - 2}</div>
               )}
             </div>
           );
@@ -308,6 +310,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
           {monthEvents.map(ev => (
             <div
               key={ev.id}
+              className="nq-agenda-item"
               onClick={() => onSelect(ev)}
               style={{
                 display: "flex", alignItems: "center", gap: 12,
@@ -367,6 +370,7 @@ function CalendarTab({ events, lang, t, onSelect }) {
               </div>
 
               <a
+                className="nq-agenda-gcal"
                 href={makeGCalUrl(ev)}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -591,6 +595,87 @@ export default function NextQuest() {
 
         .cal-nav-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #a09cbc; border-radius: 8px; padding: 6px 14px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.15s; line-height: 1; }
         .cal-nav-btn:hover { background: rgba(255,255,255,0.1); color: #e8e6f0; }
+
+        /* ── MOBILE RESPONSIVE ─────────────────────────────────── */
+        @media (max-width: 640px) {
+
+          /* Header */
+          .nq-header-inner { height: 52px !important; }
+          .nq-logo-text { font-size: 17px !important; }
+          .nq-logo-icon { width: 26px !important; height: 26px !important; font-size: 13px !important; }
+          .lang-btn { font-size: 11px !important; padding: 3px 4px !important; }
+
+          /* Hero */
+          .nq-hero { padding: 24px 16px 20px !important; }
+
+          /* Controls wrapper */
+          .nq-controls { padding: 0 16px 20px !important; }
+
+          /* Search full width */
+          .nq-search-wrap { max-width: 100% !important; }
+
+          /* Tabs: all 3 fit on one line */
+          .tab-btn { font-size: 12px !important; padding: 8px 2px !important; gap: 4px !important; }
+          .tab-count { font-size: 10px !important; padding: 1px 5px !important; }
+          .nq-tabs { gap: 16px !important; }
+
+          /* Filter rows: horizontal scroll, no wrap */
+          .nq-filters-cat,
+          .nq-filters-city {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            gap: 6px !important;
+            padding-bottom: 6px !important;
+            scrollbar-width: none !important;
+          }
+          .nq-filters-cat::-webkit-scrollbar,
+          .nq-filters-city::-webkit-scrollbar { display: none !important; }
+          .filter-btn { flex-shrink: 0 !important; padding: 6px 12px !important; font-size: 12px !important; }
+
+          /* Main content */
+          .nq-main { padding: 0 16px 60px !important; }
+
+          /* Calendar legend: horizontal scroll */
+          .nq-cal-legend {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            gap: 6px 12px !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 16px !important;
+          }
+          .nq-cal-legend::-webkit-scrollbar { display: none !important; }
+
+          /* Calendar grid: tighter gap, smaller cells */
+          .nq-cal-hdr { gap: 2px !important; }
+          .nq-cal-grid { gap: 2px !important; margin-bottom: 16px !important; }
+          .nq-cal-cell { min-height: 46px !important; padding: 3px 2px 2px !important; border-radius: 6px !important; }
+          .nq-cal-day-num { font-size: 10px !important; }
+          .nq-cal-event-pill { font-size: 8px !important; padding: 1px 3px !important; margin-bottom: 1px !important; }
+          .nq-cal-overflow { font-size: 8px !important; }
+
+          /* Agenda: hide gcal button to save space */
+          .nq-agenda-gcal { display: none !important; }
+          .nq-agenda-item { padding: 8px 10px !important; gap: 8px !important; }
+
+          /* Modal: bottom sheet */
+          .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+          .modal { border-radius: 20px 20px 0 0 !important; max-height: 92vh !important; width: 100% !important; max-width: 100% !important; }
+          .nq-modal-cover { height: 180px !important; border-radius: 20px 20px 0 0 !important; }
+          .nq-modal-body { padding: 20px 16px !important; }
+          .nq-modal-actions { flex-direction: column !important; }
+          .nq-modal-actions > * { width: 100% !important; text-align: center !important; justify-content: center !important; }
+
+          /* Footer */
+          .nq-footer-inner { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+        }
+
+        @media (max-width: 900px) and (min-width: 641px) {
+          .nq-controls { padding: 0 20px 20px !important; }
+          .nq-main { padding: 0 20px 60px !important; }
+        }
       `}</style>
 
       <div className="mesh-bg" />
@@ -616,10 +701,10 @@ export default function NextQuest() {
             transition: "box-shadow 0.3s",
           }}
         >
-          <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+          <div className="nq-header-inner" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #7c3aed, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧭</div>
-              <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
+              <div className="nq-logo-icon" style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #7c3aed, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧭</div>
+              <span className="nq-logo-text" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
             </div>
             <div style={{ display: "flex", gap: 4 }}>
               {["en","ru","el","uk"].map(l => (
@@ -630,7 +715,7 @@ export default function NextQuest() {
         </header>
 
         {/* ── HERO ── */}
-        <div style={{ position: "relative", zIndex: 1, padding: "48px 24px 32px", textAlign: "center" }}>
+        <div className="nq-hero" style={{ position: "relative", zIndex: 1, padding: "48px 24px 32px", textAlign: "center" }}>
           <p style={{ color: "#6b6890", fontSize: 13, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>{t.subtitle}</p>
           <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: "clamp(2.2rem, 6vw, 4rem)", letterSpacing: "-0.03em", lineHeight: 1, background: "linear-gradient(135deg, #fff 0%, #a78bfa 50%, #06b6d4 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Find Your<br />Next Adventure
@@ -638,14 +723,14 @@ export default function NextQuest() {
         </div>
 
         {/* ── CONTROLS ── */}
-        <div style={{ position: "relative", zIndex: 1, padding: "0 24px 24px", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ position: "relative", marginBottom: 20, maxWidth: 480 }}>
+        <div className="nq-controls" style={{ position: "relative", zIndex: 1, padding: "0 24px 24px", maxWidth: 1100, margin: "0 auto" }}>
+          <div className="nq-search-wrap" style={{ position: "relative", marginBottom: 20, maxWidth: 480 }}>
             <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 16 }}>🔍</span>
             <input className="search-input" placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
           </div>
 
           {/* Tabs with count badges */}
-          <div style={{ display: "flex", gap: 24, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="nq-tabs" style={{ display: "flex", gap: 24, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <button className={`tab-btn${tab === "upcoming" ? " active" : ""}`} onClick={() => setTab("upcoming")}>
               {t.upcoming} <span className="tab-count">{upcomingCount}</span>
             </button>
@@ -660,7 +745,7 @@ export default function NextQuest() {
           {/* Category + City filters — hidden on Calendar tab */}
           {tab !== "calendar" && (
             <>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              <div className="nq-filters-cat" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
                 <button className={`filter-btn${catFilter === "all" ? " active" : ""}`} onClick={() => setCatFilter("all")}>{t.all}</button>
                 {CATEGORIES.map(c => (
                   <button key={c.id}
@@ -671,7 +756,7 @@ export default function NextQuest() {
                   </button>
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="nq-filters-city" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button className={`filter-btn${cityFilter === "all" ? " active" : ""}`} onClick={() => setCityFilter("all")}>🌍 {t.allCities}</button>
                 {CITIES.map(city => (
                   <button key={city}
@@ -686,7 +771,7 @@ export default function NextQuest() {
         </div>
 
         {/* ── MAIN CONTENT ── */}
-        <main style={{ position: "relative", zIndex: 1, padding: "0 24px 80px", maxWidth: 1100, margin: "0 auto" }}>
+        <main className="nq-main" style={{ position: "relative", zIndex: 1, padding: "0 24px 80px", maxWidth: 1100, margin: "0 auto" }}>
 
           {/* ── CALENDAR TAB ── */}
           {tab === "calendar" && !loading && (
@@ -812,7 +897,7 @@ export default function NextQuest() {
           padding: "24px 24px",
           background: "rgba(13,13,20,0.8)",
         }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div className="nq-footer-inner" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 24, height: 24, borderRadius: 6, background: "linear-gradient(135deg, #7c3aed, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>🧭</div>
               <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 14, color: "#fff" }}>NextQuest</span>
@@ -834,7 +919,7 @@ export default function NextQuest() {
           <div className="modal-overlay" onClick={() => setSelected(null)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               {/* Cover */}
-              <div style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
+              <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
                 <img src={selected.cover} alt=""
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   onError={e => { e.target.style.display = "none"; }} />
@@ -849,7 +934,7 @@ export default function NextQuest() {
               </div>
 
               {/* Body */}
-              <div style={{ padding: 24 }}>
+              <div className="nq-modal-body" style={{ padding: 24 }}>
                 <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{selected.title}</h2>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
@@ -892,7 +977,7 @@ export default function NextQuest() {
                 )}
 
                 {/* Action buttons */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div className="nq-modal-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <button
                     className={`notify-btn${subscribed[selected.id] ? " done" : ""}`}
                     onClick={() => setSubscribed(s => ({ ...s, [selected.id]: true }))}
