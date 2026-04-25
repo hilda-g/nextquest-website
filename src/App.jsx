@@ -178,7 +178,7 @@ function eventsForDay(events, year, month, day) {
 }
 
 // ─── CALENDAR TAB COMPONENT ──────────────────────────────────
-function CalendarTab({ events, lang, t, onSelect }) {
+function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter }) {
   const now  = new Date();
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
@@ -195,13 +195,15 @@ function CalendarTab({ events, lang, t, onSelect }) {
   const daysInMonth  = getDaysInMonth(calYear, calMonth);
   const firstDaySlot = getFirstDayOfMonth(calYear, calMonth);
 
-  // Events that fall within this month (for the agenda list)
+  // Events that fall within this month (for the agenda list), filtered by category
   const monthEvents = events.filter(e => {
     const s = e.dateStart;
     const end = e.dateEnd || e.dateStart;
     const monthStart = new Date(calYear, calMonth, 1);
     const monthEnd   = new Date(calYear, calMonth + 1, 0, 23, 59, 59);
-    return s <= monthEnd && end >= monthStart;
+    if (!(s <= monthEnd && end >= monthStart)) return false;
+    if (catFilter !== "all" && e.category !== catFilter) return false;
+    return true;
   }).sort((a, b) => a.dateStart - b.dateStart);
 
   const isToday = (d) =>
@@ -209,14 +211,40 @@ function CalendarTab({ events, lang, t, onSelect }) {
 
   return (
     <div style={{ minWidth: 0, width: "100%" }}>
-      {/* Category legend */}
+      {/* Category legend — clickable filters */}
       <div className="nq-cal-legend" style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px", marginBottom: 20 }}>
-        {CATEGORIES.map(c => (
-          <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#9996b8" }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-            {c.label}
-          </div>
-        ))}
+        {CATEGORIES.map(c => {
+          const active = catFilter === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setCatFilter(active ? "all" : c.id)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                background: active ? c.color + "18" : "transparent",
+                border: active ? `1px solid ${c.color}55` : "1px solid transparent",
+                borderRadius: 999, padding: "3px 10px 3px 6px",
+                color: active ? c.color : "#9996b8",
+                transition: "all 0.15s",
+              }}
+            >
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
+              {c.label}
+            </button>
+          );
+        })}
+        {catFilter !== "all" && (
+          <button
+            onClick={() => setCatFilter("all")}
+            style={{
+              fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 999, padding: "3px 10px", color: "#9996b8",
+              transition: "all 0.15s",
+            }}
+          >✕ {t.all}</button>
+        )}
       </div>
 
       {/* Month navigation */}
@@ -239,12 +267,15 @@ function CalendarTab({ events, lang, t, onSelect }) {
       <div className="nq-cal-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 24 }}>
         {/* Leading empty slots */}
         {Array.from({ length: firstDaySlot }).map((_, i) => (
-          <div key={`e${i}`} className="nq-cal-cell" style={{ minHeight: 64, background: "rgba(255,255,255,0.01)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.03)" }} />
+          <div key={`e${i}`} className="nq-cal-cell" style={{ minHeight: 64, minWidth: 0, background: "rgba(255,255,255,0.01)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.03)" }} />
         ))}
 
         {/* Day cells */}
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-          const dayEvents = eventsForDay(events, calYear, calMonth, day);
+          const allDayEvents = eventsForDay(events, calYear, calMonth, day);
+          const dayEvents = catFilter === "all"
+            ? allDayEvents
+            : allDayEvents.filter(e => e.category === catFilter);
           const today     = isToday(day);
           return (
             <div
@@ -252,11 +283,13 @@ function CalendarTab({ events, lang, t, onSelect }) {
               className="nq-cal-cell"
               style={{
                 minHeight: 64,
+                minWidth: 0,
                 background: today ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.025)",
                 border: today ? "1px solid rgba(167,139,250,0.45)" : "1px solid rgba(255,255,255,0.05)",
                 borderRadius: 8,
                 padding: "5px 4px 4px",
                 cursor: dayEvents.length ? "pointer" : "default",
+                overflow: "hidden",
               }}
               onClick={() => dayEvents.length === 1 && onSelect(dayEvents[0])}
             >
@@ -787,6 +820,8 @@ export default function NextQuest() {
               lang={lang}
               t={t}
               onSelect={setSelected}
+              catFilter={catFilter}
+              setCatFilter={setCatFilter}
             />
           )}
 
