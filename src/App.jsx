@@ -178,7 +178,7 @@ function eventsForDay(events, year, month, day) {
 }
 
 // ─── CALENDAR TAB COMPONENT ──────────────────────────────────
-function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter }) {
+function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter, cityFilter, setCityFilter }) {
   const now  = new Date();
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
@@ -195,7 +195,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter }) {
   const daysInMonth  = getDaysInMonth(calYear, calMonth);
   const firstDaySlot = getFirstDayOfMonth(calYear, calMonth);
 
-  // Events that fall within this month (for the agenda list), filtered by category
+  // Events that fall within this month (for the agenda list), filtered by category + city
   const monthEvents = events.filter(e => {
     const s = e.dateStart;
     const end = e.dateEnd || e.dateStart;
@@ -203,6 +203,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter }) {
     const monthEnd   = new Date(calYear, calMonth + 1, 0, 23, 59, 59);
     if (!(s <= monthEnd && end >= monthStart)) return false;
     if (catFilter !== "all" && e.category !== catFilter) return false;
+    if (cityFilter !== "all" && e.city !== cityFilter)   return false;
     return true;
   }).sort((a, b) => a.dateStart - b.dateStart);
 
@@ -211,40 +212,29 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter }) {
 
   return (
     <div style={{ minWidth: 0, width: "100%" }}>
-      {/* Category legend — clickable filters */}
-      <div className="nq-cal-legend" style={{ display: "flex", flexWrap: "wrap", gap: "8px 16px", marginBottom: 20 }}>
-        {CATEGORIES.map(c => {
-          const active = catFilter === c.id;
-          return (
-            <button
-              key={c.id}
-              onClick={() => setCatFilter(active ? "all" : c.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                background: active ? c.color + "18" : "transparent",
-                border: active ? `1px solid ${c.color}55` : "1px solid transparent",
-                borderRadius: 999, padding: "3px 10px 3px 6px",
-                color: active ? c.color : "#9996b8",
-                transition: "all 0.15s",
-              }}
-            >
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-              {c.label}
-            </button>
-          );
-        })}
-        {catFilter !== "all" && (
+      {/* Category filters — same design as Upcoming */}
+      <div className="nq-cal-legend nq-filters-cat" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+        <button className={`filter-btn${catFilter === "all" ? " active" : ""}`} onClick={() => setCatFilter("all")}>{t.all}</button>
+        {CATEGORIES.map(c => (
           <button
-            onClick={() => setCatFilter("all")}
-            style={{
-              fontSize: 11, cursor: "pointer", fontFamily: "inherit",
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 999, padding: "3px 10px", color: "#9996b8",
-              transition: "all 0.15s",
-            }}
-          >✕ {t.all}</button>
-        )}
+            key={c.id}
+            className={`filter-btn${catFilter === c.id ? " active" : ""}`}
+            onClick={() => setCatFilter(catFilter === c.id ? "all" : c.id)}
+            style={catFilter === c.id ? { borderColor: c.color + "66", color: c.color } : {}}
+          >{c.label}</button>
+        ))}
+      </div>
+
+      {/* City filters — same design as Upcoming */}
+      <div className="nq-filters-city" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+        <button className={`filter-btn${cityFilter === "all" ? " active" : ""}`} onClick={() => setCityFilter("all")}>🌍 {t.allCities}</button>
+        {CITIES.map(city => (
+          <button
+            key={city}
+            className={`filter-btn${cityFilter === city ? " active" : ""}`}
+            onClick={() => setCityFilter(cityFilter === city ? "all" : city)}
+          >📍 {city}</button>
+        ))}
       </div>
 
       {/* Month navigation */}
@@ -273,9 +263,11 @@ function CalendarTab({ events, lang, t, onSelect, catFilter, setCatFilter }) {
         {/* Day cells */}
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
           const allDayEvents = eventsForDay(events, calYear, calMonth, day);
-          const dayEvents = catFilter === "all"
-            ? allDayEvents
-            : allDayEvents.filter(e => e.category === catFilter);
+          const dayEvents = allDayEvents.filter(e => {
+            if (catFilter !== "all" && e.category !== catFilter) return false;
+            if (cityFilter !== "all" && e.city !== cityFilter)   return false;
+            return true;
+          });
           const today     = isToday(day);
           return (
             <div
@@ -822,6 +814,8 @@ export default function NextQuest() {
               onSelect={setSelected}
               catFilter={catFilter}
               setCatFilter={setCatFilter}
+              cityFilter={cityFilter}
+              setCityFilter={setCityFilter}
             />
           )}
 
