@@ -172,6 +172,13 @@ function makeGCalUrl(event) {
   return `https://calendar.google.com/calendar/render?${params}`;
 }
 
+function makeGMapsUrl(city, address) {
+  const q = encodeURIComponent(`${address || ""} ${city || ""}`.trim());
+  return `https://maps.google.com/?q=${q}`;
+}
+
+const FORMAT_LABELS = { official: "🎉 Official", private: "🔒 Private" };
+
 // ─── Calendar helpers ─────────────────────────────────────────
 function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year, month) {
@@ -1038,6 +1045,21 @@ export default function NextQuest() {
                 <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{selected.title}</h2>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+
+                  {/* Format */}
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", padding: "3px 10px",
+                      borderRadius: 999, fontWeight: 700, fontSize: 12,
+                      background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)",
+                      color: selected.format === "private" ? "#a78bfa" : "#10b981",
+                      border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}`,
+                    }}>
+                      {FORMAT_LABELS[selected.format] || "🎉 Official"}
+                    </span>
+                  </div>
+
+                  {/* Date */}
                   <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
                       <rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/>
@@ -1055,26 +1077,47 @@ export default function NextQuest() {
                       {selected.multiDay && selected.dateEnd ? ` — ${formatDate(selected.dateEnd, lang)}` : ` · ${formatTime(selected.dateStart)}`}
                     </span>
                   </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-                    <span>📍</span><span>{t.location}: {selected.city}{selected.address ? `, ${selected.address}` : ""}</span>
+
+                  {/* Location with Google Maps link */}
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
+                    <span style={{ flexShrink: 0 }}>📍</span>
+                    <a
+                      href={makeGMapsUrl(selected.city, selected.address)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#a09cbc", textDecoration: "underline", textDecorationColor: "rgba(160,156,188,0.3)", textUnderlineOffset: 3 }}
+                    >
+                      {selected.city}{selected.address ? `, ${selected.address}` : ""}
+                    </a>
                   </div>
+
+                  {/* User limit */}
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
+                    <span>👥</span>
+                    <span>
+                      {selected.maxParticipants
+                        ? `${selected.currentParticipants}/${selected.maxParticipants} ${t.participants}`
+                        : (lang === "ru" ? "без лимита" : lang === "uk" ? "без ліміту" : lang === "el" ? "χωρίς όριο" : "no limit")}
+                    </span>
+                    {selected.maxParticipants && pct(selected) >= 100 && (
+                      <span style={{ color: "#ef4444", fontWeight: 700, fontSize: 12 }}>FULL</span>
+                    )}
+                  </div>
+
+                  {/* Organizer contacts — shown only when set */}
+                  {selected.organizerContacts && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14 }}>
+                      <span style={{ flexShrink: 0 }}>📋</span>
+                      <span style={{ color: "#a09cbc" }}>{selected.organizerContacts}</span>
+                    </div>
+                  )}
                 </div>
 
                 {selected.description && (
                   <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>{selected.description}</p>
                 )}
 
-                {selected.maxParticipants && (
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 12, color: "#4a4868" }}>
-                      <span>{selected.currentParticipants}/{selected.maxParticipants} {t.participants}</span>
-                      {pct(selected) >= 100 && <span style={{ color: "#ef4444", fontWeight: 700 }}>FULL</span>}
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${pct(selected)}%`, background: pct(selected) >= 100 ? "#ef4444" : getCatColor(selected.category) }} />
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Action buttons */}
                 <div className="nq-modal-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
