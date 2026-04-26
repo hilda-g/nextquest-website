@@ -5,7 +5,7 @@ import { useToasts, ToastContainer } from "./Toast.jsx";
 import LoginScreen from "./LoginScreen.jsx";
 import EventDrawer from "./EventDrawer.jsx";
 import EventRow    from "./EventRow.jsx";
-import { DeleteModal, RestoreModal, EndRegistrationModal, CreatePostModal, ViewEventModal } from "./Modals.jsx";
+import { DeleteModal, RestoreModal, EndRegistrationModal, ReopenRegistrationModal, CreatePostModal, ViewEventModal } from "./Modals.jsx";
 
 // channel_notifier URL + secret come from .env
 // Add to your .env:
@@ -42,6 +42,7 @@ export default function AdminPanel() {
   const [restoreTarget, setRestoreTarget] = useState(null);
   const [postTarget,    setPostTarget]    = useState(null);  // event to preview/post
   const [endRegTarget,  setEndRegTarget]  = useState(null);  // event to end registration
+  const [reopenTarget,  setReopenTarget]  = useState(null);  // event to re-open registration
   const [viewTarget,    setViewTarget]    = useState(null);  // event to view
 
   // ── Filter events ────────────────────────────────────────
@@ -112,6 +113,18 @@ export default function AdminPanel() {
       toasts.success("Registration closed — event marked as Full");
     } catch (err) {
       toasts.error(`Could not close registration: ${err.message}`);
+    }
+  }
+
+  // ── Re-Open Registration ──────────────────────────────────
+  async function handleReopenRegistration() {
+    if (!reopenTarget) return;
+    try {
+      await ev.updateEvent(reopenTarget.id, { registration_closed: false });
+      setReopenTarget(null);
+      toasts.success("Registration re-opened — event marked as Open");
+    } catch (err) {
+      toasts.error(`Could not re-open registration: ${err.message}`);
     }
   }
 
@@ -278,6 +291,7 @@ export default function AdminPanel() {
                 onCreatePost={setPostTarget}
                 onViewEvent={setViewTarget}
                 onEndRegistration={setEndRegTarget}
+                onReopenRegistration={setReopenTarget}
               />
             ))
           )}
@@ -296,7 +310,8 @@ export default function AdminPanel() {
       {/* ── Modals ── */}
       <DeleteModal     event={deleteTarget}  onConfirm={handleDelete}     onClose={() => setDeleteTarget(null)}  />
       <RestoreModal    event={restoreTarget} onConfirm={handleRestore}    onClose={() => setRestoreTarget(null)} />
-      <EndRegistrationModal event={endRegTarget} onConfirm={handleEndRegistration} onClose={() => setEndRegTarget(null)} />
+      <EndRegistrationModal  event={endRegTarget}  onConfirm={handleEndRegistration}  onClose={() => setEndRegTarget(null)} />
+      <ReopenRegistrationModal event={reopenTarget} onConfirm={handleReopenRegistration} onClose={() => setReopenTarget(null)} />
       <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onClose={() => setPostTarget(null)}    />
       <ViewEventModal  event={viewTarget}                                 onClose={() => setViewTarget(null)}    />
 

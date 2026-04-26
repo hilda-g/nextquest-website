@@ -979,16 +979,16 @@ export default function NextQuest() {
 
                       <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
 
-                      {event.maxParticipants && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                        {event.maxParticipants ? (
                           <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
-                          {event.registrationClosed ? (
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
-                          ) : (
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
-                          )}
-                        </div>
-                      )}
+                        ) : null}
+                        {event.maxParticipants && event.registrationClosed ? (
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
+                        ) : (
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1092,21 +1092,16 @@ export default function NextQuest() {
                   </div>
 
                   {/* User limit — badge when limit set, text only when no limit */}
-                  {selected.maxParticipants ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 14, color: "#a09cbc" }}>👥 {selected.maxParticipants} {t.participants}</span>
-                      {selected.registrationClosed ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
-                      ) : (
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-                      <span>👥</span>
-                      <span>{lang === "ru" ? "без лимита" : lang === "uk" ? "без ліміту" : lang === "el" ? "χωρίς όριο" : "no limit"}</span>
-                    </div>
-                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 14, color: "#a09cbc" }}>
+                      👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : (lang === "ru" ? "без лимита" : lang === "uk" ? "без ліміту" : lang === "el" ? "χωρίς όριο" : "no limit")}
+                    </span>
+                    {selected.maxParticipants && selected.registrationClosed ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
+                    )}
+                  </div>
 
                   {/* Organizer contacts — with label prefix */}
                   {selected.organizerContacts && (

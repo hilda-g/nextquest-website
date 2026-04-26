@@ -37,7 +37,7 @@ function menuItem(color) {
 }
 
 // ─── ThreeDotMenu ─────────────────────────────────────────────
-function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration }) {
+function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -129,6 +129,14 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
                   </button>
                 </>
               )}
+              {event.max_participants && event.registration_closed && (
+                <>
+                  <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
+                  <button onClick={() => { onReopenRegistration(event); setOpen(false); }} style={menuItem("#10b981")}>
+                    ♻️ Re-Open Registration
+                  </button>
+                </>
+              )}
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
@@ -157,7 +165,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 }
 
 // ─── EventRow ────────────────────────────────────────────────
-export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration }) {
+export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration }) {
   const isDeleted = !!event.deleted_at;
   const date      = event.date_start ? event.date_start.slice(0, 10) : "—";
   const cover     = event.cover_image_url;
@@ -209,6 +217,7 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
         onCreatePost={onCreatePost}
         onViewEvent={onViewEvent}
         onEndRegistration={onEndRegistration}
+        onReopenRegistration={onReopenRegistration}
       />
     </div>
   );
