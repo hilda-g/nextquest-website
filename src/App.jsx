@@ -35,7 +35,8 @@ function mapEvent(row) {
     cover: (row.cover_image_url && row.cover_image_url.startsWith("http"))
       ? row.cover_image_url
       : "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
-    externalUrl: row.external_url || `https://t.me/${BOT_USERNAME}?start=event_${row.id}`,
+    externalUrl:      row.external_url,
+    organizerContacts: row.organizer_contacts || null,
     status:   row.status,
     multiDay: !!(row.date_end && row.date_end !== row.date_start),
     // isPast = true only if the event START day is strictly before today's calendar date
@@ -58,6 +59,7 @@ const LANGS = {
     search: "Search events…",
     notify: "🔔 Notify me", notified: "✓ Subscribed",
     location: "Location", organizer: "Organizer", register: "Register →",
+    contactOrganizer: "📋 Contact organizer", organizerContacts: "Organizer contacts",
     noEvents: "No events found", multiDay: "Multi-day", cancelled: "Cancelled",
     participants: "participants", loading: "Loading events…", error: "Could not load events.",
     allCities: "All Cities",
@@ -74,6 +76,7 @@ const LANGS = {
     search: "Поиск событий…",
     notify: "🔔 Напомнить", notified: "✓ Подписан",
     location: "Место", organizer: "Организатор", register: "Регистрация →",
+    contactOrganizer: "📋 Связаться с организатором", organizerContacts: "Контакт организатора",
     noEvents: "Событий не найдено", multiDay: "Многодневное", cancelled: "Отменено",
     participants: "участников", loading: "Загрузка…", error: "Не удалось загрузить события.",
     allCities: "Все города",
@@ -90,6 +93,7 @@ const LANGS = {
     search: "Αναζήτηση…",
     notify: "🔔 Υπενθύμιση", notified: "✓ Εγγεγραμμένος",
     location: "Τοποθεσία", organizer: "Διοργανωτής", register: "Εγγραφή →",
+    contactOrganizer: "📋 Επικοινωνία", organizerContacts: "Στοιχεία διοργανωτή",
     noEvents: "Δεν βρέθηκαν εκδηλώσεις", multiDay: "Πολυήμερο", cancelled: "Ακυρώθηκε",
     participants: "συμμετέχοντες", loading: "Φόρτωση…", error: "Αδύνατη η φόρτωση.",
     allCities: "Όλες οι πόλεις",
@@ -106,6 +110,7 @@ const LANGS = {
     search: "Пошук подій…",
     notify: "🔔 Нагадати", notified: "✓ Підписано",
     location: "Місце", organizer: "Організатор", register: "Реєстрація →",
+    contactOrganizer: "📋 Зв'язатися з організатором", organizerContacts: "Контакт організатора",
     noEvents: "Подій не знайдено", multiDay: "Багатоденна", cancelled: "Скасовано",
     participants: "учасників", loading: "Завантаження…", error: "Не вдалося завантажити.",
     allCities: "Всі міста",
@@ -514,6 +519,7 @@ export default function NextQuest() {
   const [selected, setSelected]     = useState(null);
   const [subscribed, setSubscribed] = useState({});
   const [notifyTooltip, setNotifyTooltip] = useState(null); // event id showing tooltip
+  const [showContacts, setShowContacts] = useState(false);
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -1010,7 +1016,7 @@ export default function NextQuest() {
 
         {/* ── EVENT MODAL ── */}
         {selected && (
-          <div className="modal-overlay" onClick={() => { setSelected(null); setNotifyTooltip(null); }}>
+          <div className="modal-overlay" onClick={() => { setSelected(null); setNotifyTooltip(null); setShowContacts(false); }}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               {/* Cover */}
               <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
@@ -1073,17 +1079,43 @@ export default function NextQuest() {
                 {/* Action buttons */}
                 <div className="nq-modal-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
 
-                  {/* 1. Register */}
+                  {/* 1. Register / Contact organizer */}
                   {selected.status !== "cancelled" && (
-                    <a
-                      href={selected.externalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="register-btn"
-                      style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
-                    >
-                      {t.register}
-                    </a>
+                    selected.externalUrl ? (
+                      <a
+                        href={selected.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="register-btn"
+                        style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
+                      >
+                        {t.register}
+                      </a>
+                    ) : selected.organizerContacts ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+                        <button
+                          className="register-btn"
+                          style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.4)", color: "#f97316" }}
+                          onClick={() => setShowContacts(s => !s)}
+                        >
+                          {t.contactOrganizer}
+                        </button>
+                        {showContacts && (
+                          <div style={{
+                            background: "rgba(249,115,22,0.06)",
+                            border: "1px solid rgba(249,115,22,0.25)",
+                            borderRadius: 8, padding: "10px 14px",
+                            fontSize: 14, color: "#e8e6f0", lineHeight: 1.5,
+                            userSelect: "all",
+                          }}>
+                            <span style={{ fontSize: 11, color: "#f97316", fontWeight: 700, display: "block", marginBottom: 4 }}>
+                              {t.organizerContacts}
+                            </span>
+                            {selected.organizerContacts}
+                          </div>
+                        )}
+                      </div>
+                    ) : null
                   )}
 
                   {/* 2. Notify me — with Telegram tooltip */}
