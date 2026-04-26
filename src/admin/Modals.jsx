@@ -109,6 +109,39 @@ export function RestoreModal({ event, onConfirm, onClose }) {
   );
 }
 
+
+// ─── End Registration Modal ───────────────────────────────────
+export function EndRegistrationModal({ event, onConfirm, onClose }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleConfirm() {
+    setLoading(true);
+    try { await onConfirm(); } finally { setLoading(false); }
+  }
+
+  return (
+    <ConfirmModal visible={!!event} onClose={onClose}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, margin: "0 auto 20px" }}>🔒</div>
+        <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, color: "#fff", marginBottom: 10 }}>End Registration?</div>
+        <div style={{ fontSize: 14, color: "#a09cbc", marginBottom: 8 }}>"{event?.title}"</div>
+        <div style={{ fontSize: 13, color: "#6b6890", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "10px 14px", marginBottom: 24, lineHeight: 1.5 }}>
+          This will mark the event as <strong style={{ color: "#ef4444" }}>Full</strong> on the website and notify all subscribers that registration is closed.
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={handleConfirm} disabled={loading}
+            style={{ flex: 1, padding: "11px 0", borderRadius: 11, cursor: loading ? "wait" : "pointer", background: "rgba(239,68,68,0.8)", border: "1px solid rgba(239,68,68,0.6)", color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit" }}
+          >
+            {loading ? "Closing…" : "🔒 Close Registration"}
+          </button>
+          <button onClick={onClose} style={{ padding: "11px 20px", borderRadius: 11, cursor: "pointer", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", fontSize: 14, fontFamily: "inherit" }}>Cancel</button>
+        </div>
+      </div>
+    </ConfirmModal>
+  );
+}
+
 // ─── Create Post Modal ────────────────────────────────────────
 // Shows a preview of the channel post and lets the admin confirm.
 // Props:

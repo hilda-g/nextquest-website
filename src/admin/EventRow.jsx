@@ -37,7 +37,7 @@ function menuItem(color) {
 }
 
 // ─── ThreeDotMenu ─────────────────────────────────────────────
-function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent }) {
+function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -121,6 +121,15 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
                 📢 Create Post
               </button>
 
+              {event.max_participants && !event.registration_closed && (
+                <>
+                  <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
+                  <button onClick={() => { onEndRegistration(event); setOpen(false); }} style={menuItem("#ef4444")}>
+                    🔒 End Registration
+                  </button>
+                </>
+              )}
+
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
               <button onClick={() => { onDelete(event); setOpen(false); }} style={menuItem("#ef4444")}>
@@ -148,7 +157,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 }
 
 // ─── EventRow ────────────────────────────────────────────────
-export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent }) {
+export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration }) {
   const isDeleted = !!event.deleted_at;
   const date      = event.date_start ? event.date_start.slice(0, 10) : "—";
   const cover     = event.cover_image_url;
@@ -199,6 +208,7 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
         onStatusChange={onStatusChange}
         onCreatePost={onCreatePost}
         onViewEvent={onViewEvent}
+        onEndRegistration={onEndRegistration}
       />
     </div>
   );

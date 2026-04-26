@@ -5,7 +5,7 @@ import { useToasts, ToastContainer } from "./Toast.jsx";
 import LoginScreen from "./LoginScreen.jsx";
 import EventDrawer from "./EventDrawer.jsx";
 import EventRow    from "./EventRow.jsx";
-import { DeleteModal, RestoreModal, CreatePostModal, ViewEventModal } from "./Modals.jsx";
+import { DeleteModal, RestoreModal, EndRegistrationModal, CreatePostModal, ViewEventModal } from "./Modals.jsx";
 
 // channel_notifier URL + secret come from .env
 // Add to your .env:
@@ -41,6 +41,7 @@ export default function AdminPanel() {
   const [deleteTarget,  setDeleteTarget]  = useState(null);
   const [restoreTarget, setRestoreTarget] = useState(null);
   const [postTarget,    setPostTarget]    = useState(null);  // event to preview/post
+  const [endRegTarget,  setEndRegTarget]  = useState(null);  // event to end registration
   const [viewTarget,    setViewTarget]    = useState(null);  // event to view
 
   // ── Filter events ────────────────────────────────────────
@@ -100,6 +101,18 @@ export default function AdminPanel() {
   async function handleStatusChange(event, newStatus) {
     await ev.updateEvent(event.id, { status: newStatus });
     toasts.success(`Status updated to ${newStatus}`);
+  }
+
+  // ── End Registration ─────────────────────────────────────
+  async function handleEndRegistration() {
+    if (!endRegTarget) return;
+    try {
+      await ev.updateEvent(endRegTarget.id, { registration_closed: true });
+      setEndRegTarget(null);
+      toasts.success("Registration closed — event marked as Full");
+    } catch (err) {
+      toasts.error(`Could not close registration: ${err.message}`);
+    }
   }
 
   // ── Create Post ──────────────────────────────────────────
@@ -264,6 +277,7 @@ export default function AdminPanel() {
                 onStatusChange={handleStatusChange}
                 onCreatePost={setPostTarget}
                 onViewEvent={setViewTarget}
+                onEndRegistration={setEndRegTarget}
               />
             ))
           )}
@@ -282,6 +296,7 @@ export default function AdminPanel() {
       {/* ── Modals ── */}
       <DeleteModal     event={deleteTarget}  onConfirm={handleDelete}     onClose={() => setDeleteTarget(null)}  />
       <RestoreModal    event={restoreTarget} onConfirm={handleRestore}    onClose={() => setRestoreTarget(null)} />
+      <EndRegistrationModal event={endRegTarget} onConfirm={handleEndRegistration} onClose={() => setEndRegTarget(null)} />
       <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onClose={() => setPostTarget(null)}    />
       <ViewEventModal  event={viewTarget}                                 onClose={() => setViewTarget(null)}    />
 

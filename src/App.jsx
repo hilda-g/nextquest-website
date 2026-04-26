@@ -48,6 +48,7 @@ function mapEvent(row) {
       return start < todayMidnight;
     })(),
     format: row.format || "official",
+    registrationClosed: row.registration_closed || false,
   };
 }
 
@@ -979,15 +980,14 @@ export default function NextQuest() {
                       <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
 
                       {event.maxParticipants && (
-                        <>
-                          <div style={{ marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: 11, color: "#4a4868" }}>{event.currentParticipants}/{event.maxParticipants} {t.participants}</span>
-                            {full && <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 700 }}>FULL</span>}
-                          </div>
-                          <div className="progress-bar">
-                            <div className="progress-fill" style={{ width: `${pct(event)}%`, background: full ? "#ef4444" : color }} />
-                          </div>
-                        </>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                          <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
+                          {event.registrationClosed ? (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
+                          ) : (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1091,16 +1091,15 @@ export default function NextQuest() {
                     </a>
                   </div>
 
-                  {/* User limit — progress bar when limit set, text only when no limit */}
+                  {/* User limit — badge when limit set, text only when no limit */}
                   {selected.maxParticipants ? (
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 12, color: "#4a4868" }}>
-                        <span>👥 {selected.currentParticipants}/{selected.maxParticipants} {t.participants}</span>
-                        {pct(selected) >= 100 && <span style={{ color: "#ef4444", fontWeight: 700 }}>FULL</span>}
-                      </div>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${pct(selected)}%`, background: pct(selected) >= 100 ? "#ef4444" : getCatColor(selected.category) }} />
-                      </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 14, color: "#a09cbc" }}>👥 {selected.maxParticipants} {t.participants}</span>
+                      {selected.registrationClosed ? (
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
+                      ) : (
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
+                      )}
                     </div>
                   ) : (
                     <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
