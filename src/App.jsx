@@ -428,6 +428,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                   {!ev.multiDay && <span>⏰ {formatTime(ev.dateStart)}</span>}
                   <span>📍 {ev.city}</span>
                   <span style={{ color: getCatColor(ev.category) }}>{getCatLabel(ev.category)}</span>
+                  <span title={ev.maxParticipants && ev.registrationClosed ? "Full" : "Open"}>{ev.maxParticipants && ev.registrationClosed ? "🔴" : "🟢"}</span>
                 </div>
               </div>
 
