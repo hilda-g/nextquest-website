@@ -502,6 +502,21 @@ export default function EventDrawer({ event, onSave, onClose }) {
               </select>
             </div>
           </div>
+          <div>
+            <label style={{ display: "block", fontSize: 12, color: "#6b6890", marginBottom: 6 }}>Format</label>
+            <select
+              value={form.format || "official"}
+              onChange={e => setForm(f => ({ ...f, format: e.target.value }))}
+              style={{
+                width: "100%", padding: "10px 14px",
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 10, color: "#e8e6f0", fontFamily: "inherit", fontSize: 14,
+              }}
+            >
+              <option value="official">🎉 Official</option>
+              <option value="private">🔒 Private</option>
+            </select>
+          </div>
 
           {/* ── Address ── */}
           <div>

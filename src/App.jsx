@@ -46,6 +46,7 @@ function mapEvent(row) {
       todayMidnight.setHours(0, 0, 0, 0);
       return start < todayMidnight;
     })(),
+    format: row.format || "official",
   };
 }
 
@@ -60,6 +61,7 @@ const LANGS = {
     noEvents: "No events found", multiDay: "Multi-day", cancelled: "Cancelled",
     participants: "participants", loading: "Loading events…", error: "Could not load events.",
     allCities: "All Cities",
+    allFormats: "All Formats",
     addToCalendar: "Add to Calendar",
     monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"],
     dayNames: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
@@ -75,6 +77,7 @@ const LANGS = {
     noEvents: "Событий не найдено", multiDay: "Многодневное", cancelled: "Отменено",
     participants: "участников", loading: "Загрузка…", error: "Не удалось загрузить события.",
     allCities: "Все города",
+    allFormats: "Все форматы",
     addToCalendar: "В календарь",
     monthNames: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
     dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
@@ -90,6 +93,7 @@ const LANGS = {
     noEvents: "Δεν βρέθηκαν εκδηλώσεις", multiDay: "Πολυήμερο", cancelled: "Ακυρώθηκε",
     participants: "συμμετέχοντες", loading: "Φόρτωση…", error: "Αδύνατη η φόρτωση.",
     allCities: "Όλες οι πόλεις",
+    allFormats: "Όλες οι μορφές",
     addToCalendar: "Στο ημερολόγιο",
     monthNames: ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"],
     dayNames: ["Δε","Τρ","Τε","Πε","Πα","Σα","Κυ"],
@@ -105,6 +109,7 @@ const LANGS = {
     noEvents: "Подій не знайдено", multiDay: "Багатоденна", cancelled: "Скасовано",
     participants: "учасників", loading: "Завантаження…", error: "Не вдалося завантажити.",
     allCities: "Всі міста",
+    allFormats: "Всі формати",
     addToCalendar: "До календаря",
     monthNames: ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"],
     dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"],
@@ -123,6 +128,11 @@ const CATEGORIES = [
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos"];
+
+const FORMAT_TYPES = [
+  { id: "private",  label: "🔒 Private" },
+  { id: "official", label: "🎉 Official" },
+];
 
 function formatDate(date, lang) {
   if (!date || isNaN(date)) return "";
@@ -469,6 +479,7 @@ export default function NextQuest() {
   const [search, setSearch]         = useState("");
   const [catFilters, setCatFilters]   = useState(new Set());
   const [cityFilters, setCityFilters] = useState(new Set());
+  const [formatFilter, setFormatFilter] = useState("all");
 
   const toggleCat = (id) => {
     if (id === "all") { setCatFilters(new Set()); return; }
@@ -556,6 +567,7 @@ export default function NextQuest() {
     if (e.status === "cancelled" && tab !== "archive") return false;
     if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
     if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
+    if (formatFilter !== "all" && e.format !== formatFilter) return false;
     const q = search.toLowerCase();
     if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
     return true;
@@ -812,6 +824,16 @@ export default function NextQuest() {
                     className={`filter-btn${cityFilters.has(city) ? " active" : ""}`}
                     onClick={() => toggleCity(city)}>
                     📍 {city}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>✨ {t.allFormats}</button>
+                {FORMAT_TYPES.map(f => (
+                  <button key={f.id}
+                    className={`filter-btn${formatFilter === f.id ? " active" : ""}`}
+                    onClick={() => setFormatFilter(formatFilter === f.id ? "all" : f.id)}>
+                    {f.label}
                   </button>
                 ))}
               </div>
