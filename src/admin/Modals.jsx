@@ -125,7 +125,7 @@ const CATEGORIES = {
   other:      "🃏 Other",
 };
 
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "nextquest_bot";
+const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "NextQuestbot";
 const SITE_URL     = import.meta.env.VITE_SITE_URL     || "https://nextquest.today";
 
 function buildPreviewText(ev) {
@@ -240,7 +240,7 @@ export function CreatePostModal({ event, onConfirm, onClose }) {
 //   event    – raw event object from Supabase (or null to hide)
 //   onClose  – () => void
 
-const SITE_BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "nextquest_bot";
+const SITE_BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "NextQuestbot";
 
 const CAT_COLORS = {
   boardgames: "#f97316", larp: "#8b5cf6", festival: "#ec4899",
