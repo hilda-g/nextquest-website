@@ -23,6 +23,10 @@ export const LANGS = {
     dayNames: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
     upcomingThisMonth: "This month",
     noCalendarEvents: "No events this month",
+    noLimit: "no limit",
+    organizerLabel: "Organizer: ",
+    statusFull: "✕ Full",
+    statusOpen: "● Open",
   },
   ru: {
     title: "NextQuest", subtitle: "События гик-сообщества Кипра",
@@ -40,6 +44,10 @@ export const LANGS = {
     dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
     upcomingThisMonth: "В этом месяце",
     noCalendarEvents: "Событий в этом месяце нет",
+    noLimit: "без лимита",
+    organizerLabel: "Организатор: ",
+    statusFull: "✕ Мест нет",
+    statusOpen: "● Открыто",
   },
   el: {
     title: "NextQuest", subtitle: "Εκδηλώσεις Geek στην Κύπρο",
@@ -57,6 +65,10 @@ export const LANGS = {
     dayNames: ["Δε","Τρ","Τε","Πε","Πα","Σα","Κυ"],
     upcomingThisMonth: "Αυτόν τον μήνα",
     noCalendarEvents: "Δεν υπάρχουν εκδηλώσεις αυτόν τον μήνα",
+    noLimit: "χωρίς όριο",
+    organizerLabel: "Διοργανωτής: ",
+    statusFull: "✕ Πλήρης",
+    statusOpen: "● Ανοιχτό",
   },
   uk: {
     title: "NextQuest", subtitle: "Гік-події на Кіпрі",
@@ -74,5 +86,9 @@ export const LANGS = {
     dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"],
     upcomingThisMonth: "Цього місяця",
     noCalendarEvents: "Подій цього місяця немає",
+    noLimit: "без ліміту",
+    organizerLabel: "Організатор: ",
+    statusFull: "✕ Місць немає",
+    statusOpen: "● Відкрито",
   },
 };

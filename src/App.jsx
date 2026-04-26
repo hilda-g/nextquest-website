@@ -1030,12 +1030,12 @@ export default function NextQuest() {
                   {/* User limit — badge when limit set, text only when no limit */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 14, color: "#a09cbc" }}>
-                      👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : (lang === "ru" ? "без лимита" : lang === "uk" ? "без ліміту" : lang === "el" ? "χωρίς όριο" : "no limit")}
+                      👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : t.noLimit}
                     </span>
                     {selected.maxParticipants && selected.registrationClosed ? (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
                     ) : (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
                     )}
                   </div>
 
@@ -1045,7 +1045,7 @@ export default function NextQuest() {
                       <span style={{ flexShrink: 0 }}>📋</span>
                       <span style={{ color: "#a09cbc" }}>
                         <span style={{ color: "#6b6890", fontWeight: 600 }}>
-                          {lang === "ru" ? "Организатор: " : lang === "uk" ? "Організатор: " : lang === "el" ? "Διοργανωτής: " : "Organizer: "}
+                          {t.organizerLabel}
                         </span>
                         {selected.organizerContacts}
                       </span>
@@ -1054,7 +1054,13 @@ export default function NextQuest() {
                 </div>
 
                 {selected.description && (
-                  <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>{selected.description}</p>
+                  <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
+                    {(() => {
+                      const descMap = { ru: selected.description_ru, el: selected.description_el, uk: selected.description_uk };
+                      const text = descMap[lang] || selected.description;
+                      return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>);
+                    })()}
+                  </div>
                 )}
 
 
