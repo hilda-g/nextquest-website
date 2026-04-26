@@ -513,6 +513,7 @@ export default function NextQuest() {
   };
   const [selected, setSelected]     = useState(null);
   const [subscribed, setSubscribed] = useState({});
+  const [notifyTooltip, setNotifyTooltip] = useState(null); // event id showing tooltip
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -1009,7 +1010,7 @@ export default function NextQuest() {
 
         {/* ── EVENT MODAL ── */}
         {selected && (
-          <div className="modal-overlay" onClick={() => setSelected(null)}>
+          <div className="modal-overlay" onClick={() => { setSelected(null); setNotifyTooltip(null); }}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               {/* Cover */}
               <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
@@ -1070,14 +1071,9 @@ export default function NextQuest() {
                 )}
 
                 {/* Action buttons */}
-                <div className="nq-modal-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button
-                    className={`notify-btn${subscribed[selected.id] ? " done" : ""}`}
-                    onClick={() => setSubscribed(s => ({ ...s, [selected.id]: true }))}
-                  >
-                    {subscribed[selected.id] ? t.notified : t.notify}
-                  </button>
+                <div className="nq-modal-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
 
+                  {/* 1. Register */}
                   {selected.status !== "cancelled" && (
                     <a
                       href={selected.externalUrl}
@@ -1090,6 +1086,82 @@ export default function NextQuest() {
                     </a>
                   )}
 
+                  {/* 2. Notify me — with Telegram tooltip */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className={`notify-btn${subscribed[selected.id] ? " done" : ""}`}
+                      onClick={() => {
+                        if (subscribed[selected.id]) return;
+                        setNotifyTooltip(selected.id);
+                      }}
+                    >
+                      {subscribed[selected.id] ? t.notified : t.notify}
+                    </button>
+
+                    {notifyTooltip === selected.id && !subscribed[selected.id] && (
+                      <div style={{
+                        position: "absolute",
+                        bottom: "calc(100% + 10px)",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: "#1e1e36",
+                        border: "1px solid rgba(167,139,250,0.35)",
+                        borderRadius: 12,
+                        padding: "12px 14px",
+                        width: 230,
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                        zIndex: 200,
+                        animation: "fadeIn 0.15s ease",
+                      }}>
+                        {/* Arrow */}
+                        <div style={{
+                          position: "absolute",
+                          bottom: -6,
+                          left: "50%",
+                          transform: "translateX(-50%) rotate(45deg)",
+                          width: 10, height: 10,
+                          background: "#1e1e36",
+                          border: "1px solid rgba(167,139,250,0.35)",
+                          borderTop: "none", borderLeft: "none",
+                        }} />
+                        <p style={{ fontSize: 12, color: "#a09cbc", marginBottom: 10, lineHeight: 1.5 }}>
+                          🔔 You'll get reminders <strong style={{ color: "#e8e6f0" }}>7 days</strong> and <strong style={{ color: "#e8e6f0" }}>1 day</strong> before the event — via Telegram.
+                        </p>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <a
+                            href={`https://t.me/${BOT_USERNAME}?start=event_${selected.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              flex: 1, textAlign: "center", textDecoration: "none",
+                              background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
+                              color: "#fff", borderRadius: 8, padding: "7px 10px",
+                              fontSize: 12, fontWeight: 700, display: "inline-flex",
+                              alignItems: "center", justifyContent: "center", gap: 4,
+                            }}
+                            onClick={() => {
+                              setSubscribed(s => ({ ...s, [selected.id]: true }));
+                              setNotifyTooltip(null);
+                            }}
+                          >
+                            ✈️ Open Telegram
+                          </a>
+                          <button
+                            onClick={() => setNotifyTooltip(null)}
+                            style={{
+                              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                              color: "#6b6890", borderRadius: 8, padding: "7px 10px",
+                              fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Add to Calendar */}
                   <a
                     href={makeGCalUrl(selected)}
                     target="_blank"
