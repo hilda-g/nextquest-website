@@ -306,12 +306,39 @@ export default function EventDrawer({ event, onSave, onClose }) {
     }
     setSaving(true);
     try {
+      const desc = form.description.trim();
+
+      // Auto-translate when publishing and translations are not yet filled
+      let desc_ru = form.description_ru.trim() || null;
+      let desc_el = form.description_el.trim() || null;
+      let desc_uk = form.description_uk.trim() || null;
+
+      if (form.status === "published" && (!desc_ru || !desc_el || !desc_uk)) {
+        async function gtranslate(text, lang) {
+          try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data[0].map(c => c[0]).join("");
+          } catch { return null; }
+        }
+        const [ru, el, uk] = await Promise.all([
+          desc_ru ? Promise.resolve(desc_ru) : gtranslate(desc, "ru"),
+          desc_el ? Promise.resolve(desc_el) : gtranslate(desc, "el"),
+          desc_uk ? Promise.resolve(desc_uk) : gtranslate(desc, "uk"),
+        ]);
+        desc_ru = ru || desc_ru;
+        desc_el = el || desc_el;
+        desc_uk = uk || desc_uk;
+      }
+
       const payload = {
         title:            form.title.trim(),
-        description:      form.description.trim(),
-        description_ru:   form.description_ru.trim() || null,
-        description_el:   form.description_el.trim() || null,
-        description_uk:   form.description_uk.trim() || null,
+        description:      desc,
+        description_ru:   desc_ru,
+        description_el:   desc_el,
+        description_uk:   desc_uk,
         category:         form.category,
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
