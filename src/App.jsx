@@ -345,7 +345,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                     cursor: "pointer",
                     letterSpacing: "0.01em",
                   }}
-                >{ev.title}</div>
+>{ev.registrationClosed && ev.maxParticipants ? "🔴 " : "🟢 "}{ev.title}</div>
               ))}
 
               {dayEvents.length > 2 && (
@@ -428,7 +428,11 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                   {!ev.multiDay && <span>⏰ {formatTime(ev.dateStart)}</span>}
                   <span>📍 {ev.city}</span>
                   <span style={{ color: getCatColor(ev.category) }}>{getCatLabel(ev.category)}</span>
-                  <span title={ev.maxParticipants && ev.registrationClosed ? "Full" : "Open"}>{ev.maxParticipants && ev.registrationClosed ? "🔴" : "🟢"}</span>
+                  {ev.maxParticipants && ev.registrationClosed ? (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", flexShrink: 0 }}>✕ Full</span>
+                  ) : (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", flexShrink: 0 }}>● Open</span>
+                  )}
                 </div>
               </div>
 
