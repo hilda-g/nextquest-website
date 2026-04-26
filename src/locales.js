@@ -1,0 +1,78 @@
+// NextQuest website — localisation strings
+// EN / RU / EL (GR) / UK
+//
+// Usage in App.jsx:
+//   import { LANGS } from './locales';
+//   const t = LANGS[lang];
+//   t.upcoming, t.monthNames[i], etc.
+
+export const LANGS = {
+  en: {
+    title: "NextQuest", subtitle: "Cyprus Geek Events",
+    all: "All", upcoming: "Upcoming", calendar: "Calendar", archive: "Archive",
+    search: "Search events…",
+    notify: "🔔 Notify me", notified: "✓ Subscribed",
+    location: "Location", organizer: "Organizer", register: "Register →",
+    contactOrganizer: "📋 Contact organizer", organizerContacts: "Organizer contacts",
+    noEvents: "No events found", multiDay: "Multi-day", cancelled: "Cancelled",
+    participants: "participants", loading: "Loading events…", error: "Could not load events.",
+    allCities: "All Cities",
+    allFormats: "All Formats",
+    addToCalendar: "Add to Calendar",
+    monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+    dayNames: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    upcomingThisMonth: "This month",
+    noCalendarEvents: "No events this month",
+  },
+  ru: {
+    title: "NextQuest", subtitle: "События гик-сообщества Кипра",
+    all: "Все", upcoming: "Предстоящие", calendar: "Календарь", archive: "Архив",
+    search: "Поиск событий…",
+    notify: "🔔 Напомнить", notified: "✓ Подписан",
+    location: "Место", organizer: "Организатор", register: "Регистрация →",
+    contactOrganizer: "📋 Связаться с организатором", organizerContacts: "Контакт организатора",
+    noEvents: "Событий не найдено", multiDay: "Многодневное", cancelled: "Отменено",
+    participants: "участников", loading: "Загрузка…", error: "Не удалось загрузить события.",
+    allCities: "Все города",
+    allFormats: "Все форматы",
+    addToCalendar: "В календарь",
+    monthNames: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
+    dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
+    upcomingThisMonth: "В этом месяце",
+    noCalendarEvents: "Событий в этом месяце нет",
+  },
+  el: {
+    title: "NextQuest", subtitle: "Εκδηλώσεις Geek στην Κύπρο",
+    all: "Όλα", upcoming: "Επερχόμενα", calendar: "Ημερολόγιο", archive: "Αρχείο",
+    search: "Αναζήτηση…",
+    notify: "🔔 Υπενθύμιση", notified: "✓ Εγγεγραμμένος",
+    location: "Τοποθεσία", organizer: "Διοργανωτής", register: "Εγγραφή →",
+    contactOrganizer: "📋 Επικοινωνία", organizerContacts: "Στοιχεία διοργανωτή",
+    noEvents: "Δεν βρέθηκαν εκδηλώσεις", multiDay: "Πολυήμερο", cancelled: "Ακυρώθηκε",
+    participants: "συμμετέχοντες", loading: "Φόρτωση…", error: "Αδύνατη η φόρτωση.",
+    allCities: "Όλες οι πόλεις",
+    allFormats: "Όλες οι μορφές",
+    addToCalendar: "Στο ημερολόγιο",
+    monthNames: ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"],
+    dayNames: ["Δε","Τρ","Τε","Πε","Πα","Σα","Κυ"],
+    upcomingThisMonth: "Αυτόν τον μήνα",
+    noCalendarEvents: "Δεν υπάρχουν εκδηλώσεις αυτόν τον μήνα",
+  },
+  uk: {
+    title: "NextQuest", subtitle: "Гік-події на Кіпрі",
+    all: "Всі", upcoming: "Майбутні", calendar: "Календар", archive: "Архів",
+    search: "Пошук подій…",
+    notify: "🔔 Нагадати", notified: "✓ Підписано",
+    location: "Місце", organizer: "Організатор", register: "Реєстрація →",
+    contactOrganizer: "📋 Зв'язатися з організатором", organizerContacts: "Контакт організатора",
+    noEvents: "Подій не знайдено", multiDay: "Багатоденна", cancelled: "Скасовано",
+    participants: "учасників", loading: "Завантаження…", error: "Не вдалося завантажити.",
+    allCities: "Всі міста",
+    allFormats: "Всі формати",
+    addToCalendar: "До календаря",
+    monthNames: ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"],
+    dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"],
+    upcomingThisMonth: "Цього місяця",
+    noCalendarEvents: "Подій цього місяця немає",
+  },
+};

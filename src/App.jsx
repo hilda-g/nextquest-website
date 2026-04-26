@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { LANGS } from "./locales";
 
 // ─── CONFIG ──────────────────────────────────────────────────
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL  || "";
@@ -29,9 +30,6 @@ function mapEvent(row) {
     city:             row.location_city,
     address:          row.location_address,
     description:      row.description,
-    description_ru:   row.description_ru || null,
-    description_el:   row.description_el || null,
-    description_uk:   row.description_uk || null,
     organizer:        String(row.organizer_tg_id),
     maxParticipants:  row.max_participants,
     currentParticipants: 0,
@@ -56,76 +54,6 @@ function mapEvent(row) {
 }
 
 // ─── i18n ─────────────────────────────────────────────────────
-const LANGS = {
-  en: {
-    title: "NextQuest", subtitle: "Cyprus Geek Events",
-    all: "All", upcoming: "Upcoming", calendar: "Calendar", archive: "Archive",
-    search: "Search events…",
-    notify: "🔔 Notify me", notified: "✓ Subscribed",
-    location: "Location", organizer: "Organizer", register: "Register →",
-    contactOrganizer: "📋 Contact organizer", organizerContacts: "Organizer contacts",
-    noEvents: "No events found", multiDay: "Multi-day", cancelled: "Cancelled",
-    participants: "participants", loading: "Loading events…", error: "Could not load events.",
-    allCities: "All Cities",
-    allFormats: "All Formats",
-    addToCalendar: "Add to Calendar",
-    monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"],
-    dayNames: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-    upcomingThisMonth: "This month",
-    noCalendarEvents: "No events this month",
-  },
-  ru: {
-    title: "NextQuest", subtitle: "События гик-сообщества Кипра",
-    all: "Все", upcoming: "Предстоящие", calendar: "Календарь", archive: "Архив",
-    search: "Поиск событий…",
-    notify: "🔔 Напомнить", notified: "✓ Подписан",
-    location: "Место", organizer: "Организатор", register: "Регистрация →",
-    contactOrganizer: "📋 Связаться с организатором", organizerContacts: "Контакт организатора",
-    noEvents: "Событий не найдено", multiDay: "Многодневное", cancelled: "Отменено",
-    participants: "участников", loading: "Загрузка…", error: "Не удалось загрузить события.",
-    allCities: "Все города",
-    allFormats: "Все форматы",
-    addToCalendar: "В календарь",
-    monthNames: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
-    dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
-    upcomingThisMonth: "В этом месяце",
-    noCalendarEvents: "Событий в этом месяце нет",
-  },
-  el: {
-    title: "NextQuest", subtitle: "Εκδηλώσεις Geek στην Κύπρο",
-    all: "Όλα", upcoming: "Επερχόμενα", calendar: "Ημερολόγιο", archive: "Αρχείο",
-    search: "Αναζήτηση…",
-    notify: "🔔 Υπενθύμιση", notified: "✓ Εγγεγραμμένος",
-    location: "Τοποθεσία", organizer: "Διοργανωτής", register: "Εγγραφή →",
-    contactOrganizer: "📋 Επικοινωνία", organizerContacts: "Στοιχεία διοργανωτή",
-    noEvents: "Δεν βρέθηκαν εκδηλώσεις", multiDay: "Πολυήμερο", cancelled: "Ακυρώθηκε",
-    participants: "συμμετέχοντες", loading: "Φόρτωση…", error: "Αδύνατη η φόρτωση.",
-    allCities: "Όλες οι πόλεις",
-    allFormats: "Όλες οι μορφές",
-    addToCalendar: "Στο ημερολόγιο",
-    monthNames: ["Ιανουάριος","Φεβρουάριος","Μάρτιος","Απρίλιος","Μάιος","Ιούνιος","Ιούλιος","Αύγουστος","Σεπτέμβριος","Οκτώβριος","Νοέμβριος","Δεκέμβριος"],
-    dayNames: ["Δε","Τρ","Τε","Πε","Πα","Σα","Κυ"],
-    upcomingThisMonth: "Αυτόν τον μήνα",
-    noCalendarEvents: "Δεν υπάρχουν εκδηλώσεις αυτόν τον μήνα",
-  },
-  uk: {
-    title: "NextQuest", subtitle: "Гік-події на Кіпрі",
-    all: "Всі", upcoming: "Майбутні", calendar: "Календар", archive: "Архів",
-    search: "Пошук подій…",
-    notify: "🔔 Нагадати", notified: "✓ Підписано",
-    location: "Місце", organizer: "Організатор", register: "Реєстрація →",
-    contactOrganizer: "📋 Зв'язатися з організатором", organizerContacts: "Контакт організатора",
-    noEvents: "Подій не знайдено", multiDay: "Багатоденна", cancelled: "Скасовано",
-    participants: "учасників", loading: "Завантаження…", error: "Не вдалося завантажити.",
-    allCities: "Всі міста",
-    allFormats: "Всі формати",
-    addToCalendar: "До календаря",
-    monthNames: ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"],
-    dayNames: ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"],
-    upcomingThisMonth: "Цього місяця",
-    noCalendarEvents: "Подій цього місяця немає",
-  },
-};
 
 const CATEGORIES = [
   { id: "boardgames", label: "🎲 Board Games", color: "#f97316" },
@@ -507,12 +435,9 @@ function ScrollToTop() {
 // ─── MAIN COMPONENT ──────────────────────────────────────────
 export default function NextQuest() {
   const [lang, setLang]             = useState(() => {
-    const saved = localStorage.getItem("nq_lang");
-    if (saved && ["en","ru","el","uk"].includes(saved)) return saved;
     const bl = navigator.language?.slice(0, 2) || "en";
     return ["en","ru","el","uk"].includes(bl) ? bl : "en";
   });
-  const changeLang = (l) => { setLang(l); localStorage.setItem("nq_lang", l); };
   const [tab, setTab]               = useState("upcoming");
   const [search, setSearch]         = useState("");
   const [catFilters, setCatFilters]   = useState(new Set());
@@ -810,8 +735,8 @@ export default function NextQuest() {
               <span className="nq-logo-text" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
             </div>
             <div style={{ display: "flex", gap: 4 }}>
-              {[["en","EN"],["ru","RU"],["el","GR"],["uk","UK"]].map(([l, label]) => (
-                <button key={l} className={`lang-btn${lang === l ? " active" : ""}`} onClick={() => changeLang(l)}>{label}</button>
+              {["en","ru","el","uk"].map(l => (
+                <button key={l} className={`lang-btn${lang === l ? " active" : ""}`} onClick={() => setLang(l)}>{l}</button>
               ))}
             </div>
           </div>
@@ -1129,13 +1054,7 @@ export default function NextQuest() {
                 </div>
 
                 {selected.description && (
-                  <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
-                    {(() => {
-                      const descMap = { ru: selected.description_ru, el: selected.description_el, uk: selected.description_uk };
-                      const text = descMap[lang] || selected.description;
-                      return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>);
-                    })()}
-                  </div>
+                  <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>{selected.description}</p>
                 )}
 
 
