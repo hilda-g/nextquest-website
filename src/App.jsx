@@ -444,7 +444,11 @@ export default function NextQuest() {
   const [catFilters, setCatFilters]   = useState(new Set());
   const [cityFilters, setCityFilters] = useState(new Set());
   const [formatFilter, setFormatFilter] = useState("all");
-  const [organizerFilter, setOrganizerFilter] = useState(null); // @username string or null
+  const [organizerPage, setOrganizerPage] = useState(() => {
+    // Support direct URL navigation to /organizers/@username
+    const m = window.location.pathname.match(/^\/organizers\/(.+)$/);
+    return m ? m[1] : null;
+  });
 
   const toggleCat = (id) => {
     if (id === "all") { setCatFilters(new Set()); return; }
@@ -535,7 +539,6 @@ export default function NextQuest() {
     if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
     if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
     if (formatFilter !== "all" && e.format !== formatFilter) return false;
-    if (organizerFilter && e.organizerUsername !== organizerFilter) return false;
     const q = search.toLowerCase();
     if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
     return true;
@@ -547,6 +550,150 @@ export default function NextQuest() {
   const archiveCount  = events.filter(e => e.dateStart < todayMidnight).length;
 
   const pct = e => e.maxParticipants ? Math.round((e.currentParticipants / e.maxParticipants) * 100) : 0;
+
+  // ── Organizer page ───────────────────────────────────────────
+  if (organizerPage) {
+    const orgEvents = events
+      .filter(e => e.organizerUsername === organizerPage)
+      .sort((a, b) => b.dateStart - a.dateStart);
+
+    return (
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Syne:wght@700;800&display=swap');
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body, #root { background: #0d0d14; min-height: 100vh; font-family: 'Outfit', sans-serif; }
+        `}</style>
+        <div style={{ background: "#0d0d14", minHeight: "100vh", color: "#e8e6f0" }}>
+
+          {/* Header */}
+          <div style={{
+            padding: "20px 24px 0",
+            maxWidth: 720, margin: "0 auto",
+          }}>
+            <button
+              onClick={() => {
+                window.history.pushState({}, "", "/");
+                setOrganizerPage(null);
+              }}
+              style={{
+                background: "none", border: "none", color: "#6b6890",
+                cursor: "pointer", fontSize: 13, fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 6, padding: 0,
+                marginBottom: 24,
+              }}
+            >← {t.upcoming}</button>
+
+            {/* Organizer name as header */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ fontSize: 12, color: "#4a4868", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                {t.organizer}
+              </div>
+              <h1 style={{
+                fontFamily: "'Syne', sans-serif", fontWeight: 800,
+                fontSize: 32, color: "#fff", lineHeight: 1.1,
+              }}>
+                @{organizerPage}
+              </h1>
+              <div style={{ fontSize: 13, color: "#4a4868", marginTop: 8 }}>
+                {orgEvents.length} {orgEvents.length === 1 ? "event" : "events"}
+              </div>
+            </div>
+          </div>
+
+          {/* Event log strips */}
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 60px" }}>
+            {orgEvents.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: "#4a4868" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🎲</div>
+                <p>{t.noEvents}</p>
+              </div>
+            ) : (
+              orgEvents.map(ev => {
+                const color = getCatColor(ev.category);
+                const isPast = ev.dateStart < todayMidnight;
+                return (
+                  <div
+                    key={ev.id}
+                    onClick={() => setSelected(ev)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 14,
+                      padding: "12px 16px",
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      cursor: "pointer",
+                      opacity: isPast ? 0.55 : 1,
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                  >
+                    {/* Cover thumb */}
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 8, flexShrink: 0,
+                      overflow: "hidden", background: "#1a1a2e",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}>
+                      <img src={ev.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        onError={e => { e.target.style.display = "none"; }} />
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#e8e6f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {ev.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#5a5878", marginTop: 2 }}>
+                        {formatDate(ev.dateStart, lang)} · {ev.city}
+                      </div>
+                    </div>
+
+                    {/* Category dot + status */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700,
+                        padding: "2px 8px", borderRadius: 999,
+                        background: color + "22", color, border: `1px solid ${color}44`,
+                      }}>{getCatLabel(ev.category)}</span>
+                      {ev.status === "cancelled" && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.cancelled}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Event modal still works on organizer page */}
+        {selected && (
+          <div className="modal-overlay" onClick={() => { setSelected(null); setShowContacts(false); setNotifyTooltip(null); }}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
+                <img src={selected.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(22,22,42,1) 0%, transparent 50%)" }} />
+                <button onClick={() => setSelected(null)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: 8, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              </div>
+              <div className="nq-modal-body" style={{ padding: 24 }}>
+                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{selected.title}</h2>
+                <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7 }}>
+                  {selected.description}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <style>{`
+          .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+          .modal { background: #16162a; border-radius: 20px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
+        `}</style>
+      </>
+    );
+  }
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -854,30 +1001,6 @@ export default function NextQuest() {
             </div>
           )}
 
-          {/* ── ORGANIZER FILTER BANNER ── */}
-          {organizerFilter && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              marginBottom: 16, padding: "10px 16px",
-              background: "rgba(124,58,237,0.1)",
-              border: "1px solid rgba(167,139,250,0.25)",
-              borderRadius: 12,
-            }}>
-              <span style={{ fontSize: 13, color: "#a78bfa", fontWeight: 600 }}>
-                🎪 {t.eventsBy} @{organizerFilter}
-              </span>
-              <button
-                onClick={() => setOrganizerFilter(null)}
-                style={{
-                  marginLeft: "auto", background: "none", border: "none",
-                  color: "#6b6890", cursor: "pointer", fontSize: 16,
-                  lineHeight: 1, padding: "2px 4px",
-                }}
-                title="Clear filter"
-              >✕</button>
-            </div>
-          )}
-
           {/* ── EVENT CARDS GRID ── */}
           {!loading && !error && tab !== "calendar" && filtered.length > 0 && (
             <div className="event-grid">
@@ -940,27 +1063,7 @@ export default function NextQuest() {
                         <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
                       </div>
 
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
-
-                      {/* Organizer chip */}
-                      {event.organizerUsername && (
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            setOrganizerFilter(event.organizerUsername);
-                          }}
-                          style={{
-                            display: "inline-flex", alignItems: "center", gap: 4,
-                            background: "none", border: "none", padding: "0 0 8px 0",
-                            cursor: "pointer", fontSize: 11, color: "#6b6890",
-                            fontFamily: "inherit", transition: "color 0.15s",
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.color = "#a78bfa"}
-                          onMouseLeave={e => e.currentTarget.style.color = "#6b6890"}
-                        >
-                          🎪 @{event.organizerUsername}
-                        </button>
-                      )}
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
 
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                         {event.maxParticipants ? (
@@ -972,6 +1075,27 @@ export default function NextQuest() {
                           <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
                         )}
                       </div>
+
+                      {/* Organizer chip — below participants */}
+                      {event.organizerUsername && (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            window.history.pushState({}, "", `/organizers/${event.organizerUsername}`);
+                            setOrganizerPage(event.organizerUsername);
+                          }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            background: "none", border: "none", padding: "8px 0 0 0",
+                            cursor: "pointer", fontSize: 11, color: "#6b6890",
+                            fontFamily: "inherit", transition: "color 0.15s",
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.color = "#a78bfa"}
+                          onMouseLeave={e => e.currentTarget.style.color = "#6b6890"}
+                        >
+                          🎪 {t.organizerLabel}@{event.organizerUsername}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1092,7 +1216,7 @@ export default function NextQuest() {
                       <span style={{ flexShrink: 0 }}>📋</span>
                       <span style={{ color: "#a09cbc" }}>
                         <span style={{ color: "#6b6890", fontWeight: 600 }}>
-                          {t.organizerLabel}
+                          {t.contactsLabel}
                         </span>
                         {selected.organizerContacts}
                       </span>
