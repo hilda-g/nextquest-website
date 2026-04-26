@@ -31,6 +31,7 @@ function mapEvent(row) {
     address:          row.location_address,
     description:      row.description,
     organizer:        String(row.organizer_tg_id),
+    organizerUsername: row.organizer_username || null,
     maxParticipants:  row.max_participants,
     currentParticipants: 0,
     cover: (row.cover_image_url && row.cover_image_url.startsWith("http"))
@@ -443,6 +444,7 @@ export default function NextQuest() {
   const [catFilters, setCatFilters]   = useState(new Set());
   const [cityFilters, setCityFilters] = useState(new Set());
   const [formatFilter, setFormatFilter] = useState("all");
+  const [organizerFilter, setOrganizerFilter] = useState(null); // @username string or null
 
   const toggleCat = (id) => {
     if (id === "all") { setCatFilters(new Set()); return; }
@@ -533,6 +535,7 @@ export default function NextQuest() {
     if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
     if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
     if (formatFilter !== "all" && e.format !== formatFilter) return false;
+    if (organizerFilter && e.organizerUsername !== organizerFilter) return false;
     const q = search.toLowerCase();
     if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
     return true;
@@ -851,6 +854,30 @@ export default function NextQuest() {
             </div>
           )}
 
+          {/* ── ORGANIZER FILTER BANNER ── */}
+          {organizerFilter && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              marginBottom: 16, padding: "10px 16px",
+              background: "rgba(124,58,237,0.1)",
+              border: "1px solid rgba(167,139,250,0.25)",
+              borderRadius: 12,
+            }}>
+              <span style={{ fontSize: 13, color: "#a78bfa", fontWeight: 600 }}>
+                🎪 {t.eventsBy} @{organizerFilter}
+              </span>
+              <button
+                onClick={() => setOrganizerFilter(null)}
+                style={{
+                  marginLeft: "auto", background: "none", border: "none",
+                  color: "#6b6890", cursor: "pointer", fontSize: 16,
+                  lineHeight: 1, padding: "2px 4px",
+                }}
+                title="Clear filter"
+              >✕</button>
+            </div>
+          )}
+
           {/* ── EVENT CARDS GRID ── */}
           {!loading && !error && tab !== "calendar" && filtered.length > 0 && (
             <div className="event-grid">
@@ -913,7 +940,27 @@ export default function NextQuest() {
                         <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
                       </div>
 
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
+
+                      {/* Organizer chip */}
+                      {event.organizerUsername && (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            setOrganizerFilter(event.organizerUsername);
+                          }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            background: "none", border: "none", padding: "0 0 8px 0",
+                            cursor: "pointer", fontSize: 11, color: "#6b6890",
+                            fontFamily: "inherit", transition: "color 0.15s",
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.color = "#a78bfa"}
+                          onMouseLeave={e => e.currentTarget.style.color = "#6b6890"}
+                        >
+                          🎪 @{event.organizerUsername}
+                        </button>
+                      )}
 
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                         {event.maxParticipants ? (

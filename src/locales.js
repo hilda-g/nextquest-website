@@ -27,6 +27,7 @@ export const LANGS = {
     organizerLabel: "Organizer: ",
     statusFull: "✕ Full",
     statusOpen: "● Open",
+    eventsBy: "Events by",
   },
   ru: {
     title: "NextQuest", subtitle: "События гик-сообщества Кипра",
@@ -48,6 +49,7 @@ export const LANGS = {
     organizerLabel: "Организатор: ",
     statusFull: "✕ Мест нет",
     statusOpen: "● Открыто",
+    eventsBy: "События от",
   },
   el: {
     title: "NextQuest", subtitle: "Εκδηλώσεις Geek στην Κύπρο",
@@ -69,6 +71,7 @@ export const LANGS = {
     organizerLabel: "Διοργανωτής: ",
     statusFull: "✕ Πλήρης",
     statusOpen: "● Ανοιχτό",
+    eventsBy: "Εκδηλώσεις από",
   },
   uk: {
     title: "NextQuest", subtitle: "Гік-події на Кіпрі",
@@ -90,5 +93,6 @@ export const LANGS = {
     organizerLabel: "Організатор: ",
     statusFull: "✕ Місць немає",
     statusOpen: "● Відкрито",
+    eventsBy: "Події від",
   },
 };
