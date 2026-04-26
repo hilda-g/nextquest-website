@@ -1091,24 +1091,34 @@ export default function NextQuest() {
                     </a>
                   </div>
 
-                  {/* User limit */}
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-                    <span>👥</span>
-                    <span>
-                      {selected.maxParticipants
-                        ? `${selected.currentParticipants}/${selected.maxParticipants} ${t.participants}`
-                        : (lang === "ru" ? "без лимита" : lang === "uk" ? "без ліміту" : lang === "el" ? "χωρίς όριο" : "no limit")}
-                    </span>
-                    {selected.maxParticipants && pct(selected) >= 100 && (
-                      <span style={{ color: "#ef4444", fontWeight: 700, fontSize: 12 }}>FULL</span>
-                    )}
-                  </div>
+                  {/* User limit — progress bar when limit set, text only when no limit */}
+                  {selected.maxParticipants ? (
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 12, color: "#4a4868" }}>
+                        <span>👥 {selected.currentParticipants}/{selected.maxParticipants} {t.participants}</span>
+                        {pct(selected) >= 100 && <span style={{ color: "#ef4444", fontWeight: 700 }}>FULL</span>}
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${pct(selected)}%`, background: pct(selected) >= 100 ? "#ef4444" : getCatColor(selected.category) }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
+                      <span>👥</span>
+                      <span>{lang === "ru" ? "без лимита" : lang === "uk" ? "без ліміту" : lang === "el" ? "χωρίς όριο" : "no limit"}</span>
+                    </div>
+                  )}
 
-                  {/* Organizer contacts — shown only when set */}
+                  {/* Organizer contacts — with label prefix */}
                   {selected.organizerContacts && (
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14 }}>
                       <span style={{ flexShrink: 0 }}>📋</span>
-                      <span style={{ color: "#a09cbc" }}>{selected.organizerContacts}</span>
+                      <span style={{ color: "#a09cbc" }}>
+                        <span style={{ color: "#6b6890", fontWeight: 600 }}>
+                          {lang === "ru" ? "Организатор: " : lang === "uk" ? "Організатор: " : lang === "el" ? "Διοργανωτής: " : "Organizer: "}
+                        </span>
+                        {selected.organizerContacts}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1135,29 +1145,26 @@ export default function NextQuest() {
                         {t.register}
                       </a>
                     ) : selected.organizerContacts ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
-                        <button
-                          className="register-btn"
-                          style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.4)", color: "#f97316" }}
-                          onClick={() => setShowContacts(s => !s)}
-                        >
-                          {t.contactOrganizer}
-                        </button>
-                        {showContacts && (
-                          <div style={{
-                            background: "rgba(249,115,22,0.06)",
-                            border: "1px solid rgba(249,115,22,0.25)",
-                            borderRadius: 8, padding: "10px 14px",
-                            fontSize: 14, color: "#e8e6f0", lineHeight: 1.5,
-                            userSelect: "all",
-                          }}>
-                            <span style={{ fontSize: 11, color: "#f97316", fontWeight: 700, display: "block", marginBottom: 4 }}>
-                              {t.organizerContacts}
-                            </span>
-                            {selected.organizerContacts}
-                          </div>
-                        )}
-                      </div>
+                      <a
+                        href={
+                          selected.organizerContacts.startsWith("http")
+                            ? selected.organizerContacts
+                            : selected.organizerContacts.startsWith("@")
+                            ? `https://t.me/${selected.organizerContacts.slice(1)}`
+                            : `https://t.me/${selected.organizerContacts}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="register-btn"
+                        style={{
+                          textDecoration: "none", display: "inline-flex", alignItems: "center",
+                          background: "rgba(249,115,22,0.15)",
+                          border: "1px solid rgba(249,115,22,0.5)",
+                          color: "#f97316",
+                        }}
+                      >
+                        {t.contactOrganizer}
+                      </a>
                     ) : null
                   )}
 
