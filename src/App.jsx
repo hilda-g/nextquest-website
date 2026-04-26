@@ -188,7 +188,7 @@ function eventsForDay(events, year, month, day) {
 }
 
 // ─── CALENDAR TAB COMPONENT ──────────────────────────────────
-function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFilters, toggleCity }) {
+function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFilters, toggleCity, formatFilter, setFormatFilter }) {
   const now  = new Date();
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
@@ -214,6 +214,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
     if (!(s <= monthEnd && end >= monthStart)) return false;
     if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
     if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
+    if (formatFilter !== "all" && e.format !== formatFilter) return false;
     return true;
   }).sort((a, b) => a.dateStart - b.dateStart);
 
@@ -236,7 +237,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
       </div>
 
       {/* City filters — same design as Upcoming */}
-      <div className="nq-filters-city" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+      <div className="nq-filters-city" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
         <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>🌍 {t.allCities}</button>
         {CITIES.map(city => (
           <button
@@ -244,6 +245,18 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
             className={`filter-btn${cityFilters.has(city) ? " active" : ""}`}
             onClick={() => toggleCity(city)}
           >📍 {city}</button>
+        ))}
+      </div>
+
+      {/* Format filters — same design as Upcoming */}
+      <div className="nq-filters-format" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+        <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>✨ {t.allFormats}</button>
+        {FORMAT_TYPES.map(f => (
+          <button
+            key={f.id}
+            className={`filter-btn${formatFilter === f.id ? " active" : ""}`}
+            onClick={() => setFormatFilter(formatFilter === f.id ? "all" : f.id)}
+          >{f.label}</button>
         ))}
       </div>
 
@@ -276,6 +289,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
           const dayEvents = allDayEvents.filter(e => {
             if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
             if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
+            if (formatFilter !== "all" && e.format !== formatFilter) return false;
             return true;
           });
           const today     = isToday(day);
@@ -680,7 +694,8 @@ export default function NextQuest() {
 
           /* Filter rows: horizontal scroll, no wrap */
           .nq-filters-cat,
-          .nq-filters-city {
+          .nq-filters-city,
+          .nq-filters-format {
             flex-wrap: nowrap !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
@@ -689,7 +704,8 @@ export default function NextQuest() {
             scrollbar-width: none !important;
           }
           .nq-filters-cat::-webkit-scrollbar,
-          .nq-filters-city::-webkit-scrollbar { display: none !important; }
+          .nq-filters-city::-webkit-scrollbar,
+          .nq-filters-format::-webkit-scrollbar { display: none !important; }
           .filter-btn { flex-shrink: 0 !important; padding: 6px 12px !important; font-size: 12px !important; }
 
           /* Main content */
@@ -855,6 +871,8 @@ export default function NextQuest() {
               toggleCat={toggleCat}
               cityFilters={cityFilters}
               toggleCity={toggleCity}
+              formatFilter={formatFilter}
+              setFormatFilter={setFormatFilter}
             />
           )}
 
