@@ -1123,7 +1123,11 @@ export default function NextQuest() {
                 </div>
 
                 {selected.description && (
-                  <p style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>{selected.description}</p>
+                  <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
+                    {selected.description.split("\n").map((line, i) => (
+                      <span key={i}>{line}<br /></span>
+                    ))}
+                  </div>
                 )}
 
 
