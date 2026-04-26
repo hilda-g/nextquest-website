@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 // ─── CONFIG ──────────────────────────────────────────────────
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL  || "";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME  || "nextquest_bot";
+const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME  || "NextQuestbot";
 
 async function sbFetch(path, params = {}) {
   const url = new URL(`${SUPABASE_URL}/rest/v1/${path}`);
@@ -628,14 +628,14 @@ export default function NextQuest() {
         .lang-btn:hover { color: #e8e6f0; }
         .lang-btn.active { color: #a78bfa; }
 
-        .notify-btn { border: 1px solid rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); color: #a78bfa; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .notify-btn { border: 1px solid rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); color: #a78bfa; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .notify-btn:hover { background: rgba(167,139,250,0.18); }
         .notify-btn.done { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); color: #10b981; }
 
         .register-btn { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-family: inherit; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
         .register-btn:hover { opacity: 0.88; }
 
-        .gcal-btn { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.25); color: #06b6d4; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-family: inherit; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .gcal-btn { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.25); color: #06b6d4; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-family: inherit; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .gcal-btn:hover { background: rgba(6,182,212,0.16); }
 
         .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #e8e6f0; border-radius: 12px; padding: 10px 16px 10px 40px; font-size: 14px; font-family: inherit; width: 100%; outline: none; transition: border-color 0.2s; }
