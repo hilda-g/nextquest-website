@@ -29,6 +29,9 @@ function mapEvent(row) {
     city:             row.location_city,
     address:          row.location_address,
     description:      row.description,
+    description_ru:   row.description_ru || null,
+    description_el:   row.description_el || null,
+    description_uk:   row.description_uk || null,
     organizer:        String(row.organizer_tg_id),
     maxParticipants:  row.max_participants,
     currentParticipants: 0,
@@ -504,9 +507,12 @@ function ScrollToTop() {
 // ─── MAIN COMPONENT ──────────────────────────────────────────
 export default function NextQuest() {
   const [lang, setLang]             = useState(() => {
+    const saved = localStorage.getItem("nq_lang");
+    if (saved && ["en","ru","el","uk"].includes(saved)) return saved;
     const bl = navigator.language?.slice(0, 2) || "en";
     return ["en","ru","el","uk"].includes(bl) ? bl : "en";
   });
+  const changeLang = (l) => { setLang(l); localStorage.setItem("nq_lang", l); };
   const [tab, setTab]               = useState("upcoming");
   const [search, setSearch]         = useState("");
   const [catFilters, setCatFilters]   = useState(new Set());
@@ -804,8 +810,8 @@ export default function NextQuest() {
               <span className="nq-logo-text" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
             </div>
             <div style={{ display: "flex", gap: 4 }}>
-              {["en","ru","el","uk"].map(l => (
-                <button key={l} className={`lang-btn${lang === l ? " active" : ""}`} onClick={() => setLang(l)}>{l}</button>
+              {[["en","EN"],["ru","RU"],["el","GR"],["uk","UK"]].map(([l, label]) => (
+                <button key={l} className={`lang-btn${lang === l ? " active" : ""}`} onClick={() => changeLang(l)}>{label}</button>
               ))}
             </div>
           </div>
@@ -1124,9 +1130,11 @@ export default function NextQuest() {
 
                 {selected.description && (
                   <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
-                    {selected.description.split("\n").map((line, i) => (
-                      <span key={i}>{line}<br /></span>
-                    ))}
+                    {(() => {
+                      const descMap = { ru: selected.description_ru, el: selected.description_el, uk: selected.description_uk };
+                      const text = descMap[lang] || selected.description;
+                      return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>);
+                    })()}
                   </div>
                 )}
 

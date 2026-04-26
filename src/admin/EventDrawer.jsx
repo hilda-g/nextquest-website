@@ -14,6 +14,9 @@ const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
 const EMPTY_FORM = {
   title:            "",
   description:      "",
+  description_ru:   "",
+  description_el:   "",
+  description_uk:   "",
   category:         "boardgames",
   location_city:    "Nicosia",
   location_address: "",
@@ -249,6 +252,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
   const [multiDay, setMultiDay] = useState(false);
   const [visible, setVisible]   = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
   const initialForm = useRef(null);
 
   useEffect(() => {
@@ -256,6 +260,9 @@ export default function EventDrawer({ event, onSave, onClose }) {
       ? {
           title:            event.title            || "",
           description:      event.description      || "",
+          description_ru:   event.description_ru   || "",
+          description_el:   event.description_el   || "",
+          description_uk:   event.description_uk   || "",
           category:         event.category         || "boardgames",
           location_city:    event.location_city    || "Nicosia",
           location_address: event.location_address || "",
@@ -273,6 +280,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
     setMultiDay(!!event?.date_end);
     setErrors({});
     setDirty(false);
+    setActiveTab("details");
     requestAnimationFrame(() => setVisible(true));
   }, [event]);
 
@@ -301,6 +309,9 @@ export default function EventDrawer({ event, onSave, onClose }) {
       const payload = {
         title:            form.title.trim(),
         description:      form.description.trim(),
+        description_ru:   form.description_ru.trim() || null,
+        description_el:   form.description_el.trim() || null,
+        description_uk:   form.description_uk.trim() || null,
         category:         form.category,
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
@@ -398,6 +409,25 @@ export default function EventDrawer({ event, onSave, onClose }) {
           }}>×</button>
         </div>
 
+        {/* Tab bar */}
+        <div style={{
+          display: "flex", gap: 0,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          flexShrink: 0,
+          padding: "0 24px",
+        }}>
+          {[["details", "📋 Details"], ["translations", "🌐 Translations"]].map(([id, label]) => (
+            <button key={id} onClick={() => setActiveTab(id)} style={{
+              padding: "10px 16px", fontSize: 12, fontWeight: 600,
+              fontFamily: "inherit", cursor: "pointer", border: "none",
+              background: "none",
+              color: activeTab === id ? "#a78bfa" : "#6b6890",
+              borderBottom: activeTab === id ? "2px solid #a78bfa" : "2px solid transparent",
+              marginBottom: -1, transition: "all 0.15s",
+            }}>{label}</button>
+          ))}
+        </div>
+
         {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: 22 }}>
 
@@ -406,6 +436,38 @@ export default function EventDrawer({ event, onSave, onClose }) {
               ✗ {errors._global}
             </div>
           )}
+
+          {/* ── TRANSLATIONS TAB ── */}
+          {activeTab === "translations" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
+                🤖 These translations are generated automatically when you publish an event via the bot. You can review and edit them here if needed.
+              </div>
+              {[
+                ["description_ru", "🇷🇺 Russian"],
+                ["description_el", "🇬🇷 Greek"],
+                ["description_uk", "🇺🇦 Ukrainian"],
+              ].map(([field, langLabel]) => (
+                <div key={field}>
+                  <span style={label}>{langLabel}</span>
+                  <textarea
+                    style={{ ...inputStyle(), minHeight: 110, resize: "vertical" }}
+                    value={form[field]}
+                    onChange={e => set(field, e.target.value)}
+                    placeholder={`Translation will appear here after publishing…`}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                  />
+                  <div style={{ fontSize: 11, color: "#4a4868", marginTop: 4, textAlign: "right" }}>
+                    {form[field].length} chars
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── DETAILS TAB ── */}
+          {activeTab === "details" && (<>
 
           {/* ── Cover image ── */}
           <div>
@@ -629,6 +691,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
               </div>
             </div>
           )}
+
+          </>)}{/* end details tab */}
 
         </div>{/* end scrollable body */}
 
