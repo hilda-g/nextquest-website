@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { LANGS } from "./locales";
+import { EventCardBody, EventCardModal } from "./EventCard";
 
 // ─── CONFIG ──────────────────────────────────────────────────
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL  || "";
@@ -487,10 +488,6 @@ export default function NextQuest() {
   const [selected, setSelected]     = useState(null);
   const [subscribed, setSubscribed] = useState({});
   const [notifyTooltip, setNotifyTooltip] = useState(null); // event id showing tooltip
-  const [showContacts, setShowContacts] = useState(false);
-  const [contactTooltipPos, setContactTooltipPos] = useState({ top: 0, left: 0 });
-  const [showFmtInfo,  setShowFmtInfo]  = useState(false);
-  const [fmtInfoPos, setFmtInfoPos] = useState({ top: 0, left: 0 });
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -686,7 +683,7 @@ export default function NextQuest() {
             {/* Header */}
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontSize: 11, color: "#4a4868", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>{t.organizer}</div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 32, color: "#fff", lineHeight: 1.1 }}>{organizerPage}</h1>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 32, color: "#fff", lineHeight: 1.1 }}>@{organizerPage}</h1>
               <div style={{ fontSize: 13, color: "#4a4868", marginTop: 8 }}>{orgEvents.length} {orgEvents.length === 1 ? "event" : "events"}</div>
             </div>
           </div>
@@ -706,82 +703,25 @@ export default function NextQuest() {
           </div>
         </div>
 
-        {/* Full event modal — identical to main page */}
-        {selected && (
-          <div className="modal-overlay" onClick={() => { setSelected(null); setShowContacts(false); setNotifyTooltip(null); }}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
-                <img src={selected.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(22,22,42,1) 0%, transparent 50%)" }} />
-                <button onClick={() => setSelected(null)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: 8, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                <div style={{ position: "absolute", bottom: 16, left: 20, display: "flex", gap: 8 }}>
-                  <span className="pill" style={{ background: getCatColor(selected.category) + "22", color: getCatColor(selected.category), border: `1px solid ${getCatColor(selected.category)}44` }}>{getCatLabel(selected.category)}</span>
-                  {selected.multiDay && <span className="pill" style={{ background: "rgba(255,255,255,0.1)", color: "#e8e6f0" }}>{t.multiDay}</span>}
-                  {selected.status === "cancelled" && <span className="pill" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444" }}>{t.cancelled}</span>}
-                </div>
-              </div>
-              <div className="nq-modal-body" style={{ padding: 24 }}>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{({ ru: selected.title_ru, el: selected.title_el, uk: selected.title_uk })[lang] || selected.title}</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 20 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12, background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)", color: selected.format === "private" ? "#a78bfa" : "#10b981", border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}` }}>
-                      {getFormatLabel(selected.format, t)}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/><rect x="1" y="2" width="14" height="5" rx="2" fill="#ef4444"/><rect x="9" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/><rect x="5" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/><rect x="3" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="7" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="11" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="3" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="7" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/></svg>
-                    <span>{formatDate(selected.dateStart, lang)}{selected.multiDay && selected.dateEnd ? ` — ${formatDate(selected.dateEnd, lang)}` : ` · ${formatTime(selected.dateStart)}`}</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
-                    <span style={{ flexShrink: 0 }}>📍</span>
-                    <a href={makeGMapsUrl(selected.city, selected.address)} target="_blank" rel="noopener noreferrer" style={{ color: "#a09cbc", textDecoration: "underline", textDecorationColor: "rgba(160,156,188,0.3)", textUnderlineOffset: 3 }}>
-                      {selected.city}{selected.address ? `, ${selected.address}` : ""}
-                    </a>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 14, color: "#a09cbc" }}>👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : t.noLimit}</span>
-                    {selected.maxParticipants && selected.registrationClosed ? (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
-                    ) : (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
-                    )}
-                  </div>
-                  {selected.organizerUsername && (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
-                      <span style={{ flexShrink: 0 }}>🎪</span>
-                      <span style={{ color: "#6b6890", fontWeight: 600 }}>{t.organizerLabel}</span>
-                      <button onClick={() => { setSelected(null); window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`); setOrganizerPage(selected.organizerUsername); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, color: "#a78bfa", fontFamily: "inherit", fontWeight: 600, transition: "color 0.15s" }} onMouseEnter={e => e.currentTarget.style.color = "#c4b5fd"} onMouseLeave={e => e.currentTarget.style.color = "#a78bfa"}>{selected.organizerUsername}</button>
-                    </div>
-                  )}
-                  {selected.organizerContacts && (
-                    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14 }}>
-                      <span style={{ flexShrink: 0 }}>📋</span>
-                      <span style={{ color: "#a09cbc" }}><span style={{ color: "#6b6890", fontWeight: 600 }}>{t.contactsLabel}</span>{selected.organizerContacts}</span>
-                    </div>
-                  )}
-                </div>
-                {selected.description && (
-                  <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
-                    {(() => { const descMap = { ru: selected.description_ru, el: selected.description_el, uk: selected.description_uk }; const text = descMap[lang] || selected.description; return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>); })()}
-                  </div>
-                )}
-                <div className="nq-modal-actions">
-                  {selected.status !== "cancelled" && (
-                    selected.externalUrl ? (
-                      <a href={selected.externalUrl} target="_blank" rel="noopener noreferrer" className="register-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>{t.register}</a>
-                    ) : selected.organizerContacts ? (
-                      <a href={selected.organizerContacts.startsWith("http") ? selected.organizerContacts : `https://t.me/${selected.organizerContacts.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" className="register-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.5)", color: "#f97316" }}>{t.contactOrganizer}</a>
-                    ) : null
-                  )}
-                  <button className={`notify-btn${subscribed[selected.id] ? " done" : ""}`} onClick={() => { if (!subscribed[selected.id]) setNotifyTooltip(selected.id); }}>
-                    {subscribed[selected.id] ? t.notified : t.notify}
-                  </button>
-                  <a href={makeGCalUrl(selected)} target="_blank" rel="noopener noreferrer" className="gcal-btn">📅 {t.addToCalendar}</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Full event modal — shared component */}
+        <EventCardModal
+          event={selected}
+          onClose={() => { setSelected(null); setNotifyTooltip(null); }}
+          lang={lang} t={t}
+          onOrganizerClick={username => {
+            setSelected(null);
+            window.history.pushState({}, "", `/organizers/${username}`);
+            setOrganizerPage(username);
+          }}
+          botUsername={BOT_USERNAME}
+          subscribed={!!subscribed[selected?.id]}
+          onNotify={() => setNotifyTooltip(selected?.id)}
+          notifyTooltipOpen={notifyTooltip === selected?.id}
+          onNotifyTooltipClose={() => {
+            setSubscribed(s => ({ ...s, [selected?.id]: true }));
+            setNotifyTooltip(null);
+          }}
+        />
       </>
     );
   }
@@ -1126,378 +1066,24 @@ export default function NextQuest() {
         </footer>
 
         {/* ── EVENT MODAL ── */}
-        {selected && (
-          <div className="modal-overlay" onClick={() => { setSelected(null); setNotifyTooltip(null); setShowContacts(false); setShowFmtInfo(false); }}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              {/* Cover */}
-              <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
-                <img src={selected.cover} alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={e => { e.target.style.display = "none"; }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(22,22,42,1) 0%, transparent 50%)" }} />
-                <button onClick={() => setSelected(null)}
-                  style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: 8, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                <div style={{ position: "absolute", bottom: 16, left: 20, display: "flex", gap: 8 }}>
-                  <span className="pill" style={{ background: getCatColor(selected.category) + "22", color: getCatColor(selected.category), border: `1px solid ${getCatColor(selected.category)}44` }}>{getCatLabel(selected.category)}</span>
-                  {selected.multiDay && <span className="pill" style={{ background: "rgba(255,255,255,0.1)", color: "#e8e6f0" }}>{t.multiDay}</span>}
-                  {selected.status === "cancelled" && <span className="pill" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444" }}>{t.cancelled}</span>}
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="nq-modal-body" style={{ padding: 24 }}>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{({ ru: selected.title_ru, el: selected.title_el, uk: selected.title_uk })[lang] || selected.title}</h2>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 18 }}>
-
-                  {/* Format badge + organizer name — single inline row */}
-                  {(() => {
-                    const fmt        = selected.format || "official";
-                    const fmtLabel   = getFormatLabel(fmt, t);
-                    const fmtColors  = {
-                      private:   { bg: "rgba(139,92,246,0.15)",  color: "#a78bfa", border: "rgba(167,139,250,0.3)"  },
-                      community: { bg: "rgba(6,182,212,0.12)",   color: "#06b6d4", border: "rgba(6,182,212,0.3)"    },
-                      official:  { bg: "rgba(16,185,129,0.12)",  color: "#10b981", border: "rgba(16,185,129,0.3)"   },
-                    };
-                    const fmtDesc = getFormatDesc(fmt, t);
-                    const fc = fmtColors[fmt] || fmtColors.official;
-                    const displayName = selected.organizerName
-                      ? selected.organizerName
-                      : selected.organizerUsername || null;
-                    const isNavigable = !!selected.organizerUsername;
-
-                    return (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        {/* Format pill + info button */}
-                        <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <span style={{
-                            display: "inline-flex", alignItems: "center", padding: "3px 10px",
-                            borderRadius: 999, fontWeight: 700, fontSize: 12, flexShrink: 0,
-                            background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`,
-                          }}>
-                            {fmtLabel}
-                          </span>
-                          {/* small ℹ button */}
-                          <button
-                            onClick={e => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setFmtInfoPos({ top: rect.top - 8, left: rect.left });
-                              setShowFmtInfo(v => !v);
-                              setShowContacts(false);
-                            }}
-                            style={{
-                              width: 15, height: 15, borderRadius: "50%",
-                              background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-                              color: "#6b6890", fontSize: 9, fontWeight: 700, cursor: "pointer",
-                              display: "inline-flex", alignItems: "center", justifyContent: "center",
-                              fontFamily: "inherit", flexShrink: 0, lineHeight: 1, padding: 0,
-                              transition: "all 0.15s",
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#a09cbc"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#6b6890"; }}
-                          >i</button>
-                          {/* Format info tooltip — fixed to avoid modal overflow clipping */}
-                          {showFmtInfo && (
-                            <div style={{
-                              position: "fixed",
-                              bottom: `calc(100vh - ${fmtInfoPos.top}px)`,
-                              left: fmtInfoPos.left,
-                              background: "#1e1e36", border: "1px solid rgba(167,139,250,0.25)",
-                              borderRadius: 10, padding: "10px 13px", width: 210,
-                              boxShadow: "0 8px 28px rgba(0,0,0,0.5)", zIndex: 9999,
-                              fontSize: 12, lineHeight: 1.5, color: "#a09cbc",
-                              animation: "fadeIn 0.15s ease",
-                            }}>
-                              <strong style={{ color: "#e8e6f0", fontSize: 12 }}>{fmtLabel}</strong><br />
-                              {fmtDesc}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Organizer — pill-style clearly clickable button */}
-                        {displayName && (isNavigable ? (
-                          <button
-                            onClick={() => {
-                              setSelected(null);
-                              window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`);
-                              setOrganizerPage(selected.organizerUsername);
-                            }}
-                            style={{
-                              display: "inline-flex", alignItems: "center", gap: 5,
-                              background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
-                              borderRadius: 999, padding: "3px 10px 3px 8px",
-                              cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#a78bfa",
-                              fontFamily: "inherit", transition: "all 0.15s",
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.18)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; e.currentTarget.style.color = "#c4b5fd"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(167,139,250,0.08)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.2)"; e.currentTarget.style.color = "#a78bfa"; }}
-                          >
-                            <span style={{ fontSize: 13 }}>👤</span>
-                            {displayName}
-                            <span style={{ fontSize: 11, color: "rgba(167,139,250,0.6)" }}>›</span>
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: 13, color: "#a09cbc" }}>
-                            <span style={{ color: "#4a4868", fontWeight: 600, fontSize: 12 }}>{t.organizerLabel}</span>
-                            {displayName}
-                          </span>
-                        ))}
-                      </div>
-                    );
-                  })()}
-
-                  {/* Date */}
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-                      <rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/>
-                      <rect x="1" y="2" width="14" height="5" rx="2" fill="#ef4444"/>
-                      <rect x="9" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/>
-                      <rect x="5" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/>
-                      <rect x="3" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-                      <rect x="7" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-                      <rect x="11" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-                      <rect x="3" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-                      <rect x="7" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-                    </svg>
-                    <span>
-                      {formatDate(selected.dateStart, lang)}
-                      {selected.multiDay && selected.dateEnd ? ` — ${formatDate(selected.dateEnd, lang)}` : ` · ${formatTime(selected.dateStart)}`}
-                    </span>
-                  </div>
-
-                  {/* Location with Google Maps link */}
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
-                    <span style={{ flexShrink: 0 }}>📍</span>
-                    <a
-                      href={makeGMapsUrl(selected.city, selected.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#a09cbc", textDecoration: "underline", textDecorationColor: "rgba(160,156,188,0.3)", textUnderlineOffset: 3 }}
-                    >
-                      {selected.city}{selected.address ? `, ${selected.address}` : ""}
-                    </a>
-                  </div>
-
-                  {/* User limit + status badge */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 14, color: "#a09cbc" }}>
-                      👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : t.noLimit}
-                    </span>
-                    {selected.maxParticipants && selected.registrationClosed ? (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
-                    ) : (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
-                    )}
-                  </div>
-
-                </div>
-
-                {selected.description && (
-                  <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
-                    {(() => {
-                      const descMap = { ru: selected.description_ru, el: selected.description_el, uk: selected.description_uk };
-                      const text = descMap[lang] || selected.description;
-                      return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>);
-                    })()}
-                  </div>
-                )}
-
-
-
-                {/* Action buttons — always one row, 3 equal slots */}
-                <div className="nq-modal-actions" style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
-
-                  {/* 1. Contact organizer / Register — orange, with tooltip if contacts */}
-                  {selected.status !== "cancelled" && (() => {
-                    if (selected.externalUrl) {
-                      return (
-                        <a
-                          href={selected.externalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="register-btn"
-                          style={{ flex: 1, textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                        >
-                          {t.register}
-                        </a>
-                      );
-                    }
-                    if (selected.organizerContacts) {
-                      const raw = selected.organizerContacts;
-                      const href = raw.startsWith("http")
-                        ? raw
-                        : raw.startsWith("@")
-                        ? `https://t.me/${raw.slice(1)}`
-                        : `https://t.me/${raw}`;
-                      return (
-                        <div style={{ flex: 1, position: "relative" }}>
-                          <button
-                            onClick={e => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setContactTooltipPos({ top: rect.top, left: rect.left + rect.width / 2 });
-                              setShowContacts(v => !v);
-                              setShowFmtInfo(false);
-                            }}
-                            className="register-btn"
-                            style={{
-                              width: "100%", height: "100%",
-                              background: "rgba(249,115,22,0.12)",
-                              border: "1px solid rgba(249,115,22,0.45)",
-                              color: "#f97316", cursor: "pointer",
-                              fontFamily: "inherit", display: "inline-flex",
-                              alignItems: "center", justifyContent: "center", gap: 6,
-                            }}
-                          >
-                            📋 {t.contactOrganizer.replace(/📋\s?/,"").split(" ")[0]}
-                          </button>
-
-                          {/* Contact tooltip — fixed to avoid modal overflow clipping */}
-                          {showContacts && (
-                            <div style={{
-                              position: "fixed",
-                              bottom: `calc(100vh - ${contactTooltipPos.top}px + 10px)`,
-                              left: contactTooltipPos.left,
-                              transform: "translateX(-50%)",
-                              background: "#1e1e36",
-                              border: "1px solid rgba(249,115,22,0.3)",
-                              borderRadius: 12,
-                              padding: "13px 15px",
-                              width: 240,
-                              boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-                              zIndex: 9999,
-                              animation: "fadeIn 0.15s ease",
-                            }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6890", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>
-                                {t.organizerContacts}
-                              </div>
-                              <div style={{ fontSize: 14, color: "#f97316", fontWeight: 600, wordBreak: "break-all", marginBottom: 11 }}>
-                                {raw}
-                              </div>
-                              <div style={{ display: "flex", gap: 6 }}>
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    flex: 1, textAlign: "center", textDecoration: "none",
-                                    background: "linear-gradient(135deg, #ea580c, #f97316)",
-                                    color: "#fff", borderRadius: 8, padding: "8px 10px",
-                                    fontSize: 12, fontWeight: 700, display: "inline-flex",
-                                    alignItems: "center", justifyContent: "center", gap: 5,
-                                  }}
-                                  onClick={() => setShowContacts(false)}
-                                >
-                                  ✈️ Open
-                                </a>
-                                <button
-                                  onClick={() => setShowContacts(false)}
-                                  style={{
-                                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                                    color: "#6b6890", borderRadius: 8, padding: "8px 11px",
-                                    fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                                  }}
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    return <div style={{ flex: 1 }} />;
-                  })()}
-
-                  {/* 2. Notify me */}
-                  <div style={{ flex: 1, position: "relative" }}>
-                    <button
-                      className={`notify-btn${subscribed[selected.id] ? " done" : ""}`}
-                      style={{ width: "100%" }}
-                      onClick={() => {
-                        if (subscribed[selected.id]) return;
-                        setShowContacts(false);
-                        setShowFmtInfo(false);
-                        setNotifyTooltip(selected.id);
-                      }}
-                    >
-                      {subscribed[selected.id] ? t.notified : t.notify}
-                    </button>
-
-                    {notifyTooltip === selected.id && !subscribed[selected.id] && (
-                      <div style={{
-                        position: "absolute",
-                        bottom: "calc(100% + 10px)",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        background: "#1e1e36",
-                        border: "1px solid rgba(167,139,250,0.35)",
-                        borderRadius: 12,
-                        padding: "12px 14px",
-                        width: 230,
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-                        zIndex: 200,
-                        animation: "fadeIn 0.15s ease",
-                      }}>
-                        <div style={{
-                          position: "absolute", bottom: -6, left: "50%",
-                          transform: "translateX(-50%) rotate(45deg)",
-                          width: 10, height: 10, background: "#1e1e36",
-                          border: "1px solid rgba(167,139,250,0.35)",
-                          borderTop: "none", borderLeft: "none",
-                        }} />
-                        <p style={{ fontSize: 12, color: "#a09cbc", marginBottom: 10, lineHeight: 1.5 }}>
-                          🔔 You'll get reminders <strong style={{ color: "#e8e6f0" }}>7 days</strong> and <strong style={{ color: "#e8e6f0" }}>1 day</strong> before the event — via Telegram.
-                        </p>
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <a
-                            href={`https://t.me/${BOT_USERNAME}?start=event_${selected.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              flex: 1, textAlign: "center", textDecoration: "none",
-                              background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
-                              color: "#fff", borderRadius: 8, padding: "7px 10px",
-                              fontSize: 12, fontWeight: 700, display: "inline-flex",
-                              alignItems: "center", justifyContent: "center", gap: 4,
-                            }}
-                            onClick={() => {
-                              setSubscribed(s => ({ ...s, [selected.id]: true }));
-                              setNotifyTooltip(null);
-                            }}
-                          >
-                            ✈️ Open Telegram
-                          </a>
-                          <button
-                            onClick={() => setNotifyTooltip(null)}
-                            style={{
-                              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                              color: "#6b6890", borderRadius: 8, padding: "7px 10px",
-                              fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 3. Add to Calendar */}
-                  <a
-                    href={makeGCalUrl(selected)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="gcal-btn"
-                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                  >
-                    📅 {t.addToCalendar}
-                  </a>
-
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <EventCardModal
+          event={selected}
+          onClose={() => { setSelected(null); setNotifyTooltip(null); }}
+          lang={lang} t={t}
+          onOrganizerClick={username => {
+            setSelected(null);
+            window.history.pushState({}, "", `/organizers/${username}`);
+            setOrganizerPage(username);
+          }}
+          botUsername={BOT_USERNAME}
+          subscribed={!!subscribed[selected?.id]}
+          onNotify={() => setNotifyTooltip(selected?.id)}
+          notifyTooltipOpen={notifyTooltip === selected?.id}
+          onNotifyTooltipClose={() => {
+            setSubscribed(s => ({ ...s, [selected?.id]: true }));
+            setNotifyTooltip(null);
+          }}
+        />
 
         {/* ── SCROLL TO TOP ── */}
         <ScrollToTop />
