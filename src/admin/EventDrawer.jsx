@@ -378,8 +378,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
         category:         form.category,
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
-        date_start:       form.date_start ? new Date(form.date_start).toISOString() : null,
-        date_end:         multiDay && form.date_end ? new Date(form.date_end).toISOString() : null,
+        date_start:       form.date_start ? form.date_start.replace("T", " ") + ":00" : null,
+        date_end:         multiDay && form.date_end ? form.date_end.replace("T", " ") + ":00" : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
         external_url:     form.external_url.trim() || null,
         // BUG 2 FIX: use null (allowed by some schemas) or empty string fallback

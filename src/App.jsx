@@ -99,7 +99,7 @@ function formatDate(date, lang) {
 }
 function formatTime(date) {
   if (!date || isNaN(date)) return "";
-  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 function getCatColor(id) { return CATEGORIES.find(c => c.id === id)?.color || "#6b7280"; }
 function getCatLabel(id) { return CATEGORIES.find(c => c.id === id)?.label || id; }
