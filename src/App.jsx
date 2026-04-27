@@ -30,6 +30,12 @@ function mapEvent(row) {
     city:             row.location_city,
     address:          row.location_address,
     description:      row.description,
+    description_ru:   row.description_ru || null,
+    description_el:   row.description_el || null,
+    description_uk:   row.description_uk || null,
+    title_ru:         row.title_ru || null,
+    title_el:         row.title_el || null,
+    title_uk:         row.title_uk || null,
     organizer:        String(row.organizer_tg_id),
     organizerUsername: row.organizer_username || null,
     maxParticipants:  row.max_participants,
@@ -613,7 +619,7 @@ export default function NextQuest() {
             <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
           </div>
 
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
             {event.maxParticipants ? (
@@ -704,7 +710,7 @@ export default function NextQuest() {
                 </div>
               </div>
               <div className="nq-modal-body" style={{ padding: 24 }}>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{selected.title}</h2>
+                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{({ ru: selected.title_ru, el: selected.title_el, uk: selected.title_uk })[lang] || selected.title}</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
                     <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12, background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)", color: selected.format === "private" ? "#a78bfa" : "#10b981", border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}` }}>
@@ -1129,7 +1135,7 @@ export default function NextQuest() {
 
               {/* Body */}
               <div className="nq-modal-body" style={{ padding: 24 }}>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{selected.title}</h2>
+                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{({ ru: selected.title_ru, el: selected.title_el, uk: selected.title_uk })[lang] || selected.title}</h2>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
 
