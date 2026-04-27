@@ -1,16 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 
 const CATEGORIES = [
-  { id: "boardgames", label: "🎲 Board Games"  },
-  { id: "rpg",        label: "🧙 Tabletop RPG" },
-  { id: "larp",       label: "⚔️ LARP"         },
-  { id: "festival",   label: "🎪 Festival"      },
-  { id: "cosplay",    label: "👽 Cosplay"       },
-  { id: "lectures",   label: "🔭 Lectures"      },
-  { id: "workshops",  label: "🧵 Workshops"     },
-  { id: "gaming",     label: "🎮 Gaming"        },
-  { id: "market",     label: "🛍️ Market"         },
-  { id: "other",      label: "🃏 Other"         },
+  { id: "boardgames", label: "🎲 Board Games" },
+  { id: "larp",       label: "⚔️ LARP"        },
+  { id: "festival",   label: "🎪 Festival"     },
+  { id: "rpg",        label: "🎭 RPG"          },
+  { id: "cosplay",    label: "👗 Cosplay"      },
+  { id: "other",      label: "🃏 Other"        },
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
@@ -606,8 +602,9 @@ export default function EventDrawer({ event, onSave, onClose }) {
                 borderRadius: 10, color: "#e8e6f0", fontFamily: "inherit", fontSize: 14,
               }}
             >
-              <option value="official">🎉 Official</option>
               <option value="private">🔒 Private</option>
+              <option value="community">✨ Community</option>
+              <option value="official">🎉 Official</option>
             </select>
           </div>
 

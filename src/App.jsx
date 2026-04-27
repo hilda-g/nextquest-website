@@ -57,23 +57,20 @@ function mapEvent(row) {
 // ─── i18n ─────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { id: "boardgames", label: "🎲 Board Games",  color: "#f97316" },
-  { id: "rpg",        label: "🧙 Tabletop RPG", color: "#06b6d4" },
-  { id: "larp",       label: "⚔️ LARP",         color: "#8b5cf6" },
-  { id: "festival",   label: "🎪 Festival",      color: "#ec4899" },
-  { id: "cosplay",    label: "👽 Cosplay",       color: "#10b981" },
-  { id: "lectures",   label: "🔭 Lectures",      color: "#0ea5e9" },
-  { id: "workshops",  label: "🧵 Workshops",     color: "#a855f7" },
-  { id: "gaming",     label: "🎮 Gaming",        color: "#22c55e" },
-  { id: "market",     label: "🛍️ Market",         color: "#f59e0b" },
-  { id: "other",      label: "🃏 Other",         color: "#6b7280" },
+  { id: "boardgames", label: "🎲 Board Games", color: "#f97316" },
+  { id: "larp",       label: "⚔️ LARP",        color: "#8b5cf6" },
+  { id: "festival",   label: "🎪 Festival",     color: "#ec4899" },
+  { id: "rpg",        label: "🎭 RPG",          color: "#06b6d4" },
+  { id: "cosplay",    label: "👗 Cosplay",      color: "#10b981" },
+  { id: "other",      label: "🃏 Other",        color: "#6b7280" },
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos"];
 
 const FORMAT_TYPES = [
-  { id: "private",  label: "🔒 Private" },
-  { id: "official", label: "🎉 Official" },
+  { id: "private",   label: "🔒 Private"    },
+  { id: "community", label: "✨ Community"  },
+  { id: "official",  label: "🎉 Official"   },
 ];
 
 function formatDate(date, lang) {
@@ -114,7 +111,7 @@ function makeGMapsUrl(city, address) {
   return `https://maps.google.com/?q=${q}`;
 }
 
-const FORMAT_LABELS = { official: "🎉 Official", private: "🔒 Private" };
+const FORMAT_LABELS = { private: "🔒 Private", community: "✨ Community", official: "🎉 Official" };
 
 // ─── Calendar helpers ─────────────────────────────────────────
 function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
