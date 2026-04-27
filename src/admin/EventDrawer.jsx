@@ -753,7 +753,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
             <div style={{ display: "grid", gridTemplateColumns: multiDay ? "1fr 1fr" : "1fr", gap: 12 }}>
               <div>
                 <span style={{ ...label, marginBottom: 4 }}>{multiDay ? "Start" : "Date"}</span>
-                <input type="datetime-local" style={inputStyle(errors.date_start)}
+                <input type="datetime-local" lang="en-GB" style={inputStyle(errors.date_start)}
                   value={form.date_start} onChange={e => set("date_start", e.target.value)}
                   onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
                   onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
@@ -763,7 +763,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
               {multiDay && (
                 <div>
                   <span style={{ ...label, marginBottom: 4 }}>End</span>
-                  <input type="datetime-local" style={inputStyle(errors.date_end)}
+                  <input type="datetime-local" lang="en-GB" style={inputStyle(errors.date_end)}
                     value={form.date_end} onChange={e => set("date_end", e.target.value)}
                     onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
                     onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
