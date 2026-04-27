@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL  || "";
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
 const CATEGORIES = [
   { id: "boardgames", label: "🎲 Board Games" },
   { id: "larp",       label: "⚔️ LARP"        },
@@ -253,6 +256,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
   const [multiDay, setMultiDay] = useState(false);
   const [visible, setVisible]   = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [orgProfiles, setOrgProfiles] = useState([]);
   const initialForm = useRef(null);
 
   useEffect(() => {
@@ -286,6 +290,26 @@ export default function EventDrawer({ event, onSave, onClose }) {
     setActiveTab("details");
     requestAnimationFrame(() => setVisible(true));
   }, [event]);
+
+  // Fetch onboarded organizer profiles for the dropdown
+  useEffect(() => {
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    const url = new URL(`${SUPABASE_URL}/rest/v1/users`);
+    url.searchParams.set("select", "tg_username,org_format,org_name,org_link,org_contact");
+    url.searchParams.set("onboarded", "eq.true");
+    url.searchParams.set("org_format", "not.is.null");
+    fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setOrgProfiles(data);
+      })
+      .catch(() => {});
+  }, []);
 
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }));
@@ -505,6 +529,48 @@ export default function EventDrawer({ event, onSave, onClose }) {
               <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
                 👤 These fields are auto-filled from the organizer's bot profile. Edit here to override for this specific event.
               </div>
+
+              {/* ── Fill from existing organizer ── */}
+              {orgProfiles.length > 0 && (
+                <div>
+                  <span style={label}>Fill from existing organizer</span>
+                  <select
+                    defaultValue=""
+                    onChange={e => {
+                      const tg = e.target.value;
+                      if (!tg) return;
+                      const p = orgProfiles.find(o => o.tg_username === tg);
+                      if (!p) return;
+                      set("organizer_username", p.org_name || p.tg_username || "");
+                      set("organizer_contacts", p.org_contact || "");
+                      set("organizer_link",     p.org_link    || "");
+                      // reset select back to placeholder after fill
+                      e.target.value = "";
+                    }}
+                    style={{
+                      ...inputStyle(),
+                      cursor: "pointer",
+                      appearance: "none",
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6890' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 14px center",
+                      paddingRight: 36,
+                    }}
+                  >
+                    <option value="" disabled>— select organizer to auto-fill —</option>
+                    {orgProfiles.map(p => {
+                      const fmtIcon = { private: "🔒", community: "✨", official: "🎉" }[p.org_format] || "";
+                      const display = p.org_name || p.tg_username || p.tg_id;
+                      return (
+                        <option key={p.tg_username} value={p.tg_username}>
+                          {fmtIcon} {display}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <span style={label}>Organizer Name / Username</span>
                 <input
