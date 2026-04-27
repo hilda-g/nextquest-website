@@ -1140,18 +1140,62 @@ export default function NextQuest() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
 
-                  {/* Format */}
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", padding: "3px 10px",
-                      borderRadius: 999, fontWeight: 700, fontSize: 12,
-                      background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)",
-                      color: selected.format === "private" ? "#a78bfa" : "#10b981",
-                      border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}`,
-                    }}>
-                      {FORMAT_LABELS[selected.format] || "🎉 Official"}
-                    </span>
-                  </div>
+                  {/* Format badge + organizer name — single inline row */}
+                  {(() => {
+                    const fmt        = selected.format || "official";
+                    const fmtLabel   = FORMAT_LABELS[fmt] || "🎉 Official";
+                    const fmtColors  = {
+                      private:   { bg: "rgba(139,92,246,0.15)",  color: "#a78bfa", border: "rgba(167,139,250,0.3)"  },
+                      community: { bg: "rgba(6,182,212,0.12)",   color: "#06b6d4", border: "rgba(6,182,212,0.3)"    },
+                      official:  { bg: "rgba(16,185,129,0.12)",  color: "#10b981", border: "rgba(16,185,129,0.3)"   },
+                    };
+                    const fc = fmtColors[fmt] || fmtColors.official;
+                    const displayName = selected.organizerName
+                      ? (fmt === "private" && !selected.organizerName.startsWith("@") ? `@${selected.organizerName}` : selected.organizerName)
+                      : selected.organizerUsername ? `@${selected.organizerUsername}` : null;
+                    const isNavigable = !!selected.organizerUsername;
+
+                    return (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {/* Format pill */}
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", padding: "3px 10px",
+                          borderRadius: 999, fontWeight: 700, fontSize: 12, flexShrink: 0,
+                          background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`,
+                        }}>
+                          {fmtLabel}
+                        </span>
+
+                        {/* Organizer name — clickable if navigable */}
+                        {displayName && (isNavigable ? (
+                          <button
+                            onClick={() => {
+                              setSelected(null);
+                              window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`);
+                              setOrganizerPage(selected.organizerUsername);
+                            }}
+                            style={{
+                              background: "none", border: "none", padding: 0,
+                              cursor: "pointer", fontSize: 13, color: "#a09cbc",
+                              fontFamily: "inherit", transition: "color 0.15s",
+                              display: "flex", alignItems: "center", gap: 4,
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.color = "#e8e6f0"}
+                            onMouseLeave={e => e.currentTarget.style.color = "#a09cbc"}
+                          >
+                            <span style={{ color: "#4a4868", fontWeight: 600, fontSize: 12 }}>{t.organizerLabel}</span>
+                            <span style={{ fontWeight: 600 }}>{displayName}</span>
+                            <span style={{ fontSize: 11, color: "#4a4868" }}>›</span>
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 13, color: "#a09cbc" }}>
+                            <span style={{ color: "#4a4868", fontWeight: 600, fontSize: 12 }}>{t.organizerLabel}</span>
+                            {displayName}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                   {/* Date */}
                   <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
@@ -1197,92 +1241,6 @@ export default function NextQuest() {
                     )}
                   </div>
 
-                  {/* Organizer chip — clickable pill combining name + contacts */}
-                  {(selected.organizerName || selected.organizerUsername || selected.organizerContacts) && (() => {
-                    const fmt = selected.format || "official";
-                    const fmtIcon  = { private: "🔒", community: "✨", official: "🎉" }[fmt] || "🎉";
-                    const fmtColor = { private: "#8b5cf6", community: "#06b6d4", official: "#f59e0b" }[fmt] || "#f59e0b";
-                    const fmtColorBg   = { private: "rgba(139,92,246,0.15)", community: "rgba(6,182,212,0.15)", official: "rgba(245,158,11,0.15)" }[fmt];
-                    const fmtColorBorder = { private: "rgba(139,92,246,0.3)", community: "rgba(6,182,212,0.3)", official: "rgba(245,158,11,0.3)" }[fmt];
-                    const displayName = selected.organizerName
-                      ? (fmt === "private" && !selected.organizerName.startsWith("@") ? `@${selected.organizerName}` : selected.organizerName)
-                      : selected.organizerUsername
-                      ? `@${selected.organizerUsername}`
-                      : null;
-                    const isNavigable = !!selected.organizerUsername;
-
-                    const chipContent = (
-                      <>
-                        {/* Avatar circle with format icon */}
-                        <div style={{
-                          width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                          background: fmtColorBg, border: `1px solid ${fmtColorBorder}`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 15,
-                        }}>
-                          {fmtIcon}
-                        </div>
-
-                        {/* Name + contacts */}
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          {displayName && (
-                            <div style={{
-                              fontSize: 14, fontWeight: 600,
-                              color: isNavigable ? fmtColor : "#a09cbc",
-                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                            }}>
-                              {displayName}
-                            </div>
-                          )}
-                          {selected.organizerContacts && (
-                            <div style={{
-                              fontSize: 12, color: "#6b6890", marginTop: displayName ? 1 : 0,
-                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                            }}>
-                              {selected.organizerContacts}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Arrow indicator only when navigable */}
-                        {isNavigable && (
-                          <div style={{ fontSize: 12, color: "#4a4868", flexShrink: 0 }}>›</div>
-                        )}
-                      </>
-                    );
-
-                    return isNavigable ? (
-                      <button
-                        onClick={() => {
-                          setSelected(null);
-                          window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`);
-                          setOrganizerPage(selected.organizerUsername);
-                        }}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          width: "100%", textAlign: "left",
-                          background: "rgba(255,255,255,0.03)",
-                          border: `1px solid ${fmtColorBorder}`,
-                          borderRadius: 12, padding: "8px 12px",
-                          cursor: "pointer", fontFamily: "inherit",
-                          transition: "background 0.15s, border-color 0.15s",
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = fmtColorBg; e.currentTarget.style.borderColor = fmtColor; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = fmtColorBorder; }}
-                      >
-                        {chipContent}
-                      </button>
-                    ) : (
-                      <div style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        background: "rgba(255,255,255,0.03)",
-                        border: `1px solid ${fmtColorBorder}`,
-                        borderRadius: 12, padding: "8px 12px",
-                      }}>
-                        {chipContent}
-                      </div>
-                    );
-                  })()}
                 </div>
 
                 {selected.description && (
@@ -1297,51 +1255,117 @@ export default function NextQuest() {
 
 
 
-                {/* Action buttons */}
-                <div className="nq-modal-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                {/* Action buttons — always one row, 3 equal slots */}
+                <div className="nq-modal-actions" style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
 
-                  {/* 1. Register / Contact organizer */}
-                  {selected.status !== "cancelled" && (
-                    selected.externalUrl ? (
-                      <a
-                        href={selected.externalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="register-btn"
-                        style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
-                      >
-                        {t.register}
-                      </a>
-                    ) : selected.organizerContacts ? (
-                      <a
-                        href={
-                          selected.organizerContacts.startsWith("http")
-                            ? selected.organizerContacts
-                            : selected.organizerContacts.startsWith("@")
-                            ? `https://t.me/${selected.organizerContacts.slice(1)}`
-                            : `https://t.me/${selected.organizerContacts}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="register-btn"
-                        style={{
-                          textDecoration: "none", display: "inline-flex", alignItems: "center",
-                          background: "rgba(249,115,22,0.15)",
-                          border: "1px solid rgba(249,115,22,0.5)",
-                          color: "#f97316",
-                        }}
-                      >
-                        {t.contactOrganizer}
-                      </a>
-                    ) : null
-                  )}
+                  {/* 1. Contact organizer / Register — orange, with tooltip if contacts */}
+                  {selected.status !== "cancelled" && (() => {
+                    if (selected.externalUrl) {
+                      return (
+                        <a
+                          href={selected.externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="register-btn"
+                          style={{ flex: 1, textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          {t.register}
+                        </a>
+                      );
+                    }
+                    if (selected.organizerContacts) {
+                      const raw = selected.organizerContacts;
+                      const href = raw.startsWith("http")
+                        ? raw
+                        : raw.startsWith("@")
+                        ? `https://t.me/${raw.slice(1)}`
+                        : `https://t.me/${raw}`;
+                      return (
+                        <div style={{ flex: 1, position: "relative" }}>
+                          <button
+                            onClick={() => setShowContacts(v => !v)}
+                            className="register-btn"
+                            style={{
+                              width: "100%", height: "100%",
+                              background: "rgba(249,115,22,0.15)",
+                              border: "1px solid rgba(249,115,22,0.5)",
+                              color: "#f97316", cursor: "pointer",
+                              fontFamily: "inherit", display: "inline-flex",
+                              alignItems: "center", justifyContent: "center",
+                            }}
+                          >
+                            {t.contactOrganizer}
+                          </button>
 
-                  {/* 2. Notify me — with Telegram tooltip */}
-                  <div style={{ position: "relative" }}>
+                          {showContacts && (
+                            <div style={{
+                              position: "absolute",
+                              bottom: "calc(100% + 10px)",
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                              background: "#1e1e36",
+                              border: "1px solid rgba(249,115,22,0.35)",
+                              borderRadius: 12,
+                              padding: "12px 14px",
+                              width: 230,
+                              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                              zIndex: 200,
+                              animation: "fadeIn 0.15s ease",
+                            }}>
+                              <div style={{
+                                position: "absolute", bottom: -6, left: "50%",
+                                transform: "translateX(-50%) rotate(45deg)",
+                                width: 10, height: 10, background: "#1e1e36",
+                                border: "1px solid rgba(249,115,22,0.35)",
+                                borderTop: "none", borderLeft: "none",
+                              }} />
+                              <p style={{ fontSize: 12, color: "#a09cbc", marginBottom: 10, lineHeight: 1.5 }}>
+                                📋 <strong style={{ color: "#e8e6f0" }}>{t.organizerContacts}:</strong><br />
+                                <span style={{ color: "#f97316", wordBreak: "break-all" }}>{raw}</span>
+                              </p>
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    flex: 1, textAlign: "center", textDecoration: "none",
+                                    background: "linear-gradient(135deg, #ea580c, #f97316)",
+                                    color: "#fff", borderRadius: 8, padding: "7px 10px",
+                                    fontSize: 12, fontWeight: 700, display: "inline-flex",
+                                    alignItems: "center", justifyContent: "center", gap: 4,
+                                  }}
+                                  onClick={() => setShowContacts(false)}
+                                >
+                                  ✈️ {t.contactOrganizer.replace("📋 ", "")}
+                                </a>
+                                <button
+                                  onClick={() => setShowContacts(false)}
+                                  style={{
+                                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                                    color: "#6b6890", borderRadius: 8, padding: "7px 10px",
+                                    fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                                  }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return <div style={{ flex: 1 }} />;
+                  })()}
+
+                  {/* 2. Notify me */}
+                  <div style={{ flex: 1, position: "relative" }}>
                     <button
                       className={`notify-btn${subscribed[selected.id] ? " done" : ""}`}
+                      style={{ width: "100%" }}
                       onClick={() => {
                         if (subscribed[selected.id]) return;
+                        setShowContacts(false);
                         setNotifyTooltip(selected.id);
                       }}
                     >
@@ -1363,14 +1387,10 @@ export default function NextQuest() {
                         zIndex: 200,
                         animation: "fadeIn 0.15s ease",
                       }}>
-                        {/* Arrow */}
                         <div style={{
-                          position: "absolute",
-                          bottom: -6,
-                          left: "50%",
+                          position: "absolute", bottom: -6, left: "50%",
                           transform: "translateX(-50%) rotate(45deg)",
-                          width: 10, height: 10,
-                          background: "#1e1e36",
+                          width: 10, height: 10, background: "#1e1e36",
                           border: "1px solid rgba(167,139,250,0.35)",
                           borderTop: "none", borderLeft: "none",
                         }} />
@@ -1404,7 +1424,7 @@ export default function NextQuest() {
                               fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                             }}
                           >
-                            Cancel
+                            ✕
                           </button>
                         </div>
                       </div>
@@ -1417,9 +1437,11 @@ export default function NextQuest() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="gcal-btn"
+                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                   >
                     📅 {t.addToCalendar}
                   </a>
+
                 </div>
               </div>
             </div>
