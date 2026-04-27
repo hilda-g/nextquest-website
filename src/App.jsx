@@ -38,6 +38,7 @@ function mapEvent(row) {
     title_uk:         row.title_uk || null,
     organizer:        String(row.organizer_tg_id),
     organizerUsername: row.organizer_username || null,
+    organizerName:    row.organizer_name || row.organizer_username || null,
     maxParticipants:  row.max_participants,
     currentParticipants: 0,
     cover: (row.cover_image_url && row.cover_image_url.startsWith("http"))
@@ -1196,11 +1197,61 @@ export default function NextQuest() {
                     )}
                   </div>
 
-                  {/* Organizer — clickable, navigates to organizer page */}
-                  {selected.organizerUsername && (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
-                      <span style={{ flexShrink: 0 }}>🎪</span>
-                      <span style={{ color: "#6b6890", fontWeight: 600 }}>{t.organizerLabel}</span>
+                  {/* Organizer chip — clickable pill combining name + contacts */}
+                  {(selected.organizerName || selected.organizerUsername || selected.organizerContacts) && (() => {
+                    const fmt = selected.format || "official";
+                    const fmtIcon  = { private: "🔒", community: "✨", official: "🎉" }[fmt] || "🎉";
+                    const fmtColor = { private: "#8b5cf6", community: "#06b6d4", official: "#f59e0b" }[fmt] || "#f59e0b";
+                    const fmtColorBg   = { private: "rgba(139,92,246,0.15)", community: "rgba(6,182,212,0.15)", official: "rgba(245,158,11,0.15)" }[fmt];
+                    const fmtColorBorder = { private: "rgba(139,92,246,0.3)", community: "rgba(6,182,212,0.3)", official: "rgba(245,158,11,0.3)" }[fmt];
+                    const displayName = selected.organizerName
+                      ? (fmt === "private" && !selected.organizerName.startsWith("@") ? `@${selected.organizerName}` : selected.organizerName)
+                      : selected.organizerUsername
+                      ? `@${selected.organizerUsername}`
+                      : null;
+                    const isNavigable = !!selected.organizerUsername;
+
+                    const chipContent = (
+                      <>
+                        {/* Avatar circle with format icon */}
+                        <div style={{
+                          width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                          background: fmtColorBg, border: `1px solid ${fmtColorBorder}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 15,
+                        }}>
+                          {fmtIcon}
+                        </div>
+
+                        {/* Name + contacts */}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          {displayName && (
+                            <div style={{
+                              fontSize: 14, fontWeight: 600,
+                              color: isNavigable ? fmtColor : "#a09cbc",
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                            }}>
+                              {displayName}
+                            </div>
+                          )}
+                          {selected.organizerContacts && (
+                            <div style={{
+                              fontSize: 12, color: "#6b6890", marginTop: displayName ? 1 : 0,
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                            }}>
+                              {selected.organizerContacts}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Arrow indicator only when navigable */}
+                        {isNavigable && (
+                          <div style={{ fontSize: 12, color: "#4a4868", flexShrink: 0 }}>›</div>
+                        )}
+                      </>
+                    );
+
+                    return isNavigable ? (
                       <button
                         onClick={() => {
                           setSelected(null);
@@ -1208,30 +1259,30 @@ export default function NextQuest() {
                           setOrganizerPage(selected.organizerUsername);
                         }}
                         style={{
-                          background: "none", border: "none", padding: 0,
-                          cursor: "pointer", fontSize: 14, color: "#a78bfa",
-                          fontFamily: "inherit", fontWeight: 600, transition: "color 0.15s",
+                          display: "flex", alignItems: "center", gap: 10,
+                          width: "100%", textAlign: "left",
+                          background: "rgba(255,255,255,0.03)",
+                          border: `1px solid ${fmtColorBorder}`,
+                          borderRadius: 12, padding: "8px 12px",
+                          cursor: "pointer", fontFamily: "inherit",
+                          transition: "background 0.15s, border-color 0.15s",
                         }}
-                        onMouseEnter={e => e.currentTarget.style.color = "#c4b5fd"}
-                        onMouseLeave={e => e.currentTarget.style.color = "#a78bfa"}
+                        onMouseEnter={e => { e.currentTarget.style.background = fmtColorBg; e.currentTarget.style.borderColor = fmtColor; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = fmtColorBorder; }}
                       >
-                        @{selected.organizerUsername}
+                        {chipContent}
                       </button>
-                    </div>
-                  )}
-
-                  {/* Organizer contacts */}
-                  {selected.organizerContacts && (
-                    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14 }}>
-                      <span style={{ flexShrink: 0 }}>📋</span>
-                      <span style={{ color: "#a09cbc" }}>
-                        <span style={{ color: "#6b6890", fontWeight: 600 }}>
-                          {t.contactsLabel}
-                        </span>
-                        {selected.organizerContacts}
-                      </span>
-                    </div>
-                  )}
+                    ) : (
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        background: "rgba(255,255,255,0.03)",
+                        border: `1px solid ${fmtColorBorder}`,
+                        borderRadius: 12, padding: "8px 12px",
+                      }}>
+                        {chipContent}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {selected.description && (
