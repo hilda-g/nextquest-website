@@ -183,10 +183,14 @@ export function ReopenRegistrationModal({ event, onConfirm, onClose }) {
 
 const CATEGORIES = {
   boardgames: "🎲 Board Games",
+  rpg:        "🧙 Tabletop RPG",
   larp:       "⚔️ LARP",
   festival:   "🎪 Festival",
-  rpg:        "🎭 RPG",
-  cosplay:    "👗 Cosplay",
+  cosplay:    "👽 Cosplay",
+  lectures:   "🔭 Lectures",
+  workshops:  "🧵 Workshops",
+  gaming:     "🎮 Gaming",
+  market:     "🛍️ Market",
   other:      "🃏 Other",
 };
 
@@ -308,12 +312,14 @@ export function CreatePostModal({ event, onConfirm, onClose }) {
 const SITE_BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "NextQuestbot";
 
 const CAT_COLORS = {
-  boardgames: "#f97316", larp: "#8b5cf6", festival: "#ec4899",
-  rpg: "#06b6d4", cosplay: "#10b981", other: "#6b7280",
+  boardgames: "#f97316", rpg: "#06b6d4",   larp: "#8b5cf6",
+  festival:   "#ec4899", cosplay: "#10b981", lectures: "#0ea5e9",
+  workshops:  "#a855f7", gaming: "#22c55e", market: "#f59e0b", other: "#6b7280",
 };
 const CAT_LABELS = {
-  boardgames: "🎲 Board Games", larp: "⚔️ LARP", festival: "🎪 Festival",
-  rpg: "🎭 RPG", cosplay: "👗 Cosplay", other: "🃏 Other",
+  boardgames: "🎲 Board Games",  rpg:      "🧙 Tabletop RPG", larp:     "⚔️ LARP",
+  festival:   "🎪 Festival",     cosplay:  "👽 Cosplay",      lectures: "🔭 Lectures",
+  workshops:  "🧵 Workshops",    gaming:   "🎮 Gaming",       market:   "🛍️ Market",   other: "🃏 Other",
 };
 
 function fmtDate(iso) {

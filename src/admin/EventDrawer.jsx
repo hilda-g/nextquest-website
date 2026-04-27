@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 
 const CATEGORIES = [
-  { id: "boardgames", label: "🎲 Board Games" },
-  { id: "larp",       label: "⚔️ LARP"        },
-  { id: "festival",   label: "🎪 Festival"     },
-  { id: "rpg",        label: "🎭 RPG"          },
-  { id: "cosplay",    label: "👗 Cosplay"      },
-  { id: "other",      label: "🃏 Other"        },
+  { id: "boardgames", label: "🎲 Board Games"  },
+  { id: "rpg",        label: "🧙 Tabletop RPG" },
+  { id: "larp",       label: "⚔️ LARP"         },
+  { id: "festival",   label: "🎪 Festival"      },
+  { id: "cosplay",    label: "👽 Cosplay"       },
+  { id: "lectures",   label: "🔭 Lectures"      },
+  { id: "workshops",  label: "🧵 Workshops"     },
+  { id: "gaming",     label: "🎮 Gaming"        },
+  { id: "market",     label: "🛍️ Market"         },
+  { id: "other",      label: "🃏 Other"         },
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
