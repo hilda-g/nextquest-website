@@ -372,9 +372,9 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                   <span>📍 {ev.city}</span>
                   <span style={{ color: getCatColor(ev.category) }}>{getCatLabel(ev.category)}</span>
                   {ev.maxParticipants && ev.registrationClosed ? (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", flexShrink: 0 }}>✕ Full</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", flexShrink: 0 }}>{t.statusFull}</span>
                   ) : (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", flexShrink: 0 }}>● Open</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", flexShrink: 0 }}>{t.statusOpen}</span>
                   )}
                 </div>
               </div>
