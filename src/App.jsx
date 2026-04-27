@@ -78,11 +78,18 @@ const CATEGORIES = [
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos"];
 
-const FORMAT_TYPES = [
-  { id: "private",   label: "🔒 Private"   },
-  { id: "community", label: "✨ Community" },
-  { id: "official",  label: "🎉 Official"  },
+const FORMAT_TYPES = (t) => [
+  { id: "private",   label: t.formatPrivate   },
+  { id: "community", label: t.formatCommunity },
+  { id: "official",  label: t.formatOfficial  },
 ];
+
+function getFormatLabel(fmt, t) {
+  return { private: t.formatPrivate, community: t.formatCommunity, official: t.formatOfficial }[fmt] || t.formatOfficial;
+}
+function getFormatDesc(fmt, t) {
+  return { private: t.formatDescPrivate, community: t.formatDescCommunity, official: t.formatDescOfficial }[fmt] || "";
+}
 
 function formatDate(date, lang) {
   if (!date || isNaN(date)) return "";
@@ -122,7 +129,7 @@ function makeGMapsUrl(city, address) {
   return `https://maps.google.com/?q=${q}`;
 }
 
-const FORMAT_LABELS = { private: "🔒 Private", community: "✨ Community", official: "🎉 Official" };
+// FORMAT_LABELS replaced by getFormatLabel(fmt, t)
 
 // ─── Calendar helpers ─────────────────────────────────────────
 function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
@@ -208,7 +215,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
       {/* Format filters — same design as Upcoming */}
       <div className="nq-filters-format" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
         <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>{t.allFormats}</button>
-        {FORMAT_TYPES.map(f => (
+        {FORMAT_TYPES(t).map(f => (
           <button
             key={f.id}
             className={`filter-btn${formatFilter === f.id ? " active" : ""}`}
@@ -481,7 +488,9 @@ export default function NextQuest() {
   const [subscribed, setSubscribed] = useState({});
   const [notifyTooltip, setNotifyTooltip] = useState(null); // event id showing tooltip
   const [showContacts, setShowContacts] = useState(false);
+  const [contactTooltipPos, setContactTooltipPos] = useState({ top: 0, left: 0 });
   const [showFmtInfo,  setShowFmtInfo]  = useState(false);
+  const [fmtInfoPos, setFmtInfoPos] = useState({ top: 0, left: 0 });
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -653,7 +662,7 @@ export default function NextQuest() {
           .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
           .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; }
           @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-          .modal { background: #16162a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+          .modal { background: #16162a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow: visible; display: flex; flex-direction: column; animation: slideUp 0.3s ease; } .nq-modal-body { overflow-y: auto; flex: 1; }
           @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
           .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
           .register-btn { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; border: none; border-radius: 8px; padding: 0 20px; height: 42px; font-size: 14px; font-family: inherit; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; }
@@ -716,7 +725,7 @@ export default function NextQuest() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 20 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
                     <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12, background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)", color: selected.format === "private" ? "#a78bfa" : "#10b981", border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}` }}>
-                      {FORMAT_LABELS[selected.format] || "🎉 Official"}
+                      {getFormatLabel(selected.format, t)}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
@@ -826,7 +835,7 @@ export default function NextQuest() {
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        .modal { background: #16162a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+        .modal { background: #16162a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow: visible; display: flex; flex-direction: column; animation: slideUp 0.3s ease; } .nq-modal-body { overflow-y: auto; flex: 1; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 
         .progress-bar { height: 4px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
@@ -1028,7 +1037,7 @@ export default function NextQuest() {
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
                 <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>{t.allFormats}</button>
-                {FORMAT_TYPES.map(f => (
+                {FORMAT_TYPES(t).map(f => (
                   <button key={f.id}
                     className={`filter-btn${formatFilter === f.id ? " active" : ""}`}
                     onClick={() => setFormatFilter(formatFilter === f.id ? "all" : f.id)}>
@@ -1144,17 +1153,13 @@ export default function NextQuest() {
                   {/* Format badge + organizer name — single inline row */}
                   {(() => {
                     const fmt        = selected.format || "official";
-                    const fmtLabel   = FORMAT_LABELS[fmt] || "🎉 Official";
+                    const fmtLabel   = getFormatLabel(fmt, t);
                     const fmtColors  = {
                       private:   { bg: "rgba(139,92,246,0.15)",  color: "#a78bfa", border: "rgba(167,139,250,0.3)"  },
                       community: { bg: "rgba(6,182,212,0.12)",   color: "#06b6d4", border: "rgba(6,182,212,0.3)"    },
                       official:  { bg: "rgba(16,185,129,0.12)",  color: "#10b981", border: "rgba(16,185,129,0.3)"   },
                     };
-                    const fmtDesc = {
-                      private:   "Personal event, home game or small gathering. Registration goes directly through the organizer.",
-                      community: "Club, regular meetup or community group. Open to members and newcomers.",
-                      official:  "Big convention, branded event or company-run experience.",
-                    };
+                    const fmtDesc = getFormatDesc(fmt, t);
                     const fc = fmtColors[fmt] || fmtColors.official;
                     const displayName = selected.organizerName
                       ? (fmt === "private" && !selected.organizerName.startsWith("@") ? `@${selected.organizerName}` : selected.organizerName)
@@ -1174,7 +1179,12 @@ export default function NextQuest() {
                           </span>
                           {/* small ℹ button */}
                           <button
-                            onClick={() => { setShowFmtInfo(v => !v); setShowContacts(false); }}
+                            onClick={e => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setFmtInfoPos({ top: rect.top - 8, left: rect.left });
+                              setShowFmtInfo(v => !v);
+                              setShowContacts(false);
+                            }}
                             style={{
                               width: 15, height: 15, borderRadius: "50%",
                               background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
@@ -1186,22 +1196,20 @@ export default function NextQuest() {
                             onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#a09cbc"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#6b6890"; }}
                           >i</button>
-                          {/* Format info tooltip */}
+                          {/* Format info tooltip — fixed to avoid modal overflow clipping */}
                           {showFmtInfo && (
                             <div style={{
-                              position: "absolute", bottom: "calc(100% + 8px)", left: 0,
+                              position: "fixed",
+                              bottom: `calc(100vh - ${fmtInfoPos.top}px)`,
+                              left: fmtInfoPos.left,
                               background: "#1e1e36", border: "1px solid rgba(167,139,250,0.25)",
                               borderRadius: 10, padding: "10px 13px", width: 210,
-                              boxShadow: "0 8px 28px rgba(0,0,0,0.5)", zIndex: 300,
+                              boxShadow: "0 8px 28px rgba(0,0,0,0.5)", zIndex: 9999,
                               fontSize: 12, lineHeight: 1.5, color: "#a09cbc",
                               animation: "fadeIn 0.15s ease",
                             }}>
-                              <div style={{ position: "absolute", bottom: -5, left: 14,
-                                width: 8, height: 8, background: "#1e1e36",
-                                borderRight: "1px solid rgba(167,139,250,0.25)", borderBottom: "1px solid rgba(167,139,250,0.25)",
-                                transform: "rotate(45deg)" }} />
                               <strong style={{ color: "#e8e6f0", fontSize: 12 }}>{fmtLabel}</strong><br />
-                              {fmtDesc[fmt]}
+                              {fmtDesc}
                             </div>
                           )}
                         </div>
@@ -1324,7 +1332,12 @@ export default function NextQuest() {
                       return (
                         <div style={{ flex: 1, position: "relative" }}>
                           <button
-                            onClick={() => { setShowContacts(v => !v); setShowFmtInfo(false); }}
+                            onClick={e => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setContactTooltipPos({ top: rect.top, left: rect.left + rect.width / 2 });
+                              setShowContacts(v => !v);
+                              setShowFmtInfo(false);
+                            }}
                             className="register-btn"
                             style={{
                               width: "100%", height: "100%",
@@ -1338,11 +1351,12 @@ export default function NextQuest() {
                             📋 {t.contactOrganizer.replace(/📋\s?/,"").split(" ")[0]}
                           </button>
 
+                          {/* Contact tooltip — fixed to avoid modal overflow clipping */}
                           {showContacts && (
                             <div style={{
-                              position: "absolute",
-                              bottom: "calc(100% + 10px)",
-                              left: "50%",
+                              position: "fixed",
+                              bottom: `calc(100vh - ${contactTooltipPos.top}px + 10px)`,
+                              left: contactTooltipPos.left,
                               transform: "translateX(-50%)",
                               background: "#1e1e36",
                               border: "1px solid rgba(249,115,22,0.3)",
@@ -1350,16 +1364,9 @@ export default function NextQuest() {
                               padding: "13px 15px",
                               width: 240,
                               boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-                              zIndex: 300,
+                              zIndex: 9999,
                               animation: "fadeIn 0.15s ease",
                             }}>
-                              <div style={{
-                                position: "absolute", bottom: -5, left: "50%",
-                                transform: "translateX(-50%) rotate(45deg)",
-                                width: 8, height: 8, background: "#1e1e36",
-                                borderRight: "1px solid rgba(249,115,22,0.3)",
-                                borderBottom: "1px solid rgba(249,115,22,0.3)",
-                              }} />
                               <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6890", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>
                                 {t.organizerContacts}
                               </div>
