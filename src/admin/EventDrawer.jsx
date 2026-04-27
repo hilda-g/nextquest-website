@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL  || "";
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-
 const CATEGORIES = [
   { id: "boardgames", label: "🎲 Board Games" },
   { id: "larp",       label: "⚔️ LARP"        },
@@ -256,7 +253,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
   const [multiDay, setMultiDay] = useState(false);
   const [visible, setVisible]   = useState(false);
   const [activeTab, setActiveTab] = useState("details");
-  const [orgProfiles, setOrgProfiles] = useState([]);
   const initialForm = useRef(null);
 
   useEffect(() => {
@@ -291,35 +287,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
     requestAnimationFrame(() => setVisible(true));
   }, [event]);
 
-  // Fetch organizer profiles — read from events table (accessible with anon key)
-  // and deduplicate by organizer_username to build the dropdown list
-  useEffect(() => {
-    if (!SUPABASE_URL || !SUPABASE_KEY) return;
-    const url = new URL(`${SUPABASE_URL}/rest/v1/events`);
-    url.searchParams.set("select", "organizer_username,organizer_contacts,organizer_link,format");
-    url.searchParams.set("organizer_username", "not.is.null");
-    url.searchParams.set("order", "created_at.desc");
-    url.searchParams.set("limit", "200");
-    fetch(url.toString(), {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (!Array.isArray(data)) return;
-        // Deduplicate by organizer_username, keep most recent entry per name
-        const seen = new Map();
-        data.forEach(row => {
-          const key = row.organizer_username;
-          if (key && !seen.has(key)) seen.set(key, row);
-        });
-        setOrgProfiles([...seen.values()]);
-      })
-      .catch(() => {});
-  }, []);
-
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }));
     setDirty(true);
@@ -344,12 +311,12 @@ export default function EventDrawer({ event, onSave, onClose }) {
     try {
       const desc = form.description.trim();
 
-      // Auto-translate when publishing and translations are not yet filled
+      // Auto-translate whenever description is present and any translation is missing
       let desc_ru = form.description_ru.trim() || null;
       let desc_el = form.description_el.trim() || null;
       let desc_uk = form.description_uk.trim() || null;
 
-      if (form.status === "published" && (!desc_ru || !desc_el || !desc_uk)) {
+      if (desc && (!desc_ru || !desc_el || !desc_uk)) {
         async function gtranslate(text, lang) {
           try {
             const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`;
@@ -538,46 +505,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
               <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
                 👤 These fields are auto-filled from the organizer's bot profile. Edit here to override for this specific event.
               </div>
-
-              {/* ── Fill from existing organizer ── */}
-              {orgProfiles.length > 0 && (
-                <div>
-                  <span style={label}>Fill from existing organizer</span>
-                  <select
-                    defaultValue=""
-                    onChange={e => {
-                      const username = e.target.value;
-                      if (!username) return;
-                      const p = orgProfiles.find(o => o.organizer_username === username);
-                      if (!p) return;
-                      set("organizer_username", p.organizer_username || "");
-                      set("organizer_contacts", p.organizer_contacts || "");
-                      set("organizer_link",     p.organizer_link     || "");
-                      e.target.value = "";
-                    }}
-                    style={{
-                      ...inputStyle(),
-                      cursor: "pointer",
-                      appearance: "none",
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6890' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 14px center",
-                      paddingRight: 36,
-                    }}
-                  >
-                    <option value="" disabled>— select organizer to auto-fill —</option>
-                    {orgProfiles.map(p => {
-                      const fmtIcon = { private: "🔒", community: "✨", official: "🎉" }[p.format] || "👤";
-                      return (
-                        <option key={p.organizer_username} value={p.organizer_username}>
-                          {fmtIcon} {p.organizer_username}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )}
-
               <div>
                 <span style={label}>Organizer Name / Username</span>
                 <input
