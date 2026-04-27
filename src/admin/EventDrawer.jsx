@@ -27,9 +27,6 @@ const EMPTY_FORM = {
   cover_image_url:  "",
   cover_position:   { x: 50, y: 50 },
   status:           "pending",
-  organizer_username: "",
-  organizer_contacts: "",
-  organizer_link:   "",
 };
 
 function fmt(iso) {
@@ -278,7 +275,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
           status:           event.status            || "pending",
           organizer_username: event.organizer_username || "",
           organizer_contacts: event.organizer_contacts || "",
-          organizer_link:   event.organizer_link    || "",
+          organizer_link:     event.organizer_link     || "",
         }
       : { ...EMPTY_FORM };
     setForm(initial);
@@ -359,6 +356,9 @@ export default function EventDrawer({ event, onSave, onClose }) {
         cover_image_url:  form.cover_image_url.trim() || null,
         cover_position:   form.cover_position,
         status:           form.status,
+        organizer_username: form.organizer_username.trim() || null,
+        organizer_contacts: form.organizer_contacts.trim() || null,
+        organizer_link:     form.organizer_link.trim()     || null,
       };
 
       // BUG 2 FIX: block save if cover_image_url is empty (DB has NOT NULL constraint)
@@ -449,7 +449,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
           flexShrink: 0,
           padding: "0 24px",
         }}>
-          {[["details", "📋 Details"], ["translations", "🌐 Translations"]].map(([id, label]) => (
+          {[["details", "📋 Details"], ["organizer", "👤 Organizer"], ["translations", "🌐 Translations"]].map(([id, label]) => (
             <button key={id} onClick={() => setActiveTab(id)} style={{
               padding: "10px 16px", fontSize: 12, fontWeight: 600,
               fontFamily: "inherit", cursor: "pointer", border: "none",
@@ -499,7 +499,47 @@ export default function EventDrawer({ event, onSave, onClose }) {
             </div>
           )}
 
-          {/* ── DETAILS TAB ── */}
+          {/* ── ORGANIZER TAB ── */}
+          {activeTab === "organizer" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
+                👤 These fields are auto-filled from the organizer's bot profile. Edit here to override for this specific event.
+              </div>
+              <div>
+                <span style={label}>Organizer Name / Username</span>
+                <input
+                  style={inputStyle()}
+                  value={form.organizer_username}
+                  onChange={e => set("organizer_username", e.target.value)}
+                  placeholder="@username or Club Name"
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                />
+              </div>
+              <div>
+                <span style={label}>Organizer Contact</span>
+                <input
+                  style={inputStyle()}
+                  value={form.organizer_contacts}
+                  onChange={e => set("organizer_contacts", e.target.value)}
+                  placeholder="@username, phone, link…"
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                />
+              </div>
+              <div>
+                <span style={label}>Organizer Link</span>
+                <input
+                  style={inputStyle()}
+                  value={form.organizer_link}
+                  onChange={e => set("organizer_link", e.target.value)}
+                  placeholder="https://... (club site, TG channel, etc.)"
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                />
+              </div>
+            </div>
+          )}
           {activeTab === "details" && (<>
 
           {/* ── Cover image ── */}
@@ -697,43 +737,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
               onBlur={ev  => ev.target.style.borderColor = errors.external_url ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
             />
             {errors.external_url && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.external_url}</div>}
-          </div>
-
-          {/* ── Organizer Info ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div>
-              <span style={label}>Organizer Name / Username</span>
-              <input
-                style={inputStyle()}
-                value={form.organizer_username}
-                onChange={e => set("organizer_username", e.target.value)}
-                placeholder="@username or Club Name"
-                onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-                onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
-              />
-            </div>
-            <div>
-              <span style={label}>Organizer Contact</span>
-              <input
-                style={inputStyle()}
-                value={form.organizer_contacts}
-                onChange={e => set("organizer_contacts", e.target.value)}
-                placeholder="@username, phone, link…"
-                onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-                onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
-              />
-            </div>
-          </div>
-          <div>
-            <span style={label}>Organizer Link</span>
-            <input
-              style={inputStyle()}
-              value={form.organizer_link}
-              onChange={e => set("organizer_link", e.target.value)}
-              placeholder="https://... (club site, TG channel, etc.)"
-              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-              onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
-            />
           </div>
 
           {/* ── Status (edit only) ── */}
