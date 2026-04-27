@@ -46,7 +46,6 @@ function mapEvent(row) {
       : "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     externalUrl:      row.external_url,
     organizerContacts: row.organizer_contacts || null,
-    organizerLink:    row.organizer_link || null,
     status:   row.status,
     multiDay: !!(row.date_end && row.date_end !== row.date_start),
     // isPast = true only if the event START day is strictly before today's calendar date
@@ -482,6 +481,7 @@ export default function NextQuest() {
   const [subscribed, setSubscribed] = useState({});
   const [notifyTooltip, setNotifyTooltip] = useState(null); // event id showing tooltip
   const [showContacts, setShowContacts] = useState(false);
+  const [showFmtInfo,  setShowFmtInfo]  = useState(false);
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -713,7 +713,7 @@ export default function NextQuest() {
               </div>
               <div className="nq-modal-body" style={{ padding: 24 }}>
                 <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{({ ru: selected.title_ru, el: selected.title_el, uk: selected.title_uk })[lang] || selected.title}</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 20 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
                     <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12, background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)", color: selected.format === "private" ? "#a78bfa" : "#10b981", border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}` }}>
                       {FORMAT_LABELS[selected.format] || "🎉 Official"}
@@ -1118,7 +1118,7 @@ export default function NextQuest() {
 
         {/* ── EVENT MODAL ── */}
         {selected && (
-          <div className="modal-overlay" onClick={() => { setSelected(null); setNotifyTooltip(null); setShowContacts(false); }}>
+          <div className="modal-overlay" onClick={() => { setSelected(null); setNotifyTooltip(null); setShowContacts(false); setShowFmtInfo(false); }}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               {/* Cover */}
               <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
@@ -1139,7 +1139,7 @@ export default function NextQuest() {
               <div className="nq-modal-body" style={{ padding: 24 }}>
                 <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{({ ru: selected.title_ru, el: selected.title_el, uk: selected.title_uk })[lang] || selected.title}</h2>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 18 }}>
 
                   {/* Format badge + organizer name — single inline row */}
                   {(() => {
@@ -1150,6 +1150,11 @@ export default function NextQuest() {
                       community: { bg: "rgba(6,182,212,0.12)",   color: "#06b6d4", border: "rgba(6,182,212,0.3)"    },
                       official:  { bg: "rgba(16,185,129,0.12)",  color: "#10b981", border: "rgba(16,185,129,0.3)"   },
                     };
+                    const fmtDesc = {
+                      private:   "Personal event, home game or small gathering. Registration goes directly through the organizer.",
+                      community: "Club, regular meetup or community group. Open to members and newcomers.",
+                      official:  "Big convention, branded event or company-run experience.",
+                    };
                     const fc = fmtColors[fmt] || fmtColors.official;
                     const displayName = selected.organizerName
                       ? (fmt === "private" && !selected.organizerName.startsWith("@") ? `@${selected.organizerName}` : selected.organizerName)
@@ -1157,17 +1162,51 @@ export default function NextQuest() {
                     const isNavigable = !!selected.organizerUsername;
 
                     return (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {/* Format pill */}
-                        <span style={{
-                          display: "inline-flex", alignItems: "center", padding: "3px 10px",
-                          borderRadius: 999, fontWeight: 700, fontSize: 12, flexShrink: 0,
-                          background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`,
-                        }}>
-                          {fmtLabel}
-                        </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        {/* Format pill + info button */}
+                        <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", padding: "3px 10px",
+                            borderRadius: 999, fontWeight: 700, fontSize: 12, flexShrink: 0,
+                            background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`,
+                          }}>
+                            {fmtLabel}
+                          </span>
+                          {/* small ℹ button */}
+                          <button
+                            onClick={() => { setShowFmtInfo(v => !v); setShowContacts(false); }}
+                            style={{
+                              width: 15, height: 15, borderRadius: "50%",
+                              background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+                              color: "#6b6890", fontSize: 9, fontWeight: 700, cursor: "pointer",
+                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                              fontFamily: "inherit", flexShrink: 0, lineHeight: 1, padding: 0,
+                              transition: "all 0.15s",
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#a09cbc"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#6b6890"; }}
+                          >i</button>
+                          {/* Format info tooltip */}
+                          {showFmtInfo && (
+                            <div style={{
+                              position: "absolute", bottom: "calc(100% + 8px)", left: 0,
+                              background: "#1e1e36", border: "1px solid rgba(167,139,250,0.25)",
+                              borderRadius: 10, padding: "10px 13px", width: 210,
+                              boxShadow: "0 8px 28px rgba(0,0,0,0.5)", zIndex: 300,
+                              fontSize: 12, lineHeight: 1.5, color: "#a09cbc",
+                              animation: "fadeIn 0.15s ease",
+                            }}>
+                              <div style={{ position: "absolute", bottom: -5, left: 14,
+                                width: 8, height: 8, background: "#1e1e36",
+                                borderRight: "1px solid rgba(167,139,250,0.25)", borderBottom: "1px solid rgba(167,139,250,0.25)",
+                                transform: "rotate(45deg)" }} />
+                              <strong style={{ color: "#e8e6f0", fontSize: 12 }}>{fmtLabel}</strong><br />
+                              {fmtDesc[fmt]}
+                            </div>
+                          )}
+                        </div>
 
-                        {/* Organizer name — clickable if navigable */}
+                        {/* Organizer — pill-style clearly clickable button */}
                         {displayName && (isNavigable ? (
                           <button
                             onClick={() => {
@@ -1176,17 +1215,18 @@ export default function NextQuest() {
                               setOrganizerPage(selected.organizerUsername);
                             }}
                             style={{
-                              background: "none", border: "none", padding: 0,
-                              cursor: "pointer", fontSize: 13, color: "#a09cbc",
-                              fontFamily: "inherit", transition: "color 0.15s",
-                              display: "flex", alignItems: "center", gap: 4,
+                              display: "inline-flex", alignItems: "center", gap: 5,
+                              background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
+                              borderRadius: 999, padding: "3px 10px 3px 8px",
+                              cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#a78bfa",
+                              fontFamily: "inherit", transition: "all 0.15s",
                             }}
-                            onMouseEnter={e => e.currentTarget.style.color = "#e8e6f0"}
-                            onMouseLeave={e => e.currentTarget.style.color = "#a09cbc"}
+                            onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.18)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; e.currentTarget.style.color = "#c4b5fd"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "rgba(167,139,250,0.08)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.2)"; e.currentTarget.style.color = "#a78bfa"; }}
                           >
-                            <span style={{ color: "#4a4868", fontWeight: 600, fontSize: 12 }}>{t.organizerLabel}</span>
-                            <span style={{ fontWeight: 600 }}>{displayName}</span>
-                            <span style={{ fontSize: 11, color: "#4a4868" }}>›</span>
+                            <span style={{ fontSize: 13 }}>👤</span>
+                            {displayName}
+                            <span style={{ fontSize: 11, color: "rgba(167,139,250,0.6)" }}>›</span>
                           </button>
                         ) : (
                           <span style={{ fontSize: 13, color: "#a09cbc" }}>
@@ -1230,15 +1270,15 @@ export default function NextQuest() {
                     </a>
                   </div>
 
-                  {/* User limit — badge when limit set, text only when no limit */}
+                  {/* User limit + status badge */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 14, color: "#a09cbc" }}>
                       👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : t.noLimit}
                     </span>
                     {selected.maxParticipants && selected.registrationClosed ? (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
                     ) : (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
                     )}
                   </div>
 
@@ -1284,18 +1324,18 @@ export default function NextQuest() {
                       return (
                         <div style={{ flex: 1, position: "relative" }}>
                           <button
-                            onClick={() => setShowContacts(v => !v)}
+                            onClick={() => { setShowContacts(v => !v); setShowFmtInfo(false); }}
                             className="register-btn"
                             style={{
                               width: "100%", height: "100%",
-                              background: "rgba(249,115,22,0.15)",
-                              border: "1px solid rgba(249,115,22,0.5)",
+                              background: "rgba(249,115,22,0.12)",
+                              border: "1px solid rgba(249,115,22,0.45)",
                               color: "#f97316", cursor: "pointer",
                               fontFamily: "inherit", display: "inline-flex",
-                              alignItems: "center", justifyContent: "center",
+                              alignItems: "center", justifyContent: "center", gap: 6,
                             }}
                           >
-                            {t.contactOrganizer}
+                            📋 {t.contactOrganizer.replace(/📋\s?/,"").split(" ")[0]}
                           </button>
 
                           {showContacts && (
@@ -1305,25 +1345,27 @@ export default function NextQuest() {
                               left: "50%",
                               transform: "translateX(-50%)",
                               background: "#1e1e36",
-                              border: "1px solid rgba(249,115,22,0.35)",
+                              border: "1px solid rgba(249,115,22,0.3)",
                               borderRadius: 12,
-                              padding: "12px 14px",
-                              width: 230,
-                              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-                              zIndex: 200,
+                              padding: "13px 15px",
+                              width: 240,
+                              boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+                              zIndex: 300,
                               animation: "fadeIn 0.15s ease",
                             }}>
                               <div style={{
-                                position: "absolute", bottom: -6, left: "50%",
+                                position: "absolute", bottom: -5, left: "50%",
                                 transform: "translateX(-50%) rotate(45deg)",
-                                width: 10, height: 10, background: "#1e1e36",
-                                border: "1px solid rgba(249,115,22,0.35)",
-                                borderTop: "none", borderLeft: "none",
+                                width: 8, height: 8, background: "#1e1e36",
+                                borderRight: "1px solid rgba(249,115,22,0.3)",
+                                borderBottom: "1px solid rgba(249,115,22,0.3)",
                               }} />
-                              <p style={{ fontSize: 12, color: "#a09cbc", marginBottom: 10, lineHeight: 1.5 }}>
-                                📋 <strong style={{ color: "#e8e6f0" }}>{t.organizerContacts}:</strong><br />
-                                <span style={{ color: "#f97316", wordBreak: "break-all" }}>{raw}</span>
-                              </p>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6890", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>
+                                {t.organizerContacts}
+                              </div>
+                              <div style={{ fontSize: 14, color: "#f97316", fontWeight: 600, wordBreak: "break-all", marginBottom: 11 }}>
+                                {raw}
+                              </div>
                               <div style={{ display: "flex", gap: 6 }}>
                                 <a
                                   href={href}
@@ -1332,19 +1374,19 @@ export default function NextQuest() {
                                   style={{
                                     flex: 1, textAlign: "center", textDecoration: "none",
                                     background: "linear-gradient(135deg, #ea580c, #f97316)",
-                                    color: "#fff", borderRadius: 8, padding: "7px 10px",
+                                    color: "#fff", borderRadius: 8, padding: "8px 10px",
                                     fontSize: 12, fontWeight: 700, display: "inline-flex",
-                                    alignItems: "center", justifyContent: "center", gap: 4,
+                                    alignItems: "center", justifyContent: "center", gap: 5,
                                   }}
                                   onClick={() => setShowContacts(false)}
                                 >
-                                  ✈️ {t.contactOrganizer.replace("📋 ", "")}
+                                  ✈️ Open
                                 </a>
                                 <button
                                   onClick={() => setShowContacts(false)}
                                   style={{
                                     background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                                    color: "#6b6890", borderRadius: 8, padding: "7px 10px",
+                                    color: "#6b6890", borderRadius: 8, padding: "8px 11px",
                                     fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                                   }}
                                 >
@@ -1367,6 +1409,7 @@ export default function NextQuest() {
                       onClick={() => {
                         if (subscribed[selected.id]) return;
                         setShowContacts(false);
+                        setShowFmtInfo(false);
                         setNotifyTooltip(selected.id);
                       }}
                     >
