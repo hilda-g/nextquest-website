@@ -183,7 +183,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
 
       {/* City filters — same design as Upcoming */}
       <div className="nq-filters-city" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-        <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>🌍 {t.allCities}</button>
+        <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>{t.allCities}</button>
         {CITIES.map(city => (
           <button
             key={city}
@@ -195,7 +195,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
 
       {/* Format filters — same design as Upcoming */}
       <div className="nq-filters-format" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-        <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>✨ {t.allFormats}</button>
+        <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>{t.allFormats}</button>
         {FORMAT_TYPES.map(f => (
           <button
             key={f.id}
@@ -1004,7 +1004,7 @@ export default function NextQuest() {
                 ))}
               </div>
               <div className="nq-filters-city" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>🌍 {t.allCities}</button>
+                <button className={`filter-btn${cityFilters.size === 0 ? " active" : ""}`} onClick={() => toggleCity("all")}>{t.allCities}</button>
                 {CITIES.map(city => (
                   <button key={city}
                     className={`filter-btn${cityFilters.has(city) ? " active" : ""}`}
@@ -1014,7 +1014,7 @@ export default function NextQuest() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>✨ {t.allFormats}</button>
+                <button className={`filter-btn${formatFilter === "all" ? " active" : ""}`} onClick={() => setFormatFilter("all")}>{t.allFormats}</button>
                 {FORMAT_TYPES.map(f => (
                   <button key={f.id}
                     className={`filter-btn${formatFilter === f.id ? " active" : ""}`}
