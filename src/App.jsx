@@ -444,10 +444,9 @@ export default function NextQuest() {
   const [catFilters, setCatFilters]   = useState(new Set());
   const [cityFilters, setCityFilters] = useState(new Set());
   const [formatFilter, setFormatFilter] = useState("all");
-  const [organizerFilter, setOrganizerFilter] = useState(null); // @username string or null
   const [organizerPage, setOrganizerPage] = useState(() => {
     const m = window.location.pathname.match(/^\/organizers\/(.+)$/);
-    return m ? m[1] : null;
+    return m ? decodeURIComponent(m[1]) : null;
   });
 
   const toggleCat = (id) => {
@@ -539,7 +538,6 @@ export default function NextQuest() {
     if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
     if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
     if (formatFilter !== "all" && e.format !== formatFilter) return false;
-    if (organizerFilter && e.organizerUsername !== organizerFilter) return false;
     const q = search.toLowerCase();
     if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
     return true;
@@ -552,6 +550,81 @@ export default function NextQuest() {
 
   const pct = e => e.maxParticipants ? Math.round((e.currentParticipants / e.maxParticipants) * 100) : 0;
 
+  // ── Shared EventCard component ────────────────────────────────
+  function EventCard({ event }) {
+    const color = getCatColor(event.category);
+    return (
+      <div className="card-hover"
+        onClick={() => setSelected(event)}
+        style={{
+          background: "#13131f",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: 16, overflow: "hidden",
+          opacity: event.status === "cancelled" ? 0.6 : 1,
+        }}>
+
+        {/* Cover image */}
+        <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
+          <img src={event.cover} alt={event.title}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            onError={e => { e.target.style.display = "none"; }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(19,19,31,1) 0%, transparent 60%)" }} />
+
+          {/* Category badge */}
+          <div style={{
+            position: "absolute", top: 10, left: 10,
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "3px 10px", borderRadius: 999,
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)",
+            fontSize: 11, fontWeight: 700, color,
+            border: `1px solid ${color}33`,
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
+            {getCatLabel(event.category)}
+          </div>
+
+          {event.status === "cancelled" && (
+            <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.85)", color: "#fff", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
+              {t.cancelled}
+            </div>
+          )}
+          {event.multiDay && (
+            <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,0.5)", color: "#a09cbc", borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 600 }}>
+              {t.multiDay}
+            </div>
+          )}
+        </div>
+
+        {/* Card body */}
+        <div style={{ padding: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 12, color: "#5a5878", fontWeight: 600 }}>
+              {formatDate(event.dateStart, lang)}
+              {event.multiDay && event.dateEnd
+                ? ` — ${formatDate(event.dateEnd, lang)}`
+                : ` · ${formatTime(event.dateStart)}`}
+            </span>
+            <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
+            <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
+          </div>
+
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            {event.maxParticipants ? (
+              <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
+            ) : null}
+            {event.maxParticipants && event.registrationClosed ? (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
+            ) : (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Organizer profile page ────────────────────────────────────
   if (organizerPage) {
     const orgEvents = events
@@ -563,63 +636,126 @@ export default function NextQuest() {
           @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Syne:wght@700;800&display=swap');
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           html, body, #root { background: #0d0d14; min-height: 100vh; font-family: 'Outfit', sans-serif; }
-          .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
-          .modal { background: #16162a; border-radius: 20px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
+          .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; cursor: pointer; }
+          .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+          .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; }
+          @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+          .modal { background: #16162a; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+          @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+          .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+          .register-btn { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; border: none; border-radius: 8px; padding: 0 20px; height: 42px; font-size: 14px; font-family: inherit; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+          .notify-btn { border: 1px solid rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); color: #a78bfa; border-radius: 8px; padding: 0 20px; height: 42px; font-size: 14px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+          .notify-btn.done { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); color: #10b981; }
+          .gcal-btn { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.25); color: #06b6d4; border-radius: 8px; padding: 0 20px; height: 42px; font-size: 14px; font-family: inherit; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
+          .nq-modal-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+          .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+          @media (max-width: 640px) { .event-grid { grid-template-columns: 1fr; } }
         `}</style>
+
         <div style={{ background: "#0d0d14", minHeight: "100vh", color: "#e8e6f0" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 0" }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto", padding: "28px 24px 0" }}>
+
+            {/* Back */}
             <button
               onClick={() => { window.history.pushState({}, "", "/"); setOrganizerPage(null); }}
               style={{ background: "none", border: "none", color: "#6b6890", cursor: "pointer", fontSize: 13, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6, padding: 0, marginBottom: 28 }}
             >← {t.upcoming}</button>
+
+            {/* Header */}
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontSize: 11, color: "#4a4868", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>{t.organizer}</div>
               <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 32, color: "#fff", lineHeight: 1.1 }}>@{organizerPage}</h1>
               <div style={{ fontSize: 13, color: "#4a4868", marginTop: 8 }}>{orgEvents.length} {orgEvents.length === 1 ? "event" : "events"}</div>
             </div>
           </div>
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 60px" }}>
+
+          {/* Event grid — same component as main page */}
+          <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 24px 60px" }}>
             {orgEvents.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 0", color: "#4a4868" }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🎲</div>
                 <p>{t.noEvents}</p>
               </div>
-            ) : orgEvents.map(ev => {
-              const color = getCatColor(ev.category);
-              const isPast = ev.dateStart < todayMidnight;
-              return (
-                <div key={ev.id} onClick={() => setSelected(ev)}
-                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 12, marginBottom: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", opacity: isPast ? 0.55 : 1, transition: "background 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
-                >
-                  <div style={{ width: 44, height: 44, borderRadius: 8, flexShrink: 0, overflow: "hidden", background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <img src={ev.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#e8e6f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</div>
-                    <div style={{ fontSize: 12, color: "#5a5878", marginTop: 2 }}>{formatDate(ev.dateStart, lang)} · {ev.city}</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: color + "22", color, border: `1px solid ${color}44` }}>{getCatLabel(ev.category)}</span>
-                    {ev.status === "cancelled" && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.cancelled}</span>}
-                  </div>
-                </div>
-              );
-            })}
+            ) : (
+              <div className="event-grid">
+                {orgEvents.map(ev => <EventCard key={ev.id} event={ev} />)}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Full event modal — identical to main page */}
         {selected && (
           <div className="modal-overlay" onClick={() => { setSelected(null); setShowContacts(false); setNotifyTooltip(null); }}>
             <div className="modal" onClick={e => e.stopPropagation()}>
-              <div style={{ position: "relative", height: 180, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
+              <div className="nq-modal-cover" style={{ position: "relative", height: 220, borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e" }}>
                 <img src={selected.cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
-                <button onClick={() => setSelected(null)} style={{ position: "absolute", top: 14, right: 14, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: 8, width: 34, height: 34, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(22,22,42,1) 0%, transparent 50%)" }} />
+                <button onClick={() => setSelected(null)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: 8, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                <div style={{ position: "absolute", bottom: 16, left: 20, display: "flex", gap: 8 }}>
+                  <span className="pill" style={{ background: getCatColor(selected.category) + "22", color: getCatColor(selected.category), border: `1px solid ${getCatColor(selected.category)}44` }}>{getCatLabel(selected.category)}</span>
+                  {selected.multiDay && <span className="pill" style={{ background: "rgba(255,255,255,0.1)", color: "#e8e6f0" }}>{t.multiDay}</span>}
+                  {selected.status === "cancelled" && <span className="pill" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444" }}>{t.cancelled}</span>}
+                </div>
               </div>
-              <div style={{ padding: 24 }}>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 12 }}>{selected.title}</h2>
-                <div style={{ fontSize: 13, color: "#5a5878", marginBottom: 8 }}>{formatDate(selected.dateStart, lang)} · {selected.city}</div>
-                {selected.description && <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7 }}>{selected.description}</div>}
+              <div className="nq-modal-body" style={{ padding: 24 }}>
+                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 16 }}>{selected.title}</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 10px", borderRadius: 999, fontWeight: 700, fontSize: 12, background: selected.format === "private" ? "rgba(139,92,246,0.15)" : "rgba(16,185,129,0.12)", color: selected.format === "private" ? "#a78bfa" : "#10b981", border: `1px solid ${selected.format === "private" ? "rgba(167,139,250,0.3)" : "rgba(16,185,129,0.3)"}` }}>
+                      {FORMAT_LABELS[selected.format] || "🎉 Official"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/><rect x="1" y="2" width="14" height="5" rx="2" fill="#ef4444"/><rect x="9" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/><rect x="5" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/><rect x="3" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="7" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="11" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="3" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/><rect x="7" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/></svg>
+                    <span>{formatDate(selected.dateStart, lang)}{selected.multiDay && selected.dateEnd ? ` — ${formatDate(selected.dateEnd, lang)}` : ` · ${formatTime(selected.dateStart)}`}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
+                    <span style={{ flexShrink: 0 }}>📍</span>
+                    <a href={makeGMapsUrl(selected.city, selected.address)} target="_blank" rel="noopener noreferrer" style={{ color: "#a09cbc", textDecoration: "underline", textDecorationColor: "rgba(160,156,188,0.3)", textUnderlineOffset: 3 }}>
+                      {selected.city}{selected.address ? `, ${selected.address}` : ""}
+                    </a>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 14, color: "#a09cbc" }}>👥 {selected.maxParticipants ? `${selected.maxParticipants} ${t.participants}` : t.noLimit}</span>
+                    {selected.maxParticipants && selected.registrationClosed ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
+                    )}
+                  </div>
+                  {selected.organizerUsername && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
+                      <span style={{ flexShrink: 0 }}>🎪</span>
+                      <span style={{ color: "#6b6890", fontWeight: 600 }}>{t.organizerLabel}</span>
+                      <button onClick={() => { setSelected(null); window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`); setOrganizerPage(selected.organizerUsername); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, color: "#a78bfa", fontFamily: "inherit", fontWeight: 600, transition: "color 0.15s" }} onMouseEnter={e => e.currentTarget.style.color = "#c4b5fd"} onMouseLeave={e => e.currentTarget.style.color = "#a78bfa"}>@{selected.organizerUsername}</button>
+                    </div>
+                  )}
+                  {selected.organizerContacts && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14 }}>
+                      <span style={{ flexShrink: 0 }}>📋</span>
+                      <span style={{ color: "#a09cbc" }}><span style={{ color: "#6b6890", fontWeight: 600 }}>{t.contactsLabel}</span>{selected.organizerContacts}</span>
+                    </div>
+                  )}
+                </div>
+                {selected.description && (
+                  <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
+                    {(() => { const descMap = { ru: selected.description_ru, el: selected.description_el, uk: selected.description_uk }; const text = descMap[lang] || selected.description; return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>); })()}
+                  </div>
+                )}
+                <div className="nq-modal-actions">
+                  {selected.status !== "cancelled" && (
+                    selected.externalUrl ? (
+                      <a href={selected.externalUrl} target="_blank" rel="noopener noreferrer" className="register-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>{t.register}</a>
+                    ) : selected.organizerContacts ? (
+                      <a href={selected.organizerContacts.startsWith("http") ? selected.organizerContacts : `https://t.me/${selected.organizerContacts.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" className="register-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.5)", color: "#f97316" }}>{t.contactOrganizer}</a>
+                    ) : null
+                  )}
+                  <button className={`notify-btn${subscribed[selected.id] ? " done" : ""}`} onClick={() => { if (!subscribed[selected.id]) setNotifyTooltip(selected.id); }}>
+                    {subscribed[selected.id] ? t.notified : t.notify}
+                  </button>
+                  <a href={makeGCalUrl(selected)} target="_blank" rel="noopener noreferrer" className="gcal-btn">📅 {t.addToCalendar}</a>
+                </div>
               </div>
             </div>
           </div>
@@ -935,107 +1071,10 @@ export default function NextQuest() {
           )}
 
           {/* ── ORGANIZER FILTER BANNER ── */}
-          {organizerFilter && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              marginBottom: 16, padding: "10px 16px",
-              background: "rgba(124,58,237,0.1)",
-              border: "1px solid rgba(167,139,250,0.25)",
-              borderRadius: 12,
-            }}>
-              <span style={{ fontSize: 13, color: "#a78bfa", fontWeight: 600 }}>
-                🎪 {t.eventsBy} @{organizerFilter}
-              </span>
-              <button
-                onClick={() => setOrganizerFilter(null)}
-                style={{
-                  marginLeft: "auto", background: "none", border: "none",
-                  color: "#6b6890", cursor: "pointer", fontSize: 16,
-                  lineHeight: 1, padding: "2px 4px",
-                }}
-                title="Clear filter"
-              >✕</button>
-            </div>
-          )}
-
           {/* ── EVENT CARDS GRID ── */}
           {!loading && !error && tab !== "calendar" && filtered.length > 0 && (
             <div className="event-grid">
-              {filtered.map(event => {
-                const color = getCatColor(event.category);
-                const full  = pct(event) >= 100;
-                return (
-                  <div key={event.id} className="card-hover"
-                    onClick={() => setSelected(event)}
-                    style={{
-                      background: "#13131f",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      borderRadius: 16, overflow: "hidden",
-                      opacity: event.status === "cancelled" ? 0.6 : 1,
-                    }}>
-
-                    {/* Cover image */}
-                    <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
-                      <img src={event.cover} alt={event.title}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        onError={e => { e.target.style.display = "none"; }} />
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(19,19,31,1) 0%, transparent 60%)" }} />
-
-                      {/* Category badge */}
-                      <div style={{
-                        position: "absolute", top: 10, left: 10,
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        padding: "3px 10px", borderRadius: 999,
-                        background: "rgba(0,0,0,0.55)",
-                        backdropFilter: "blur(6px)",
-                        fontSize: 11, fontWeight: 700, color,
-                        border: `1px solid ${color}33`,
-                      }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
-                        {getCatLabel(event.category)}
-                      </div>
-
-                      {event.status === "cancelled" && (
-                        <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.85)", color: "#fff", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
-                          {t.cancelled}
-                        </div>
-                      )}
-                      {event.multiDay && (
-                        <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,0.5)", color: "#a09cbc", borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 600 }}>
-                          {t.multiDay}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Card body */}
-                    <div style={{ padding: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                        <span style={{ fontSize: 12, color: "#5a5878", fontWeight: 600 }}>
-                          {formatDate(event.dateStart, lang)}
-                          {event.multiDay && event.dateEnd
-                            ? ` — ${formatDate(event.dateEnd, lang)}`
-                            : ` · ${formatTime(event.dateStart)}`}
-                        </span>
-                        <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
-                        <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
-                      </div>
-
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{event.title}</h3>
-
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                        {event.maxParticipants ? (
-                          <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
-                        ) : null}
-                        {event.maxParticipants && event.registrationClosed ? (
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>✕ Full</span>
-                        ) : (
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>● Open</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {filtered.map(event => <EventCard key={event.id} event={event} />)}
             </div>
           )}
         </main>
@@ -1146,7 +1185,7 @@ export default function NextQuest() {
                     )}
                   </div>
 
-                  {/* Organizer — clickable, above contacts */}
+                  {/* Organizer — clickable, navigates to organizer page */}
                   {selected.organizerUsername && (
                     <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
                       <span style={{ flexShrink: 0 }}>🎪</span>
@@ -1160,8 +1199,7 @@ export default function NextQuest() {
                         style={{
                           background: "none", border: "none", padding: 0,
                           cursor: "pointer", fontSize: 14, color: "#a78bfa",
-                          fontFamily: "inherit", fontWeight: 600,
-                          transition: "color 0.15s",
+                          fontFamily: "inherit", fontWeight: 600, transition: "color 0.15s",
                         }}
                         onMouseEnter={e => e.currentTarget.style.color = "#c4b5fd"}
                         onMouseLeave={e => e.currentTarget.style.color = "#a78bfa"}
@@ -1171,7 +1209,7 @@ export default function NextQuest() {
                     </div>
                   )}
 
-                  {/* Organizer contacts — with label prefix */}
+                  {/* Organizer contacts */}
                   {selected.organizerContacts && (
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 14 }}>
                       <span style={{ flexShrink: 0 }}>📋</span>
