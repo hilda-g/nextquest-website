@@ -291,13 +291,15 @@ export default function EventDrawer({ event, onSave, onClose }) {
     requestAnimationFrame(() => setVisible(true));
   }, [event]);
 
-  // Fetch onboarded organizer profiles for the dropdown
+  // Fetch organizer profiles — read from events table (accessible with anon key)
+  // and deduplicate by organizer_username to build the dropdown list
   useEffect(() => {
     if (!SUPABASE_URL || !SUPABASE_KEY) return;
-    const url = new URL(`${SUPABASE_URL}/rest/v1/users`);
-    url.searchParams.set("select", "tg_username,org_format,org_name,org_link,org_contact");
-    url.searchParams.set("onboarded", "eq.true");
-    url.searchParams.set("org_format", "not.is.null");
+    const url = new URL(`${SUPABASE_URL}/rest/v1/events`);
+    url.searchParams.set("select", "organizer_username,organizer_contacts,organizer_link,format");
+    url.searchParams.set("organizer_username", "not.is.null");
+    url.searchParams.set("order", "created_at.desc");
+    url.searchParams.set("limit", "200");
     fetch(url.toString(), {
       headers: {
         apikey: SUPABASE_KEY,
@@ -306,7 +308,14 @@ export default function EventDrawer({ event, onSave, onClose }) {
     })
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) setOrgProfiles(data);
+        if (!Array.isArray(data)) return;
+        // Deduplicate by organizer_username, keep most recent entry per name
+        const seen = new Map();
+        data.forEach(row => {
+          const key = row.organizer_username;
+          if (key && !seen.has(key)) seen.set(key, row);
+        });
+        setOrgProfiles([...seen.values()]);
       })
       .catch(() => {});
   }, []);
@@ -537,14 +546,13 @@ export default function EventDrawer({ event, onSave, onClose }) {
                   <select
                     defaultValue=""
                     onChange={e => {
-                      const tg = e.target.value;
-                      if (!tg) return;
-                      const p = orgProfiles.find(o => o.tg_username === tg);
+                      const username = e.target.value;
+                      if (!username) return;
+                      const p = orgProfiles.find(o => o.organizer_username === username);
                       if (!p) return;
-                      set("organizer_username", p.org_name || p.tg_username || "");
-                      set("organizer_contacts", p.org_contact || "");
-                      set("organizer_link",     p.org_link    || "");
-                      // reset select back to placeholder after fill
+                      set("organizer_username", p.organizer_username || "");
+                      set("organizer_contacts", p.organizer_contacts || "");
+                      set("organizer_link",     p.organizer_link     || "");
                       e.target.value = "";
                     }}
                     style={{
@@ -559,11 +567,10 @@ export default function EventDrawer({ event, onSave, onClose }) {
                   >
                     <option value="" disabled>— select organizer to auto-fill —</option>
                     {orgProfiles.map(p => {
-                      const fmtIcon = { private: "🔒", community: "✨", official: "🎉" }[p.org_format] || "";
-                      const display = p.org_name || p.tg_username || p.tg_id;
+                      const fmtIcon = { private: "🔒", community: "✨", official: "🎉" }[p.format] || "👤";
                       return (
-                        <option key={p.tg_username} value={p.tg_username}>
-                          {fmtIcon} {display}
+                        <option key={p.organizer_username} value={p.organizer_username}>
+                          {fmtIcon} {p.organizer_username}
                         </option>
                       );
                     })}
