@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { EventCardModal } from "./EventCard";
-import { LANGS } from "./locales";
+import { EventCardModal } from "../EventCard";
+import { LANGS } from "../locales";
 
 // ─── Shared backdrop / container ─────────────────────────────
 function ConfirmModal({ visible, onClose, children }) {
