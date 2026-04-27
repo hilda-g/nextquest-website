@@ -686,7 +686,7 @@ export default function NextQuest() {
             {/* Header */}
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontSize: 11, color: "#4a4868", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>{t.organizer}</div>
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 32, color: "#fff", lineHeight: 1.1 }}>@{organizerPage}</h1>
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 32, color: "#fff", lineHeight: 1.1 }}>{organizerPage}</h1>
               <div style={{ fontSize: 13, color: "#4a4868", marginTop: 8 }}>{orgEvents.length} {orgEvents.length === 1 ? "event" : "events"}</div>
             </div>
           </div>
@@ -750,7 +750,7 @@ export default function NextQuest() {
                     <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
                       <span style={{ flexShrink: 0 }}>🎪</span>
                       <span style={{ color: "#6b6890", fontWeight: 600 }}>{t.organizerLabel}</span>
-                      <button onClick={() => { setSelected(null); window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`); setOrganizerPage(selected.organizerUsername); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, color: "#a78bfa", fontFamily: "inherit", fontWeight: 600, transition: "color 0.15s" }} onMouseEnter={e => e.currentTarget.style.color = "#c4b5fd"} onMouseLeave={e => e.currentTarget.style.color = "#a78bfa"}>@{selected.organizerUsername}</button>
+                      <button onClick={() => { setSelected(null); window.history.pushState({}, "", `/organizers/${selected.organizerUsername}`); setOrganizerPage(selected.organizerUsername); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, color: "#a78bfa", fontFamily: "inherit", fontWeight: 600, transition: "color 0.15s" }} onMouseEnter={e => e.currentTarget.style.color = "#c4b5fd"} onMouseLeave={e => e.currentTarget.style.color = "#a78bfa"}>{selected.organizerUsername}</button>
                     </div>
                   )}
                   {selected.organizerContacts && (
@@ -1162,8 +1162,8 @@ export default function NextQuest() {
                     const fmtDesc = getFormatDesc(fmt, t);
                     const fc = fmtColors[fmt] || fmtColors.official;
                     const displayName = selected.organizerName
-                      ? (fmt === "private" && !selected.organizerName.startsWith("@") ? `@${selected.organizerName}` : selected.organizerName)
-                      : selected.organizerUsername ? `@${selected.organizerUsername}` : null;
+                      ? selected.organizerName
+                      : selected.organizerUsername || null;
                     const isNavigable = !!selected.organizerUsername;
 
                     return (
