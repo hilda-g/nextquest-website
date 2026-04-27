@@ -46,6 +46,7 @@ function mapEvent(row) {
       : "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     externalUrl:      row.external_url,
     organizerContacts: row.organizer_contacts || null,
+    organizerLink:    row.organizer_link || null,
     status:   row.status,
     multiDay: !!(row.date_end && row.date_end !== row.date_start),
     // isPast = true only if the event START day is strictly before today's calendar date
