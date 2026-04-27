@@ -30,6 +30,7 @@ const EMPTY_FORM = {
   cover_image_url:  "",
   cover_position:   { x: 50, y: 50 },
   status:           "pending",
+  format:           "community",
 };
 
 function fmt(iso) {
@@ -280,6 +281,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
           organizer_username: event.organizer_username || "",
           organizer_contacts: event.organizer_contacts || "",
           organizer_link:     event.organizer_link     || "",
+          format:             event.format             || "community",
         }
       : { ...EMPTY_FORM };
     setForm(initial);
@@ -390,6 +392,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
         organizer_username: form.organizer_username.trim() || null,
         organizer_contacts: form.organizer_contacts.trim() || null,
         organizer_link:     form.organizer_link.trim()     || null,
+        format:             form.format                    || null,
       };
 
       // BUG 2 FIX: block save if cover_image_url is empty (DB has NOT NULL constraint)
@@ -608,6 +611,22 @@ export default function EventDrawer({ event, onSave, onClose }) {
                   onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
                 />
               </div>
+              <div>
+                <span style={label}>Format</span>
+                <select
+                  value={form.format || "community"}
+                  onChange={e => set("format", e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 14px",
+                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 10, color: "#e8e6f0", fontFamily: "inherit", fontSize: 14,
+                  }}
+                >
+                  <option value="private">🔒 Private</option>
+                  <option value="community">✨ Community</option>
+                  <option value="official">🎉 Official</option>
+                </select>
+              </div>
             </div>
           )}
           {activeTab === "details" && (<>
@@ -707,23 +726,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
               </select>
             </div>
           </div>
-          <div>
-            <label style={{ display: "block", fontSize: 12, color: "#6b6890", marginBottom: 6 }}>Format</label>
-            <select
-              value={form.format || "official"}
-              onChange={e => setForm(f => ({ ...f, format: e.target.value }))}
-              style={{
-                width: "100%", padding: "10px 14px",
-                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 10, color: "#e8e6f0", fontFamily: "inherit", fontSize: 14,
-              }}
-            >
-              <option value="private">🔒 Private</option>
-              <option value="community">✨ Community</option>
-              <option value="official">🎉 Official</option>
-            </select>
-          </div>
-
           {/* ── Address ── */}
           <div>
             <span style={label}>Address *</span>
