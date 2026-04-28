@@ -957,7 +957,7 @@ export default function NextQuest() {
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(167,139,250,0.12), 0 4px 20px rgba(124,58,237,0.15)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.28)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(167,139,250,0.08)"; }}
             >
-              <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>🔔</span>
+              <img src="/Telegram_icon.png" alt="Telegram" style={{ width: 20, height: 20, flexShrink: 0, borderRadius: "50%" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.ctaSubscribeTitle}</span>
                 <span style={{ fontSize: 11, color: "#7c6faa", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.ctaSubscribeSub}</span>
