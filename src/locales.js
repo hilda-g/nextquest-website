@@ -35,6 +35,10 @@ export const LANGS = {
     statusFull: "✕ Full",
     statusOpen: "● Open",
     eventsBy: "Events by",
+    ctaSubscribeTitle: "Subscribe to get new events",
+    ctaSubscribeSub:   "Never miss a geek event in Cyprus",
+    ctaAddTitle:       "Add your own event",
+    ctaAddSub:         "Free · takes 2 minutes via bot",
   },
   ru: {
     title: "NextQuest", subtitle: "События гик-сообщества Кипра",
@@ -64,6 +68,10 @@ export const LANGS = {
     statusFull: "✕ Мест нет",
     statusOpen: "● Открыто",
     eventsBy: "События от",
+    ctaSubscribeTitle: "Подписаться на новые события",
+    ctaSubscribeSub:   "Не пропусти ни одного гик-события на Кипре",
+    ctaAddTitle:       "Добавить своё событие",
+    ctaAddSub:         "Бесплатно · займёт 2 минуты через бота",
   },
   el: {
     title: "NextQuest", subtitle: "Εκδηλώσεις Geek στην Κύπρο",
@@ -93,6 +101,10 @@ export const LANGS = {
     statusFull: "✕ Πλήρες",
     statusOpen: "● Ανοιχτό",
     eventsBy: "Εκδηλώσεις από",
+    ctaSubscribeTitle: "Εγγραφή για νέες εκδηλώσεις",
+    ctaSubscribeSub:   "Μη χάσεις καμία geek εκδήλωση στην Κύπρο",
+    ctaAddTitle:       "Πρόσθεσε τη δική σου εκδήλωση",
+    ctaAddSub:         "Δωρεάν · 2 λεπτά μέσω bot",
   },
   uk: {
     title: "NextQuest", subtitle: "Гік-події на Кіпрі",
@@ -122,5 +134,9 @@ export const LANGS = {
     statusFull: "✕ Місць немає",
     statusOpen: "● Відкрито",
     eventsBy: "Події від",
+    ctaSubscribeTitle: "Підписатися на нові події",
+    ctaSubscribeSub:   "Не пропусти жодної гік-події на Кіпрі",
+    ctaAddTitle:       "Додати свою подію",
+    ctaAddSub:         "Безкоштовно · 2 хвилини через бота",
   },
 };

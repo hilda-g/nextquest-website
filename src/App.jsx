@@ -951,8 +951,8 @@ export default function NextQuest() {
             >
               <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>🔔</span>
               <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2, letterSpacing: "-0.01em" }}>Subscribe to get new events</span>
-                <span style={{ fontSize: 11, color: "#7c6faa", lineHeight: 1.3 }}>Never miss a geek event in Cyprus</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{t.ctaSubscribeTitle}</span>
+                <span style={{ fontSize: 11, color: "#7c6faa", lineHeight: 1.3 }}>{t.ctaSubscribeSub}</span>
               </div>
               <span style={{ marginLeft: "auto", fontSize: 14, color: "rgba(167,139,250,0.4)", flexShrink: 0 }}>↗</span>
             </a>
@@ -969,8 +969,8 @@ export default function NextQuest() {
             >
               <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>✨</span>
               <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#67e8f9", lineHeight: 1.2, letterSpacing: "-0.01em" }}>Add your own event</span>
-                <span style={{ fontSize: 11, color: "#2a7a8a", lineHeight: 1.3 }}>Free · takes 2 minutes via bot</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#67e8f9", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{t.ctaAddTitle}</span>
+                <span style={{ fontSize: 11, color: "#2a7a8a", lineHeight: 1.3 }}>{t.ctaAddSub}</span>
               </div>
               <span style={{ marginLeft: "auto", fontSize: 14, color: "rgba(6,182,212,0.4)", flexShrink: 0 }}>↗</span>
             </a>
