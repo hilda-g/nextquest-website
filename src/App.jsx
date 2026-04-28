@@ -911,7 +911,7 @@ export default function NextQuest() {
         >
           <div className="nq-header-inner" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div className="nq-logo-icon" style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #7c3aed, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧭</div>
+              <img src="/Avatar.png" alt="NextQuest" className="nq-logo-icon" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
               <span className="nq-logo-text" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
             </div>
             <div style={{ display: "flex", gap: 4 }}>
@@ -1087,7 +1087,7 @@ export default function NextQuest() {
         }}>
           <div className="nq-footer-inner" style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, background: "linear-gradient(135deg, #7c3aed, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>🧭</div>
+              <img src="/Avatar.png" alt="NextQuest" style={{ width: 24, height: 24, borderRadius: 6, objectFit: "cover" }} />
               <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 14, color: "#fff" }}>NextQuest</span>
               <span style={{ color: "#4a4868", fontSize: 12 }}>— Cyprus Geek Events</span>
             </div>
