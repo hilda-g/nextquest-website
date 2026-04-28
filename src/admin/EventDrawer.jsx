@@ -26,7 +26,9 @@ const EMPTY_FORM = {
   location_city:    "Nicosia",
   location_address: "",
   date_start:       "",
+  time_start:       "",
   date_end:         "",
+  time_end:         "",
   max_participants: "",
   external_url:     "",
   cover_image_url:  "",
@@ -35,9 +37,13 @@ const EMPTY_FORM = {
   format:           "community",
 };
 
-function fmt(iso) {
-  if (!iso) return "";
-  return iso.slice(0, 16).replace("T", " ").replace(" ", "T");
+// Split an ISO/datetime string into { date: "YYYY-MM-DD", time: "HH:MM" }
+function fmtSplit(iso) {
+  if (!iso) return { date: "", time: "" };
+  // Normalise to "YYYY-MM-DDTHH:MM" regardless of whether source uses " " or "T"
+  const s = iso.slice(0, 16).replace(" ", "T");
+  const [date, time] = s.split("T");
+  return { date: date || "", time: time || "" };
 }
 
 // ─── Validation ───────────────────────────────────────────────
@@ -52,7 +58,7 @@ function validate(form) {
   if (!form.cover_image_url?.trim())              errs.cover_url   = "Cover image URL is required";
   if (!form.location_address?.trim())             errs.address     = "Required";
   if (!form.date_start)                           errs.date_start  = "Required";
-  if (form.date_end && form.date_start && new Date(form.date_end) <= new Date(form.date_start))
+  if (form.date_end && form.date_start && new Date(`${form.date_end}T${form.time_end || "00:00"}`) <= new Date(`${form.date_start}T${form.time_start || "00:00"}`))
     errs.date_end = "Must be after start date";
   if (form.external_url && !/^https?:\/\/.+/.test(form.external_url))
     errs.external_url = "Must be a valid URL (https://...)";
@@ -274,8 +280,10 @@ export default function EventDrawer({ event, onSave, onClose }) {
           category:         event.category         || "boardgames",
           location_city:    event.location_city    || "Nicosia",
           location_address: event.location_address || "",
-          date_start:       fmt(event.date_start),
-          date_end:         fmt(event.date_end),
+          date_start:       fmtSplit(event.date_start).date,
+          time_start:       fmtSplit(event.date_start).time,
+          date_end:         fmtSplit(event.date_end).date,
+          time_end:         fmtSplit(event.date_end).time,
           max_participants: event.max_participants  || "",
           external_url:     event.external_url      || "",
           cover_image_url:  event.cover_image_url   || "",
@@ -381,8 +389,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
         category:         form.category,
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
-        date_start:       form.date_start ? form.date_start.slice(0, 16).replace("T", " ") + ":00" : null,
-        date_end:         multiDay && form.date_end ? form.date_end.slice(0, 16).replace("T", " ") + ":00" : null,
+        date_start:       (form.date_start && form.time_start) ? `${form.date_start}T${form.time_start}:00` : null,
+        date_end:         multiDay && form.date_end && form.time_end ? `${form.date_end}T${form.time_end}:00` : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
         external_url:     form.external_url.trim() || null,
         // BUG 2 FIX: use null (allowed by some schemas) or empty string fallback
@@ -750,21 +758,35 @@ export default function EventDrawer({ event, onSave, onClose }) {
             <div style={{ display: "grid", gridTemplateColumns: multiDay ? "1fr 1fr" : "1fr", gap: 12 }}>
               <div>
                 <span style={{ ...label, marginBottom: 4 }}>{multiDay ? "Start" : "Date"}</span>
-                <input type="datetime-local" lang="en-GB" style={inputStyle(errors.date_start)}
-                  value={form.date_start} onChange={e => set("date_start", e.target.value)}
-                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-                  onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
-                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+                  <input type="date" style={inputStyle(errors.date_start)}
+                    value={form.date_start} onChange={e => set("date_start", e.target.value)}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                  />
+                  <input type="time" style={{ ...inputStyle(errors.date_start), width: 110 }}
+                    value={form.time_start} onChange={e => set("time_start", e.target.value)}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                  />
+                </div>
                 {errors.date_start && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_start}</div>}
               </div>
               {multiDay && (
                 <div>
                   <span style={{ ...label, marginBottom: 4 }}>End</span>
-                  <input type="datetime-local" lang="en-GB" style={inputStyle(errors.date_end)}
-                    value={form.date_end} onChange={e => set("date_end", e.target.value)}
-                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-                    onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
-                  />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+                    <input type="date" style={inputStyle(errors.date_end)}
+                      value={form.date_end} onChange={e => set("date_end", e.target.value)}
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                    />
+                    <input type="time" style={{ ...inputStyle(errors.date_end), width: 110 }}
+                      value={form.time_end} onChange={e => set("time_end", e.target.value)}
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                    />
+                  </div>
                   {errors.date_end && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_end}</div>}
                 </div>
               )}
