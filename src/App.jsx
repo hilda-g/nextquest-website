@@ -244,7 +244,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
       <div className="nq-cal-grid" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 24 }}>
         {/* Leading empty slots */}
         {Array.from({ length: firstDaySlot }).map((_, i) => (
-          <div key={`e${i}`} className="nq-cal-cell" style={{ minHeight: 64, minWidth: 0, background: "rgba(255,255,255,0.01)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.03)" }} />
+          <div key={`e${i}`} className="nq-cal-cell" style={{ minHeight: 64, minWidth: 0, background: "rgba(5,5,12,0.6)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.04)" }} />
         ))}
 
         {/* Day cells */}
@@ -264,8 +264,8 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
               style={{
                 minHeight: 64,
                 minWidth: 0,
-                background: today ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.025)",
-                border: today ? "1px solid rgba(167,139,250,0.45)" : "1px solid rgba(255,255,255,0.05)",
+                background: today ? "rgba(124,58,237,0.15)" : "rgba(5,5,12,0.65)",
+                border: today ? "1px solid rgba(167,139,250,0.45)" : "1px solid rgba(255,255,255,0.06)",
                 borderRadius: 8,
                 padding: "5px 4px 4px",
                 cursor: dayEvents.length ? "pointer" : "default",
@@ -743,9 +743,9 @@ export default function NextQuest() {
 
         .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
 
-        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #a09cbc; border-radius: 999px; padding: 6px 16px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.2s; }
-        .filter-btn:hover { background: rgba(255,255,255,0.1); color: #e8e6f0; }
-        .filter-btn.active { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); color: #fff; }
+        .filter-btn { background: rgba(10,10,18,0.75); border: 1px solid rgba(255,255,255,0.1); color: #a09cbc; border-radius: 999px; padding: 6px 16px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px); }
+        .filter-btn:hover { background: rgba(20,20,35,0.9); color: #e8e6f0; }
+        .filter-btn.active { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.28); color: #fff; }
 
         .tab-btn { background: none; border: none; color: #6b6890; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 10px 4px; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.03em; display: flex; align-items: center; gap: 6px; }
         .tab-btn.active { color: #e8e6f0; border-bottom-color: #a78bfa; }
