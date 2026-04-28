@@ -939,8 +939,8 @@ export default function NextQuest() {
               <input className="search-input" placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer" style={{
-              flex: 1, display: "flex", alignItems: "center", gap: 10,
-              padding: "0 18px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
+              flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10,
+              padding: "0 14px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
               background: "linear-gradient(120deg, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.07) 100%)",
               border: "1px solid rgba(167,139,250,0.28)",
               boxShadow: "inset 0 1px 0 rgba(167,139,250,0.08)",
@@ -950,15 +950,15 @@ export default function NextQuest() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.28)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(167,139,250,0.08)"; }}
             >
               <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>🔔</span>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{t.ctaSubscribeTitle}</span>
-                <span style={{ fontSize: 11, color: "#7c6faa", lineHeight: 1.3 }}>{t.ctaSubscribeSub}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.ctaSubscribeTitle}</span>
+                <span style={{ fontSize: 11, color: "#7c6faa", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.ctaSubscribeSub}</span>
               </div>
-              <span style={{ marginLeft: "auto", fontSize: 14, color: "rgba(167,139,250,0.4)", flexShrink: 0 }}>↗</span>
+              <span style={{ fontSize: 14, color: "rgba(167,139,250,0.4)", flexShrink: 0 }}>↗</span>
             </a>
             <a href="https://t.me/NextQuestbot" target="_blank" rel="noopener noreferrer" style={{
-              flex: 1, display: "flex", alignItems: "center", gap: 10,
-              padding: "0 18px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
+              flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10,
+              padding: "0 14px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
               background: "linear-gradient(120deg, rgba(6,182,212,0.13) 0%, rgba(6,182,212,0.04) 100%)",
               border: "1px solid rgba(6,182,212,0.25)",
               boxShadow: "inset 0 1px 0 rgba(6,182,212,0.08)",
@@ -968,11 +968,11 @@ export default function NextQuest() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.25)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(6,182,212,0.08)"; }}
             >
               <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>✨</span>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#67e8f9", lineHeight: 1.2, letterSpacing: "-0.01em" }}>{t.ctaAddTitle}</span>
-                <span style={{ fontSize: 11, color: "#2a7a8a", lineHeight: 1.3 }}>{t.ctaAddSub}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#67e8f9", lineHeight: 1.2, letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.ctaAddTitle}</span>
+                <span style={{ fontSize: 11, color: "#2a7a8a", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.ctaAddSub}</span>
               </div>
-              <span style={{ marginLeft: "auto", fontSize: 14, color: "rgba(6,182,212,0.4)", flexShrink: 0 }}>↗</span>
+              <span style={{ fontSize: 14, color: "rgba(6,182,212,0.4)", flexShrink: 0 }}>↗</span>
             </a>
           </div>
 
