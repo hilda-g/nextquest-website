@@ -381,8 +381,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
         category:         form.category,
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
-        date_start:       form.date_start ? form.date_start.replace("T", " ") + ":00" : null,
-        date_end:         multiDay && form.date_end ? form.date_end.replace("T", " ") + ":00" : null,
+        date_start:       form.date_start ? form.date_start.slice(0, 16).replace("T", " ") + ":00" : null,
+        date_end:         multiDay && form.date_end ? form.date_end.slice(0, 16).replace("T", " ") + ":00" : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
         external_url:     form.external_url.trim() || null,
         // BUG 2 FIX: use null (allowed by some schemas) or empty string fallback
@@ -402,6 +402,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
       setVisible(false);
       setTimeout(onClose, 250);
     } catch (err) {
+      console.error("Save error:", err);
       setErrors(e => ({ ...e, _global: err.message }));
     } finally {
       setSaving(false);
