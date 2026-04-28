@@ -934,49 +934,45 @@ export default function NextQuest() {
         {/* ── CONTROLS ── */}
         <div className="nq-controls" style={{ position: "relative", zIndex: 1, padding: "0 24px 24px", maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "stretch" }}>
-            <div className="nq-search-wrap" style={{ position: "relative", maxWidth: 480, flex: "0 0 480px" }}>
-              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 16 }}>🔍</span>
+            <div className="nq-search-wrap" style={{ position: "relative", maxWidth: 480, flex: "0 0 480px", display: "flex", alignItems: "center" }}>
+              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 16, lineHeight: 1, pointerEvents: "none" }}>🔍</span>
               <input className="search-input" placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer" style={{
-              flex: 1, display: "flex", alignItems: "center", gap: 12,
-              padding: "0 16px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
-              background: "rgba(124,58,237,0.12)", border: "1px solid rgba(167,139,250,0.22)",
-              transition: "border-color 0.15s, transform 0.15s",
+              flex: 1, display: "flex", alignItems: "center", gap: 10,
+              padding: "0 18px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
+              background: "linear-gradient(120deg, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.07) 100%)",
+              border: "1px solid rgba(167,139,250,0.28)",
+              boxShadow: "inset 0 1px 0 rgba(167,139,250,0.08)",
+              transition: "border-color 0.15s, transform 0.15s, box-shadow 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.45)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.22)"; e.currentTarget.style.transform = "translateY(0)"; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(167,139,250,0.12), 0 4px 20px rgba(124,58,237,0.15)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.28)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(167,139,250,0.08)"; }}
             >
-              <div style={{
-                width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: "rgba(124,58,237,0.2)", border: "1px solid rgba(167,139,250,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15,
-              }}>🔔</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2 }}>Subscribe to get new events</span>
-                <span style={{ fontSize: 11, color: "#6b5fa0", lineHeight: 1.3 }}>Never miss a geek event in Cyprus</span>
+              <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>🔔</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd", lineHeight: 1.2, letterSpacing: "-0.01em" }}>Subscribe to get new events</span>
+                <span style={{ fontSize: 11, color: "#7c6faa", lineHeight: 1.3 }}>Never miss a geek event in Cyprus</span>
               </div>
-              <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 999, background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", flexShrink: 0 }}>Telegram</span>
+              <span style={{ marginLeft: "auto", fontSize: 14, color: "rgba(167,139,250,0.4)", flexShrink: 0 }}>↗</span>
             </a>
             <a href="https://t.me/NextQuestbot" target="_blank" rel="noopener noreferrer" style={{
-              flex: 1, display: "flex", alignItems: "center", gap: 12,
-              padding: "0 16px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
-              background: "rgba(6,182,212,0.07)", border: "1px solid rgba(6,182,212,0.2)",
-              transition: "border-color 0.15s, transform 0.15s",
+              flex: 1, display: "flex", alignItems: "center", gap: 10,
+              padding: "0 18px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
+              background: "linear-gradient(120deg, rgba(6,182,212,0.13) 0%, rgba(6,182,212,0.04) 100%)",
+              border: "1px solid rgba(6,182,212,0.25)",
+              boxShadow: "inset 0 1px 0 rgba(6,182,212,0.08)",
+              transition: "border-color 0.15s, transform 0.15s, box-shadow 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.42)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.2)"; e.currentTarget.style.transform = "translateY(0)"; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.5)"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(6,182,212,0.12), 0 4px 20px rgba(6,182,212,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.25)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(6,182,212,0.08)"; }}
             >
-              <div style={{
-                width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15,
-              }}>✨</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#67e8f9", lineHeight: 1.2 }}>Add your own event</span>
-                <span style={{ fontSize: 11, color: "#1e6a7a", lineHeight: 1.3 }}>Free · takes 2 minutes via bot</span>
+              <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>✨</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#67e8f9", lineHeight: 1.2, letterSpacing: "-0.01em" }}>Add your own event</span>
+                <span style={{ fontSize: 11, color: "#2a7a8a", lineHeight: 1.3 }}>Free · takes 2 minutes via bot</span>
               </div>
-              <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 999, background: "rgba(6,182,212,0.12)", color: "#22d3ee", border: "1px solid rgba(6,182,212,0.25)", flexShrink: 0 }}>Bot</span>
+              <span style={{ marginLeft: "auto", fontSize: 14, color: "rgba(6,182,212,0.4)", flexShrink: 0 }}>↗</span>
             </a>
           </div>
 
