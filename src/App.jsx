@@ -1106,7 +1106,7 @@ export default function NextQuest() {
                 onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(167,139,250,0.5)"}
                 onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(167,139,250,0.25)"}
               >
-                ✈️ NextQuest Community
+                <img src="/Telegram_icon.png" alt="Telegram" style={{ width: 16, height: 16, borderRadius: "50%" }} /> NextQuest Community
               </a>
               <a href="https://t.me/NextQuestbot" target="_blank" rel="noopener noreferrer"
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)", color: "#fb923c", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s" }}
