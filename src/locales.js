@@ -35,7 +35,7 @@ export const LANGS = {
     statusFull: "✕ Full",
     statusOpen: "● Open",
     eventsBy: "Events by",
-    ctaSubscribeTitle: "Subscribe to new events",
+    ctaSubscribeTitle: "Subscribe to Telegram Channel",
     ctaSubscribeSub:   "Never miss a geek event in Cyprus",
     ctaAddTitle:       "Add your own event",
     ctaAddSub:         "Free · 2 min via bot",
