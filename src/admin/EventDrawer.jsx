@@ -49,6 +49,7 @@ function validate(form) {
   if (!form.description?.trim())                  errs.description = "Required";
   else if (form.description.trim().length < 20)   errs.description = "At least 20 characters";
   else if (form.description.trim().length > 1000) errs.description = "Max 1000 characters";
+  if (!form.cover_image_url?.trim())              errs.cover_url   = "Cover image URL is required";
   if (!form.location_address?.trim())             errs.address     = "Required";
   if (!form.date_start)                           errs.date_start  = "Required";
   if (form.date_end && form.date_start && new Date(form.date_end) <= new Date(form.date_start))
@@ -396,13 +397,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
         organizer_link:     form.organizer_link.trim()     || null,
         format:             form.format                    || null,
       };
-
-      // BUG 2 FIX: block save if cover_image_url is empty (DB has NOT NULL constraint)
-      if (!payload.cover_image_url) {
-        setErrors(e => ({ ...e, cover_url: "Cover image URL is required" }));
-        setSaving(false);
-        return;
-      }
 
       await onSave(payload);
       setVisible(false);
