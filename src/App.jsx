@@ -938,6 +938,10 @@ export default function NextQuest() {
         {/* ── CONTROLS ── */}
         <div className="nq-controls" style={{ position: "relative", zIndex: 1, padding: "0 24px 24px", maxWidth: 1100, margin: "0 auto" }}>
           <div className="nq-cta-row" style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "stretch" }}>
+            <div className="nq-search-wrap" style={{ position: "relative", maxWidth: 480, flex: "0 0 480px", display: "flex", alignItems: "center" }}>
+              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 16, lineHeight: 1, pointerEvents: "none" }}>🔍</span>
+              <input className="search-input" placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
             <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer" className="nq-cta-btn" style={{
               flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10,
               padding: "0 14px", borderRadius: 12, textDecoration: "none", cursor: "pointer",
@@ -974,10 +978,6 @@ export default function NextQuest() {
               </div>
               <span style={{ fontSize: 14, color: "rgba(249,115,22,0.4)", flexShrink: 0 }}>↗</span>
             </a>
-            <div className="nq-search-wrap" style={{ position: "relative", maxWidth: 480, flex: "0 0 480px", display: "flex", alignItems: "center" }}>
-              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 16, lineHeight: 1, pointerEvents: "none" }}>🔍</span>
-              <input className="search-input" placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
           </div>
 
           {/* Tabs with count badges */}
