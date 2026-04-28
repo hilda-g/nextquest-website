@@ -4,12 +4,14 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL     || "";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 const CATEGORIES = [
-  { id: "boardgames", label: "🎲 Board Games" },
-  { id: "larp",       label: "⚔️ LARP"        },
-  { id: "festival",   label: "🎪 Festival"     },
-  { id: "rpg",        label: "🎭 RPG"          },
-  { id: "cosplay",    label: "👗 Cosplay"      },
-  { id: "other",      label: "🃏 Other"        },
+  { id: "boardgames", label: "🎲 Board Games"  },
+  { id: "rpg",        label: "🧙 Tabletop RPG" },
+  { id: "larp",       label: "⚔️ LARP"         },
+  { id: "festival",   label: "🎪 Festival"      },
+  { id: "cosplay",    label: "👽 Cosplay"       },
+  { id: "lectures",   label: "🔭 Lectures"      },
+  { id: "market",     label: "🛍️ Market"        },
+  { id: "other",      label: "🃏 Other"         },
 ];
 
 const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
