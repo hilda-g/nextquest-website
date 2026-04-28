@@ -895,6 +895,10 @@ export default function NextQuest() {
       <div style={{
         minHeight: "100vh",
         background: "#0d0d14",
+        backgroundImage: "url('/Background.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundAttachment: "fixed",
         fontFamily: "'Outfit', sans-serif",
         color: "#e8e6f0",
         position: "relative",
