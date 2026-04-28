@@ -7,8 +7,7 @@ const CATEGORIES = {
   festival:   "🎪 Festival",
   cosplay:    "👽 Cosplay",
   lectures:   "🔭 Lectures",
-  workshops:  "🧵 Workshops",
-  gaming:     "🎮 Gaming",
+
   market:     "🛍️ Market",
   other:      "🃏 Other",
 };

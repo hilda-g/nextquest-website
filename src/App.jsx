@@ -71,8 +71,7 @@ const CATEGORIES = [
   { id: "festival",   label: "🎪 Festival",      color: "#ec4899" },
   { id: "cosplay",    label: "👽 Cosplay",       color: "#10b981" },
   { id: "lectures",   label: "🔭 Lectures",      color: "#0ea5e9" },
-  { id: "workshops",  label: "🧵 Workshops",     color: "#a855f7" },
-  { id: "gaming",     label: "🎮 Gaming",        color: "#22c55e" },
+
   { id: "market",     label: "🛍️ Market",         color: "#f59e0b" },
   { id: "other",      label: "🃏 Other",         color: "#6b7280" },
 ];
