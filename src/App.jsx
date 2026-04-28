@@ -21,13 +21,24 @@ async function sbFetch(path, params = {}) {
   return res.json();
 }
 
+// Parse a DB datetime string as LOCAL time, stripping any timezone suffix.
+// Supabase may return "2025-05-03 06:00:00" or "2025-05-03T06:00:00+00:00".
+// We always take only the date+time digits and feed them to Date constructor
+// with a "T" separator and NO timezone — so JS treats it as local time.
+function parseLocalDate(str) {
+  if (!str) return null;
+  // Take only the first 16 chars: "YYYY-MM-DDTHH:MM" or "YYYY-MM-DD HH:MM"
+  const s = str.slice(0, 16).replace(" ", "T");
+  return new Date(s);
+}
+
 function mapEvent(row) {
   return {
     id:               row.id,
     title:            row.title,
     category:         row.category,
-    dateStart:        new Date(row.date_start.replace(" ", "T")),
-    dateEnd:          row.date_end ? new Date(row.date_end.replace(" ", "T")) : null,
+    dateStart:        parseLocalDate(row.date_start),
+    dateEnd:          row.date_end ? parseLocalDate(row.date_end) : null,
     city:             row.location_city,
     address:          row.location_address,
     description:      row.description,
@@ -52,7 +63,7 @@ function mapEvent(row) {
     // isPast = true only if the event START day is strictly before today's calendar date
     // (an event happening today at 11:00 is still "upcoming" even if it's now 13:00)
     isPast:   (() => {
-      const start = new Date(row.date_start.replace(" ", "T"));
+      const start = parseLocalDate(row.date_start);
       const todayMidnight = new Date();
       todayMidnight.setHours(0, 0, 0, 0);
       return start < todayMidnight;
