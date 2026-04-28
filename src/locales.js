@@ -68,7 +68,7 @@ export const LANGS = {
     statusFull: "✕ Мест нет",
     statusOpen: "● Открыто",
     eventsBy: "События от",
-    ctaSubscribeTitle: "Подписаться на события",
+    ctaSubscribeTitle: "Подписаться на канал",
     ctaSubscribeSub:   "Не пропусти гик-ивенты на Кипре",
     ctaAddTitle:       "Добавить своё событие",
     ctaAddSub:         "Бесплатно · 2 минуты через бота",
