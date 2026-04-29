@@ -910,10 +910,10 @@ export default function EventDrawer({ event, onSave, onClose }) {
             </span>
             <div style={{ display: "flex", gap: 8 }}>
               {[
-                { code: "en",  label: "EN" },
                 { code: "el",  label: "EL" },
                 { code: "ru",  label: "RU" },
                 { code: "uk",  label: "UKR" },
+                { code: "en",  label: "EN" },
               ].map(({ code, label }) => {
                 const active = form.languages.includes(code);
                 return (

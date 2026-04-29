@@ -76,10 +76,10 @@ const FMT_COLORS = {
 
 // ─── Language badges (modal) ─────────────────────────────────
 const LANG_BADGES_MODAL = [
-  { code: "en", label: "EN" },
   { code: "el", label: "EL" },
   { code: "ru", label: "RU" },
   { code: "uk", label: "UKR" },
+  { code: "en", label: "EN" },
 ];
 function LangBadgesModal({ languages }) {
   if (!languages || languages.length === 0) return null;
