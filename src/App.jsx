@@ -120,7 +120,7 @@ function getCatLabel(id) { return CATEGORIES.find(c => c.id === id)?.label || id
 // ─── Language badges ──────────────────────────────────────────
 const LANG_BADGES = [
   { code: "en", label: "EN" },
-  { code: "el", label: "GR" },
+  { code: "el", label: "EL" },
   { code: "ru", label: "RU" },
   { code: "uk", label: "UKR" },
 ];

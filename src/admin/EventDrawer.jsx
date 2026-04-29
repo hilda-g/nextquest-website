@@ -911,7 +911,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
             <div style={{ display: "flex", gap: 8 }}>
               {[
                 { code: "en",  label: "EN" },
-                { code: "el",  label: "GR" },
+                { code: "el",  label: "EL" },
                 { code: "ru",  label: "RU" },
                 { code: "uk",  label: "UKR" },
               ].map(({ code, label }) => {
