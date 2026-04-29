@@ -291,8 +291,24 @@ export function EventCardBody({
         {/* Action buttons */}
         <div style={{ display: "flex", gap: 8, alignItems: "stretch", flexWrap: "wrap" }}>
 
-          {/* 1. Register / Contact organizer */}
-          {event.status !== "cancelled" && (() => {
+          {/* 1. Register / Contact organizer — or bot CTA for promo events */}
+          {event.isPromo ? (
+            <a
+              href="https://t.me/NextQuestbot"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                flex: 1, textDecoration: "none", display: "inline-flex",
+                alignItems: "center", justifyContent: "center", gap: 8,
+                background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+                color: "#fff", border: "none", borderRadius: 8,
+                padding: "0 20px", height: 42, fontSize: 14,
+                fontFamily: "inherit", fontWeight: 700,
+              }}
+            >
+              ⭐ Add Your Event
+            </a>
+          ) : event.status !== "cancelled" && (() => {
             if (event.externalUrl) {
               return (
                 <a
@@ -382,8 +398,8 @@ export function EventCardBody({
             return <div style={{ flex: 1 }} />;
           })()}
 
-          {/* 2. Notify me */}
-          <div style={{ flex: 1, position: "relative" }}>
+          {/* 2. Notify me — hidden for promo events */}
+          {!event.isPromo && <div style={{ flex: 1, position: "relative" }}>
             <button
               onClick={() => {
                 if (subscribed) return;
@@ -448,10 +464,10 @@ export function EventCardBody({
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
-          {/* 3. Add to Calendar */}
-          <a
+          {/* 3. Add to Calendar — hidden for promo events */}
+          {!event.isPromo && <a
             href={makeGCalUrl(event)} target="_blank" rel="noopener noreferrer"
             style={{
               flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -462,7 +478,7 @@ export function EventCardBody({
             }}
           >
             📅 {t.addToCalendar}
-          </a>
+          </a>}
 
         </div>
       </div>

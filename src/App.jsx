@@ -71,6 +71,7 @@ function mapEvent(row) {
     })(),
     format: row.format || "official",
     registrationClosed: row.registration_closed || false,
+    isPromo:            row.is_promo            || false,
   };
 }
 
@@ -558,23 +559,32 @@ export default function NextQuest() {
   const todayMidnight = new Date();
   todayMidnight.setHours(0, 0, 0, 0);
 
-  const filtered = events.filter(e => {
-    // Use day-based past check: today's events are always "upcoming"
-    const isPast = e.dateStart < todayMidnight;
-    if (tab === "upcoming" && isPast)  return false;
-    if (tab === "archive"  && !isPast) return false;
-    if (tab === "calendar") {
-      // Calendar shows all non-past events regardless of category/city filters in the grid
-      // But we still respect search
+  const filtered = (() => {
+    let list = events.filter(e => {
+      // Use day-based past check: today's events are always "upcoming"
+      const isPast = e.dateStart < todayMidnight;
+      // Promo events only appear in Upcoming — never in Calendar or Archive
+      if (e.isPromo && tab !== "upcoming") return false;
+      if (tab === "upcoming" && isPast)  return false;
+      if (tab === "archive"  && !isPast) return false;
+      if (tab === "calendar") {
+        // Calendar shows all non-past events regardless of category/city filters in the grid
+        // But we still respect search
+      }
+      if (e.status === "cancelled" && tab !== "archive") return false;
+      if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
+      if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
+      if (formatFilter !== "all" && e.format !== formatFilter) return false;
+      const q = search.toLowerCase();
+      if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    // Pin promo events to top of Upcoming
+    if (tab === "upcoming") {
+      list = [...list.filter(e => e.isPromo), ...list.filter(e => !e.isPromo)];
     }
-    if (e.status === "cancelled" && tab !== "archive") return false;
-    if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
-    if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
-    if (formatFilter !== "all" && e.format !== formatFilter) return false;
-    const q = search.toLowerCase();
-    if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
-    return true;
-  });
+    return list;
+  })();
 
   // Count badges for tabs (day-based: today counts as upcoming)
   const upcomingCount = events.filter(e => e.dateStart >= todayMidnight && e.status !== "cancelled").length;
@@ -590,10 +600,17 @@ export default function NextQuest() {
       <div className="card-hover"
         onClick={() => setSelected(event)}
         style={{
-          background: "#13131f",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: event.isPromo
+            ? "linear-gradient(145deg, #1a1030 0%, #0f1f2e 100%)"
+            : "#13131f",
+          border: event.isPromo
+            ? "1px solid rgba(124,58,237,0.55)"
+            : "1px solid rgba(255,255,255,0.06)",
           borderRadius: 16, overflow: "hidden",
           opacity: event.status === "cancelled" ? 0.6 : 1,
+          boxShadow: event.isPromo
+            ? "0 0 0 1px rgba(6,182,212,0.18), 0 8px 32px rgba(124,58,237,0.18)"
+            : "none",
         }}>
 
         {/* Cover image */}
@@ -1093,7 +1110,7 @@ export default function NextQuest() {
           {/* ── CALENDAR TAB ── */}
           {tab === "calendar" && !loading && (
             <CalendarTab
-              events={events.filter(e => e.status !== "cancelled")}
+              events={events.filter(e => e.status !== "cancelled" && !e.isPromo)}
               lang={lang}
               t={t}
               onSelect={setSelected}

@@ -197,8 +197,16 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
 
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8e6f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 3 }}>
-          {event.title}
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#e8e6f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 3, display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.title}</span>
+          {event.is_promo && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999, flexShrink: 0,
+              background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.2))",
+              border: "1px solid rgba(167,139,250,0.4)", color: "#c4b5fd",
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>⭐ Promo</span>
+          )}
         </div>
         <div style={{ fontSize: 12, color: "#4a4868" }}>
           {date} · {event.location_city} · {CATEGORIES[event.category] || event.category}
