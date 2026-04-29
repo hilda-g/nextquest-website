@@ -282,16 +282,23 @@ export default function AboutPage({ onBack }) {
 
         /* ── contact ── */
         .nq-about-contact {
-          margin-top: 18px;
+          margin-top: 20px;
           text-align: center;
-          font-size: 12px;
-          color: #3d3a5c;
+          font-size: 13px;
+          color: #6b6890;
+          padding: 16px 20px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 12px;
         }
         .nq-about-contact a {
-          color: #5a5678; text-decoration: none;
-          border-bottom: 1px solid rgba(90,86,120,0.3);
+          color: #a78bfa;
+          text-decoration: none;
+          font-weight: 600;
+          border-bottom: 1px solid rgba(167,139,250,0.3);
+          transition: border-color 0.2s, color 0.2s;
         }
-        .nq-about-contact a:hover { color: #9993b8; }
+        .nq-about-contact a:hover { color: #c4b5fd; border-bottom-color: rgba(167,139,250,0.7); }
 
         /* ── mobile ── */
         @media (max-width: 640px) {
@@ -447,9 +454,9 @@ export default function AboutPage({ onBack }) {
 
         {/* Contact */}
         <p className="nq-about-contact">
-          Questions or ideas?{" "}
-          <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer">
-            Drop a message on Telegram
+          Questions or ideas? Contact us on Telegram{" "}
+          <a href="https://t.me/CatherineC" target="_blank" rel="noopener noreferrer">
+            @CatherineC
           </a>
         </p>
 

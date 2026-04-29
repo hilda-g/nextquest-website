@@ -1151,6 +1151,7 @@ export default function NextQuest() {
               <img src="/Avatar.png" alt="NextQuest" style={{ width: 24, height: 24, borderRadius: 6, objectFit: "cover" }} />
               <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 14, color: "#fff" }}>NextQuest</span>
               <span style={{ color: "#4a4868", fontSize: 12 }}>— Cyprus Geek Events</span>
+              <span style={{ color: "#2e2b45", fontSize: 12 }}>© 2026</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button
