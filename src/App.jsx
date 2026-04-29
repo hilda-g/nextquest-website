@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { LANGS } from "./locales";
 import { EventCardBody, EventCardModal } from "./EventCard";
+import AboutPage from "./AboutPage";
 
 // ─── CONFIG ──────────────────────────────────────────────────
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL  || "";
@@ -478,6 +479,9 @@ export default function NextQuest() {
     const m = window.location.pathname.match(/^\/organizers\/(.+)$/);
     return m ? decodeURIComponent(m[1]) : null;
   });
+  const [aboutOpen, setAboutOpen] = useState(() =>
+    window.location.pathname === "/about"
+  );
 
   const toggleCat = (id) => {
     if (id === "all") { setCatFilters(new Set()); return; }
@@ -651,6 +655,34 @@ export default function NextQuest() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // ── About page ───────────────────────────────────────────────
+  if (aboutOpen) {
+    return (
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Syne:wght@700;800&display=swap');
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body, #root { background: #0d0d14; min-height: 100vh; font-family: 'Outfit', sans-serif; }
+        `}</style>
+        <div style={{
+          background: "#0d0d14",
+          minHeight: "100vh",
+          color: "#e8e6f0",
+          fontFamily: "'Outfit', sans-serif",
+          position: "relative",
+          overflowX: "hidden",
+        }}>
+          {/* subtle bg glows — same as main page */}
+          <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, background: "radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,58,237,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.07) 0%, transparent 60%)" }} />
+          <AboutPage onBack={() => {
+            window.history.pushState({}, "", "/");
+            setAboutOpen(false);
+          }} />
+        </div>
+      </>
     );
   }
 
@@ -934,10 +966,19 @@ export default function NextQuest() {
               <img src="/Avatar.png" alt="NextQuest" className="nq-logo-icon" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
               <span className="nq-logo-text" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {["en","ru","el","uk"].map(l => (
-                <button key={l} className={`lang-btn${lang === l ? " active" : ""}`} onClick={() => setLang(l)}>{l}</button>
-              ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={() => { window.history.pushState({}, "", "/about"); setAboutOpen(true); }}
+                style={{ background: "none", border: "none", color: "#6b6890", fontFamily: "inherit", fontSize: 13, fontWeight: 500, cursor: "pointer", padding: "4px 8px", borderRadius: 6, transition: "color 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.color = "#a78bfa"}
+                onMouseLeave={e => e.currentTarget.style.color = "#6b6890"}
+              >About</button>
+              <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.08)" }} />
+              <div style={{ display: "flex", gap: 4 }}>
+                {["en","ru","el","uk"].map(l => (
+                  <button key={l} className={`lang-btn${lang === l ? " active" : ""}`} onClick={() => setLang(l)}>{l}</button>
+                ))}
+              </div>
             </div>
           </div>
         </header>
@@ -1112,6 +1153,12 @@ export default function NextQuest() {
               <span style={{ color: "#4a4868", fontSize: 12 }}>— Cyprus Geek Events</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => { window.history.pushState({}, "", "/about"); setAboutOpen(true); }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s, border-color 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.color = "#a78bfa"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "#6b6890"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+              >About us</button>
               <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer"
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(124,58,237,0.1)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(167,139,250,0.5)"}
