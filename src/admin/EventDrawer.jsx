@@ -1,539 +1,933 @@
-/**
- * EventCard.jsx — shared event modal card used by App.jsx, Modals.jsx, etc.
- *
- * Props:
- *   event          — camelCase mapped event object (see mapEvent in App.jsx)
- *   lang           — "en" | "ru" | "el" | "uk"
- *   t              — translation object from LANGS[lang]
- *   onClose        — called when the ✕ button is clicked
- *   onOrganizerClick(username) — optional; if provided, organizer name becomes clickable
- *   botUsername    — string, e.g. "NextQuestbot"
- *   subscribed     — bool; whether the user already subscribed to reminders
- *   onNotify()     — called when user taps the notify button
- *   notifyTooltipOpen — bool; whether the notify tooltip is open
- *   onNotifyTooltipClose() — called when notify tooltip is dismissed
- */
+import { useState, useEffect, useRef } from "react";
 
-import { useState } from "react";
-
-// ─── Shared helpers (duplicated from App.jsx so this file is self-contained) ──
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL     || "";
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 const CATEGORIES = [
-  { id: "boardgames", label: "🎲 Board Games",  color: "#f97316" },
-  { id: "rpg",        label: "🧙 Tabletop RPG", color: "#06b6d4" },
-  { id: "larp",       label: "⚔️ LARP",         color: "#8b5cf6" },
-  { id: "festival",   label: "🎪 Festival",      color: "#ec4899" },
-  { id: "cosplay",    label: "👽 Cosplay",       color: "#10b981" },
-  { id: "lectures",   label: "🔭 Lectures",      color: "#0ea5e9" },
-  { id: "workshops",  label: "🧵 Workshops",     color: "#a855f7" },
-  { id: "gaming",     label: "🎮 Gaming",        color: "#22c55e" },
-  { id: "market",     label: "🛍️ Market",        color: "#f59e0b" },
-  { id: "other",      label: "🃏 Other",         color: "#6b7280" },
+  { id: "boardgames", label: "🎲 Board Games"  },
+  { id: "rpg",        label: "🧙 Tabletop RPG" },
+  { id: "larp",       label: "⚔️ LARP"         },
+  { id: "festival",   label: "🎪 Festival"      },
+  { id: "cosplay",    label: "👽 Cosplay"       },
+  { id: "lectures",   label: "🔭 Lectures"      },
+  { id: "market",     label: "🛍️ Market"        },
+  { id: "other",      label: "🃏 Other"         },
 ];
 
-function getCatColor(id) { return CATEGORIES.find(c => c.id === id)?.color || "#6b7280"; }
-function getCatLabel(id) { return CATEGORIES.find(c => c.id === id)?.label || id; }
+const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
 
-function getFormatLabel(fmt, t) {
-  return { private: t.formatPrivate, community: t.formatCommunity, official: t.formatOfficial }[fmt] || t.formatOfficial;
-}
-function getFormatDesc(fmt, t) {
-  return { private: t.formatDescPrivate, community: t.formatDescCommunity, official: t.formatDescOfficial }[fmt] || "";
-}
-
-function formatDate(date, lang) {
-  if (!date || isNaN(date)) return "";
-  const localeMap = { en: "en-GB", ru: "ru-RU", el: "el-GR", uk: "uk-UA" };
-  return date.toLocaleDateString(localeMap[lang] || "en-GB", { day: "numeric", month: "short" });
-}
-function formatTime(date) {
-  if (!date || isNaN(date)) return "";
-  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
-function makeGCalUrl(event) {
-  const fmt = d => d.toISOString().replace(/[-:]/g, "").replace(".000", "");
-  const end = event.dateEnd || new Date(event.dateStart.getTime() + 2 * 60 * 60 * 1000);
-  const params = new URLSearchParams({
-    action:   "TEMPLATE",
-    text:     event.title,
-    dates:    `${fmt(event.dateStart)}/${fmt(end)}`,
-    details:  event.description || "",
-    location: `${event.city}, ${event.address || ""}`,
-  });
-  return `https://calendar.google.com/calendar/render?${params}`;
-}
-function makeGMapsUrl(city, address) {
-  const q = encodeURIComponent(`${address || ""} ${city || ""}`.trim());
-  return `https://maps.google.com/?q=${q}`;
-}
-
-// ─── Format pill colors ───────────────────────────────────────
-const FMT_COLORS = {
-  private:   { bg: "rgba(139,92,246,0.15)",  color: "#a78bfa", border: "rgba(167,139,250,0.3)"  },
-  community: { bg: "rgba(6,182,212,0.12)",   color: "#06b6d4", border: "rgba(6,182,212,0.3)"    },
-  official:  { bg: "rgba(16,185,129,0.12)",  color: "#10b981", border: "rgba(16,185,129,0.3)"   },
+const EMPTY_FORM = {
+  title:            "",
+  description:      "",
+  description_ru:   "",
+  description_el:   "",
+  description_uk:   "",
+  category:         "boardgames",
+  location_city:    "Nicosia",
+  location_address: "",
+  date_start:       "",
+  time_start:       "",
+  date_end:         "",
+  time_end:         "",
+  max_participants: "",
+  external_url:     "",
+  cover_image_url:  "",
+  cover_position:   { x: 50, y: 50 },
+  status:           "pending",
+  format:           "community",
+  is_promo:         false,
 };
 
-// ─── EventCardModal ───────────────────────────────────────────
-// The full event detail card — rendered inside whatever modal wrapper the caller provides.
-export function EventCardBody({
-  event, lang = "en", t,
-  onClose,
-  onOrganizerClick,
-  botUsername = "NextQuestbot",
-  subscribed = false,
-  onNotify,
-  notifyTooltipOpen = false,
-  onNotifyTooltipClose,
-}) {
-  const [showFmtInfo,  setShowFmtInfo]  = useState(false);
-  const [fmtInfoPos,   setFmtInfoPos]   = useState({ top: 0, left: 0 });
-  const [showContacts, setShowContacts] = useState(false);
-  const [contactPos,   setContactPos]   = useState({ top: 0, left: 0 });
+// Split an ISO/datetime string into { date: "YYYY-MM-DD", time: "HH:MM" }
+function fmtSplit(iso) {
+  if (!iso) return { date: "", time: "" };
+  // Normalise to "YYYY-MM-DDTHH:MM" regardless of whether source uses " " or "T"
+  const s = iso.slice(0, 16).replace(" ", "T");
+  const [date, time] = s.split("T");
+  return { date: date || "", time: time || "" };
+}
 
-  const color    = getCatColor(event.category);
-  const fmt      = event.format || "official";
-  const fmtLabel = getFormatLabel(fmt, t);
-  const fmtDesc  = getFormatDesc(fmt, t);
-  const fc       = FMT_COLORS[fmt] || FMT_COLORS.official;
+// ─── Validation ───────────────────────────────────────────────
+function validate(form) {
+  const errs = {};
+  if (!form.title?.trim())                        errs.title       = "Required";
+  else if (form.title.trim().length < 3)          errs.title       = "At least 3 characters";
+  else if (form.title.trim().length > 100)        errs.title       = "Max 100 characters";
+  if (!form.description?.trim())                  errs.description = "Required";
+  else if (form.description.trim().length < 20)   errs.description = "At least 20 characters";
+  else if (form.description.trim().length > 1000) errs.description = "Max 1000 characters";
+  if (!form.cover_image_url?.trim())              errs.cover_url   = "Cover image URL is required";
+  if (!form.location_address?.trim())             errs.address     = "Required";
+  if (!form.date_start)                           errs.date_start  = "Required";
+  if (form.date_end && form.date_start && new Date(`${form.date_end}T${form.time_end || "00:00"}`) <= new Date(`${form.date_start}T${form.time_start || "00:00"}`))
+    errs.date_end = "Must be after start date";
+  if (form.external_url && !/^https?:\/\/.+/.test(form.external_url))
+    errs.external_url = "Must be a valid URL (https://...)";
+  return errs;
+}
 
-  const displayName = event.organizerName || event.organizerUsername || null;
-  const isNavigable = !!event.organizerUsername && !!onOrganizerClick;
+// ─── Input style helper ───────────────────────────────────────
+function inputStyle(error) {
+  return {
+    width: "100%",
+    padding: "10px 14px",
+    background: error ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.05)",
+    border: `1px solid ${error ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
+    borderRadius: 10, color: "#e8e6f0",
+    fontFamily: "'Outfit', sans-serif", fontSize: 14,
+    outline: "none", transition: "border-color 0.2s",
+    boxSizing: "border-box",
+  };
+}
+
+// ─── Image Repositioner ───────────────────────────────────────
+function ImagePositioner({ src, position, onChange }) {
+  const ref      = useRef(null);
+  const [pos, setPos]             = useState(position || { x: 50, y: 50 });
+  const [zoom, setZoom]           = useState(1);
+  const [zoomInput, setZoomInput] = useState("100");
+  const [editingZoom, setEditingZoom] = useState(false);
+  const dragging = useRef(false);
+  const start    = useRef(null);
+  // Keep a ref to the latest pos so onUp always fires the correct value
+  // (avoids stale closure bug where onChange(pos) captured an old snapshot)
+  const latestPos = useRef(pos);
+
+  useEffect(() => {
+    const p = position || { x: 50, y: 50 };
+    setPos(p);
+    latestPos.current = p;
+  }, [position]);
+
+  function applyZoom(raw) {
+    const z = Math.max(0.3, Math.min(3, Math.round(raw) / 100));
+    setZoom(z);
+    setZoomInput(String(Math.round(z * 100)));
+  }
+
+  function onDown(e) {
+    dragging.current = true;
+    start.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
+    e.preventDefault();
+  }
+
+  function onMove(e) {
+    if (!dragging.current || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const dx = ((e.clientX - start.current.mx) / rect.width)  * 100;
+    const dy = ((e.clientY - start.current.my) / rect.height) * 100;
+    const nx = Math.max(0, Math.min(100, start.current.px - dx));
+    const ny = Math.max(0, Math.min(100, start.current.py - dy));
+    const p  = { x: Math.round(nx), y: Math.round(ny) };
+    setPos(p);
+    latestPos.current = p;   // always up to date, no stale closure
+  }
+
+  function onUp() {
+    if (dragging.current) {
+      dragging.current = false;
+      onChange(latestPos.current);  // use ref, not stale state
+    }
+  }
+
+  function onWheel(e) {
+    e.preventDefault();
+    applyZoom(zoom * 100 + (e.deltaY < 0 ? 10 : -10));
+  }
+
+  function commitZoomInput() {
+    const parsed = parseInt(zoomInput, 10);
+    if (!isNaN(parsed)) applyZoom(parsed);
+    else setZoomInput(String(Math.round(zoom * 100)));
+    setEditingZoom(false);
+  }
+
+  const btnStyle = {
+    width: 28, height: 28, borderRadius: 7, cursor: "pointer",
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    color: "#a09cbc", fontSize: 16, display: "flex",
+    alignItems: "center", justifyContent: "center", fontFamily: "inherit", flexShrink: 0,
+  };
+
+  // zoom >= 1: cover + scale() crops into the image
+  // zoom <  1: image shrinks to fit fully inside the frame, no clipping
+  const imgStyle = zoom >= 1
+    ? {
+        position: "absolute", width: "100%", height: "100%",
+        left: "50%", top: "50%",
+        transform: `translate(calc(-50% + ${(pos.x - 50) * 0.3 * zoom}px), calc(-50% + ${(pos.y - 50) * 0.3 * zoom}px)) scale(${zoom})`,
+        objectFit: "cover", pointerEvents: "none", transformOrigin: "center center",
+      }
+    : {
+        position: "absolute",
+        maxWidth: `${zoom * 100}%`, maxHeight: `${zoom * 100}%`,
+        width: "auto", height: "auto",
+        left: "50%", top: "50%",
+        transform: `translate(calc(-50% + ${(pos.x - 50) * zoom}px), calc(-50% + ${(pos.y - 50) * zoom}px))`,
+        objectFit: "contain", pointerEvents: "none",
+      };
 
   return (
-    <>
-      {/* ── Cover ── */}
-      <div style={{
-        position: "relative", height: 220,
-        borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#1a1a2e",
-      }}>
-        <img
-          src={event.cover} alt=""
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          onError={e => { e.target.style.display = "none"; }}
-        />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(22,22,42,1) 0%, transparent 50%)" }} />
-
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute", top: 16, right: 16,
-            background: "rgba(0,0,0,0.5)", border: "none", color: "#fff",
-            borderRadius: 8, width: 36, height: 36, cursor: "pointer",
-            fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >✕</button>
-
-        <div style={{ position: "absolute", bottom: 16, left: 20, display: "flex", gap: 8 }}>
-          <span style={{
-            display: "inline-flex", alignItems: "center", padding: "4px 12px",
-            borderRadius: 999, fontSize: 12, fontWeight: 600,
-            background: color + "22", color, border: `1px solid ${color}44`,
-          }}>{getCatLabel(event.category)}</span>
-          {event.multiDay && (
-            <span style={{
-              display: "inline-flex", alignItems: "center", padding: "4px 12px",
-              borderRadius: 999, fontSize: 12, fontWeight: 600,
-              background: "rgba(255,255,255,0.1)", color: "#e8e6f0",
-            }}>{t.multiDay}</span>
+    <div>
+      {/* Top bar: hint left, zoom controls right */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <span style={{ fontSize: 11, color: "#6b6890" }}>
+          Drag to reposition · Focus: {pos.x}% {pos.y}%
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <button style={btnStyle} onClick={() => applyZoom(zoom * 100 - 10)}>−</button>
+          {editingZoom ? (
+            <input
+              autoFocus
+              value={zoomInput}
+              onChange={e => setZoomInput(e.target.value)}
+              onBlur={commitZoomInput}
+              onKeyDown={e => {
+                if (e.key === "Enter")  commitZoomInput();
+                if (e.key === "Escape") { setZoomInput(String(Math.round(zoom * 100))); setEditingZoom(false); }
+              }}
+              style={{
+                width: 52, textAlign: "center", padding: "2px 4px",
+                background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.5)",
+                borderRadius: 6, color: "#e8e6f0", fontSize: 12,
+                fontFamily: "inherit", outline: "none",
+              }}
+            />
+          ) : (
+            <span
+              onClick={() => setEditingZoom(true)}
+              title="Click to type a zoom value (30–300)"
+              style={{
+                width: 52, textAlign: "center", fontSize: 12, color: "#a09cbc",
+                cursor: "text", padding: "2px 4px", borderRadius: 6,
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.04)", userSelect: "none",
+              }}
+            >{Math.round(zoom * 100)}%</span>
           )}
-          {event.status === "cancelled" && (
-            <span style={{
-              display: "inline-flex", alignItems: "center", padding: "4px 12px",
-              borderRadius: 999, fontSize: 12, fontWeight: 600,
-              background: "rgba(239,68,68,0.15)", color: "#ef4444",
-            }}>{t.cancelled}</span>
-          )}
+          <button style={btnStyle} onClick={() => applyZoom(zoom * 100 + 10)}>+</button>
         </div>
       </div>
 
-      {/* ── Body ── */}
-      <div style={{ padding: 24, overflowY: "auto" }}>
-        <h2 style={{
-          fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800,
-          color: "#fff", marginBottom: 16, lineHeight: 1.2,
-        }}>
-          {({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}
-        </h2>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 18 }}>
-
-          {/* Format pill + organizer */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-
-            {/* Format pill + ℹ tooltip */}
-            <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <span style={{
-                display: "inline-flex", alignItems: "center", padding: "3px 10px",
-                borderRadius: 999, fontWeight: 700, fontSize: 12, flexShrink: 0,
-                background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`,
-              }}>{fmtLabel}</span>
-
-              <button
-                onClick={e => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setFmtInfoPos({ top: rect.top - 8, left: rect.left });
-                  setShowFmtInfo(v => !v);
-                  setShowContacts(false);
-                }}
-                style={{
-                  width: 15, height: 15, borderRadius: "50%",
-                  background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#6b6890", fontSize: 9, fontWeight: 700, cursor: "pointer",
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: "inherit", flexShrink: 0, lineHeight: 1, padding: 0,
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#a09cbc"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "#6b6890"; }}
-              >i</button>
-
-              {showFmtInfo && (
-                <div style={{
-                  position: "fixed",
-                  bottom: `calc(100vh - ${fmtInfoPos.top}px)`,
-                  left: fmtInfoPos.left,
-                  background: "#1e1e36", border: "1px solid rgba(167,139,250,0.25)",
-                  borderRadius: 10, padding: "10px 13px", width: 210,
-                  boxShadow: "0 8px 28px rgba(0,0,0,0.5)", zIndex: 9999,
-                  fontSize: 12, lineHeight: 1.5, color: "#a09cbc",
-                  animation: "fadeIn 0.15s ease",
-                }}>
-                  <strong style={{ color: "#e8e6f0", fontSize: 12 }}>{fmtLabel}</strong><br />
-                  {fmtDesc}
-                </div>
-              )}
-            </div>
-
-            {/* Organizer name */}
-            {displayName && (isNavigable ? (
-              <button
-                onClick={() => onOrganizerClick(event.organizerUsername)}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)",
-                  borderRadius: 999, padding: "3px 10px 3px 8px",
-                  cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#a78bfa",
-                  fontFamily: "inherit", transition: "all 0.15s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.18)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; e.currentTarget.style.color = "#c4b5fd"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(167,139,250,0.08)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.2)"; e.currentTarget.style.color = "#a78bfa"; }}
-              >
-                <span style={{ fontSize: 13 }}>👤</span>
-                {displayName}
-                <span style={{ fontSize: 11, color: "rgba(167,139,250,0.6)" }}>›</span>
-              </button>
-            ) : (
-              <span style={{ fontSize: 13, color: "#a09cbc" }}>
-                <span style={{ color: "#4a4868", fontWeight: 600, fontSize: 12 }}>{t.organizerLabel}</span>
-                {displayName}
-              </span>
-            ))}
-          </div>
-
-          {/* Date */}
-          <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/>
-              <rect x="1" y="2" width="14" height="5" rx="2" fill="#ef4444"/>
-              <rect x="9" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/>
-              <rect x="5" y="0" width="2" height="4" rx="1" fill="#c0bcd8"/>
-              <rect x="3" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-              <rect x="7" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-              <rect x="11" y="9" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-              <rect x="3" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-              <rect x="7" y="12" width="2" height="2" rx="0.5" fill="#a09cbc"/>
-            </svg>
-            <span>
-              {formatDate(event.dateStart, lang)}
-              {event.multiDay && event.dateEnd
-                ? ` — ${formatDate(event.dateEnd, lang)}`
-                : ` · ${formatTime(event.dateStart)}`}
-            </span>
-          </div>
-
-          {/* Location */}
-          <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
-            <span style={{ flexShrink: 0 }}>📍</span>
-            <a
-              href={makeGMapsUrl(event.city, event.address)}
-              target="_blank" rel="noopener noreferrer"
-              style={{ color: "#a09cbc", textDecoration: "underline", textDecorationColor: "rgba(160,156,188,0.3)", textUnderlineOffset: 3 }}
-            >
-              {event.city}{event.address ? `, ${event.address}` : ""}
-            </a>
-          </div>
-
-          {/* Spots + status */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 14, color: "#a09cbc" }}>
-              👥 {event.maxParticipants ? `${event.maxParticipants} ${t.participants}` : t.noLimit}
-            </span>
-            {event.maxParticipants && event.registrationClosed ? (
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
-            ) : (
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Description */}
-        {event.description && (
-          <div style={{ color: "#9996b8", fontSize: 14, lineHeight: 1.7, marginBottom: 20, textAlign: "left" }}>
-            {(() => {
-              const descMap = { ru: event.description_ru, el: event.description_el, uk: event.description_uk };
-              const text = descMap[lang] || event.description;
-              return text.split("\n").map((line, i) => <span key={i}>{line}<br /></span>);
-            })()}
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: 8, alignItems: "stretch", flexWrap: "wrap" }}>
-
-          {/* 1. Register / Contact organizer — or bot CTA for promo events */}
-          {event.isPromo ? (
-            <a
-              href="https://t.me/NextQuestbot"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                flex: 1, textDecoration: "none", display: "inline-flex",
-                alignItems: "center", justifyContent: "center", gap: 8,
-                background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
-                color: "#fff", border: "none", borderRadius: 8,
-                padding: "0 20px", height: 42, fontSize: 14,
-                fontFamily: "inherit", fontWeight: 700,
-              }}
-            >
-              ⭐ Add Your Event
-            </a>
-          ) : event.status !== "cancelled" && (() => {
-            if (event.externalUrl) {
-              return (
-                <a
-                  href={event.externalUrl} target="_blank" rel="noopener noreferrer"
-                  style={{
-                    flex: 1, textDecoration: "none", display: "inline-flex",
-                    alignItems: "center", justifyContent: "center",
-                    background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
-                    color: "#fff", border: "none", borderRadius: 8,
-                    padding: "0 20px", height: 42, fontSize: 14,
-                    fontFamily: "inherit", fontWeight: 700,
-                  }}
-                >
-                  {t.register}
-                </a>
-              );
-            }
-            if (event.organizerContacts) {
-              const raw  = event.organizerContacts;
-              const href = raw.startsWith("http") ? raw
-                : raw.startsWith("@") ? `https://t.me/${raw.slice(1)}`
-                : `https://t.me/${raw}`;
-              return (
-                <div style={{ flex: 1, position: "relative" }}>
-                  <button
-                    onClick={e => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setContactPos({ top: rect.top, left: rect.left + rect.width / 2 });
-                      setShowContacts(v => !v);
-                      setShowFmtInfo(false);
-                    }}
-                    style={{
-                      width: "100%", height: 42,
-                      background: "rgba(249,115,22,0.12)",
-                      border: "1px solid rgba(249,115,22,0.45)",
-                      color: "#f97316", borderRadius: 8, cursor: "pointer",
-                      fontFamily: "inherit", fontWeight: 600, fontSize: 14,
-                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    }}
-                  >
-                    📋 {t.contactOrganizer.replace(/📋\s?/, "").split(" ")[0]}
-                  </button>
-
-                  {showContacts && (
-                    <div style={{
-                      position: "fixed",
-                      bottom: `calc(100vh - ${contactPos.top}px + 10px)`,
-                      left: contactPos.left,
-                      transform: "translateX(-50%)",
-                      background: "#1e1e36", border: "1px solid rgba(249,115,22,0.3)",
-                      borderRadius: 12, padding: "13px 15px", width: 240,
-                      boxShadow: "0 12px 40px rgba(0,0,0,0.6)", zIndex: 9999,
-                      animation: "fadeIn 0.15s ease",
-                    }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6890", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>
-                        {t.organizerContacts}
-                      </div>
-                      <div style={{ fontSize: 14, color: "#f97316", fontWeight: 600, wordBreak: "break-all", marginBottom: 11 }}>
-                        {raw}
-                      </div>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <a
-                          href={href} target="_blank" rel="noopener noreferrer"
-                          onClick={() => setShowContacts(false)}
-                          style={{
-                            flex: 1, textAlign: "center", textDecoration: "none",
-                            background: "linear-gradient(135deg, #ea580c, #f97316)",
-                            color: "#fff", borderRadius: 8, padding: "8px 10px",
-                            fontSize: 12, fontWeight: 700, display: "inline-flex",
-                            alignItems: "center", justifyContent: "center", gap: 5,
-                          }}
-                        >✈️ Open</a>
-                        <button
-                          onClick={() => setShowContacts(false)}
-                          style={{
-                            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                            color: "#6b6890", borderRadius: 8, padding: "8px 11px",
-                            fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                          }}
-                        >✕</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            }
-            return <div style={{ flex: 1 }} />;
-          })()}
-
-          {/* 2. Notify me — hidden for promo events */}
-          {!event.isPromo && <div style={{ flex: 1, position: "relative" }}>
-            <button
-              onClick={() => {
-                if (subscribed) return;
-                setShowContacts(false);
-                setShowFmtInfo(false);
-                if (onNotify) onNotify();
-              }}
-              style={{
-                width: "100%", height: 42,
-                border: subscribed ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(167,139,250,0.4)",
-                background: subscribed ? "rgba(16,185,129,0.08)" : "rgba(167,139,250,0.08)",
-                color: subscribed ? "#10b981" : "#a78bfa",
-                borderRadius: 8, fontSize: 14, fontFamily: "inherit",
-                fontWeight: 600, cursor: subscribed ? "default" : "pointer",
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.2s",
-              }}
-            >
-              {subscribed ? t.notified : t.notify}
-            </button>
-
-            {notifyTooltipOpen && !subscribed && (
-              <div style={{
-                position: "absolute", bottom: "calc(100% + 10px)", left: "50%",
-                transform: "translateX(-50%)",
-                background: "#1e1e36", border: "1px solid rgba(167,139,250,0.35)",
-                borderRadius: 12, padding: "12px 14px", width: 230,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.5)", zIndex: 200,
-                animation: "fadeIn 0.15s ease",
-              }}>
-                <div style={{
-                  position: "absolute", bottom: -6, left: "50%",
-                  transform: "translateX(-50%) rotate(45deg)",
-                  width: 10, height: 10, background: "#1e1e36",
-                  border: "1px solid rgba(167,139,250,0.35)",
-                  borderTop: "none", borderLeft: "none",
-                }} />
-                <p style={{ fontSize: 12, color: "#a09cbc", marginBottom: 10, lineHeight: 1.5 }}>
-                  🔔 You'll get reminders <strong style={{ color: "#e8e6f0" }}>7 days</strong> and <strong style={{ color: "#e8e6f0" }}>1 day</strong> before the event — via Telegram.
-                </p>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <a
-                    href={`https://t.me/${botUsername}?start=event_${event.id}`}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{
-                      flex: 1, textAlign: "center", textDecoration: "none",
-                      background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
-                      color: "#fff", borderRadius: 8, padding: "7px 10px",
-                      fontSize: 12, fontWeight: 700, display: "inline-flex",
-                      alignItems: "center", justifyContent: "center", gap: 4,
-                    }}
-                    onClick={onNotifyTooltipClose}
-                  >✈️ Open Telegram</a>
-                  <button
-                    onClick={onNotifyTooltipClose}
-                    style={{
-                      background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                      color: "#6b6890", borderRadius: 8, padding: "7px 10px",
-                      fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >✕</button>
-                </div>
-              </div>
-            )}
-          </div>}
-
-          {/* 3. Add to Calendar — hidden for promo events */}
-          {!event.isPromo && <a
-            href={makeGCalUrl(event)} target="_blank" rel="noopener noreferrer"
-            style={{
-              flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center",
-              background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.25)",
-              color: "#06b6d4", borderRadius: 8, padding: "0 20px", height: 42,
-              fontSize: 14, fontFamily: "inherit", fontWeight: 600,
-              textDecoration: "none", gap: 6, transition: "all 0.2s",
-            }}
-          >
-            📅 {t.addToCalendar}
-          </a>}
-
-        </div>
+      {/* Canvas */}
+      <div
+        ref={ref}
+        onMouseDown={onDown} onMouseMove={onMove}
+        onMouseUp={onUp} onMouseLeave={onUp}
+        onWheel={onWheel}
+        style={{
+          position: "relative", height: 180, borderRadius: 12,
+          overflow: "hidden", cursor: "grab",
+          border: "2px dashed rgba(167,139,250,0.35)", userSelect: "none",
+          background: "#0d0d14",
+        }}
+      >
+        <img src={src} alt="" style={imgStyle} />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(to top, rgba(13,13,20,0.55) 0%, transparent 50%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute",
+          top: `${pos.y}%`, left: `${pos.x}%`,
+          transform: "translate(-50%, -50%)",
+          width: 16, height: 16, borderRadius: "50%",
+          border: "2px solid #fff",
+          background: "rgba(167,139,250,0.6)",
+          pointerEvents: "none",
+          boxShadow: "0 0 0 4px rgba(167,139,250,0.2)",
+        }} />
       </div>
 
-      <style>{`
-        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-      `}</style>
-    </>
+      {/* Preset buttons */}
+      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+        {[["Top", 50, 10], ["Center", 50, 50], ["Bottom", 50, 90]].map(([label, x, y]) => (
+          <button key={label} onClick={() => { const p = { x, y }; setPos(p); onChange(p); }} style={{
+            flex: 1, padding: "5px 0", borderRadius: 8,
+            background: pos.y === y ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
+            border: `1px solid ${pos.y === y ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`,
+            color: pos.y === y ? "#a78bfa" : "#6b6890",
+            fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+          }}>{label}</button>
+        ))}
+      </div>
+    </div>
   );
 }
 
-// ─── Convenience wrapper: full-screen modal with backdrop ─────
-export function EventCardModal({
-  event, onClose,
-  lang, t, onOrganizerClick,
-  botUsername, subscribed, onNotify,
-  notifyTooltipOpen, onNotifyTooltipClose,
-}) {
-  if (!event) return null;
+// ─── Main Drawer ──────────────────────────────────────────────
+export default function EventDrawer({ event, onSave, onClose }) {
+  const isEdit = !!event?.id;
+
+  const [form, setForm]     = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [dirty, setDirty]   = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [multiDay, setMultiDay] = useState(false);
+  const [visible, setVisible]   = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
+  const [orgProfiles, setOrgProfiles] = useState([]);
+  const initialForm = useRef(null);
+
+  useEffect(() => {
+    const initial = event?.id
+      ? {
+          title:            event.title            || "",
+          description:      event.description      || "",
+          description_ru:   event.description_ru   || "",
+          description_el:   event.description_el   || "",
+          description_uk:   event.description_uk   || "",
+          category:         event.category         || "boardgames",
+          location_city:    event.location_city    || "Nicosia",
+          location_address: event.location_address || "",
+          date_start:       fmtSplit(event.date_start).date,
+          time_start:       fmtSplit(event.date_start).time,
+          date_end:         fmtSplit(event.date_end).date,
+          time_end:         fmtSplit(event.date_end).time,
+          max_participants: event.max_participants  || "",
+          external_url:     event.external_url      || "",
+          cover_image_url:  event.cover_image_url   || "",
+          cover_position:   event.cover_position    || { x: 50, y: 50 },
+          status:           event.status            || "pending",
+          organizer_username: event.organizer_username || "",
+          organizer_contacts: event.organizer_contacts || "",
+          organizer_link:     event.organizer_link     || "",
+          format:             event.format             || "community",
+          is_promo:           event.is_promo           || false,
+        }
+      : { ...EMPTY_FORM };
+    setForm(initial);
+    initialForm.current = JSON.stringify(initial);
+    setMultiDay(!!event?.date_end);
+    setErrors({});
+    setDirty(false);
+    setActiveTab("details");
+    requestAnimationFrame(() => setVisible(true));
+  }, [event]);
+
+  // Fetch organizer profiles for the dropdown — deduplicated from events table
+  useEffect(() => {
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    const url = new URL(`${SUPABASE_URL}/rest/v1/events`);
+    url.searchParams.set("select", "organizer_username,organizer_contacts,organizer_link,format");
+    url.searchParams.set("organizer_username", "not.is.null");
+    url.searchParams.set("order", "created_at.desc");
+    url.searchParams.set("limit", "200");
+    fetch(url.toString(), {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) return;
+        const seen = new Map();
+        data.forEach(row => {
+          if (row.organizer_username && !seen.has(row.organizer_username))
+            seen.set(row.organizer_username, row);
+        });
+        setOrgProfiles([...seen.values()]);
+      })
+      .catch(() => {});
+  }, []);
+
+  function set(field, value) {
+    setForm(f => ({ ...f, [field]: value }));
+    setDirty(true);
+    if (errors[field]) setErrors(e => ({ ...e, [field]: undefined }));
+  }
+
+  function handleClose() {
+    if (dirty) {
+      if (!window.confirm("You have unsaved changes. Discard them?")) return;
+    }
+    setVisible(false);
+    setTimeout(onClose, 250);
+  }
+
+  async function handleSave() {
+    const errs = validate(form);
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
+    setSaving(true);
+    try {
+      const desc = form.description.trim();
+
+      // Auto-translate whenever description is present and any translation is missing
+      let desc_ru = form.description_ru.trim() || null;
+      let desc_el = form.description_el.trim() || null;
+      let desc_uk = form.description_uk.trim() || null;
+
+      if (desc && (!desc_ru || !desc_el || !desc_uk)) {
+        async function gtranslate(text, lang) {
+          try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data[0].map(c => c[0]).join("");
+          } catch { return null; }
+        }
+        const [ru, el, uk] = await Promise.all([
+          desc_ru ? Promise.resolve(desc_ru) : gtranslate(desc, "ru"),
+          desc_el ? Promise.resolve(desc_el) : gtranslate(desc, "el"),
+          desc_uk ? Promise.resolve(desc_uk) : gtranslate(desc, "uk"),
+        ]);
+        desc_ru = ru || desc_ru;
+        desc_el = el || desc_el;
+        desc_uk = uk || desc_uk;
+      }
+
+      const payload = {
+        title:            form.title.trim(),
+        description:      desc,
+        description_ru:   desc_ru,
+        description_el:   desc_el,
+        description_uk:   desc_uk,
+        category:         form.category,
+        location_city:    form.location_city,
+        location_address: form.location_address.trim(),
+        date_start:       (form.date_start && form.time_start) ? `${form.date_start}T${form.time_start}:00` : null,
+        date_end:         multiDay && form.date_end && form.time_end ? `${form.date_end}T${form.time_end}:00` : null,
+        max_participants: form.max_participants ? parseInt(form.max_participants) : null,
+        external_url:     form.external_url.trim() || null,
+        // BUG 2 FIX: use null (allowed by some schemas) or empty string fallback
+        // to avoid violating not-null constraint when no image is provided.
+        // We pass the value as-is; if empty string is also not allowed, coerce to null
+        // only when editing (new events without a cover are blocked by validation below).
+        cover_image_url:  form.cover_image_url.trim() || null,
+        cover_position:   form.cover_position,
+        status:           form.status,
+        organizer_username: form.organizer_username.trim() || null,
+        organizer_contacts: form.organizer_contacts.trim() || null,
+        organizer_link:     form.organizer_link.trim()     || null,
+        format:             form.format                    || null,
+        is_promo:           form.is_promo                  || false,
+      };
+
+      await onSave(payload);
+      setVisible(false);
+      setTimeout(onClose, 250);
+    } catch (err) {
+      console.error("Save error:", err);
+      setErrors(e => ({ ...e, _global: err.message }));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") handleClose();
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); handleSave(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const label = {
+    fontSize: 11, color: "#6b6890", fontWeight: 600,
+    textTransform: "uppercase", letterSpacing: "0.08em",
+    marginBottom: 6, display: "block",
+  };
+
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, zIndex: 300,
-        background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 20, animation: "fadeIn 0.2s ease",
-        fontFamily: "'Outfit', sans-serif",
-      }}
-    >
+    <>
+      {/* Backdrop */}
       <div
-        onClick={e => e.stopPropagation()}
+        onClick={handleClose}
         style={{
-          width: "min(560px, 100%)", background: "#16162a",
-          border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
-          maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column",
-          animation: "slideUp 0.3s ease", boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "rgba(8,8,16,0.7)", backdropFilter: "blur(4px)",
+          opacity: visible ? 1 : 0, transition: "opacity 0.25s",
         }}
-      >
-        <EventCardBody
-          event={event} lang={lang} t={t}
-          onClose={onClose}
-          onOrganizerClick={onOrganizerClick}
-          botUsername={botUsername}
-          subscribed={subscribed}
-          onNotify={onNotify}
-          notifyTooltipOpen={notifyTooltipOpen}
-          onNotifyTooltipClose={onNotifyTooltipClose}
-        />
+      />
+
+      {/* Drawer */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 201,
+        width: "min(520px, 100vw)",
+        background: "#13131f",
+        borderLeft: "1px solid rgba(255,255,255,0.07)",
+        display: "flex", flexDirection: "column",
+        transform: visible ? "translateX(0)" : "translateX(100%)",
+        transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1)",
+        boxShadow: "-24px 0 80px rgba(0,0,0,0.5)",
+      }}>
+
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 24px",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          flexShrink: 0,
+        }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#e8e6f0" }}>
+              {isEdit ? "Edit Event" : "New Event"}
+            </div>
+            {dirty && (
+              <div style={{ fontSize: 11, color: "#f59e0b", marginTop: 2 }}>Unsaved changes</div>
+            )}
+          </div>
+          <button onClick={handleClose} style={{
+            width: 34, height: 34, borderRadius: 9,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#6b6890", cursor: "pointer", fontSize: 18,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>×</button>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{
+          display: "flex", gap: 0,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          flexShrink: 0,
+          padding: "0 24px",
+        }}>
+          {[["details", "📋 Details"], ["organizer", "👤 Organizer"], ["translations", "🌐 Translations"]].map(([id, label]) => (
+            <button key={id} onClick={() => setActiveTab(id)} style={{
+              padding: "10px 16px", fontSize: 12, fontWeight: 600,
+              fontFamily: "inherit", cursor: "pointer", border: "none",
+              background: "none",
+              color: activeTab === id ? "#a78bfa" : "#6b6890",
+              borderBottom: activeTab === id ? "2px solid #a78bfa" : "2px solid transparent",
+              marginBottom: -1, transition: "all 0.15s",
+            }}>{label}</button>
+          ))}
+        </div>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: 22 }}>
+
+          {errors._global && (
+            <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5", fontSize: 13 }}>
+              ✗ {errors._global}
+            </div>
+          )}
+
+          {/* ── TRANSLATIONS TAB ── */}
+          {activeTab === "translations" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
+                🤖 These translations are generated automatically when you publish an event via the bot. You can review and edit them here if needed.
+              </div>
+              {[
+                ["description_ru", "🇷🇺 Russian"],
+                ["description_el", "🇬🇷 Greek"],
+                ["description_uk", "🇺🇦 Ukrainian"],
+              ].map(([field, langLabel]) => (
+                <div key={field}>
+                  <span style={label}>{langLabel}</span>
+                  <textarea
+                    style={{ ...inputStyle(), minHeight: 110, resize: "vertical" }}
+                    value={form[field]}
+                    onChange={e => set(field, e.target.value)}
+                    placeholder={`Translation will appear here after publishing…`}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                  />
+                  <div style={{ fontSize: 11, color: "#4a4868", marginTop: 4, textAlign: "right" }}>
+                    {form[field].length} chars
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── ORGANIZER TAB ── */}
+          {activeTab === "organizer" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
+                👤 These fields are auto-filled from the organizer's bot profile. Edit here to override for this specific event.
+              </div>
+
+              {/* ── Fill from existing organizer dropdown ── */}
+              {orgProfiles.length > 0 && (
+                <div>
+                  <span style={label}>Fill from existing organizer</span>
+                  <select
+                    defaultValue=""
+                    onChange={e => {
+                      const username = e.target.value;
+                      if (!username) return;
+                      const p = orgProfiles.find(o => o.organizer_username === username);
+                      if (!p) return;
+                      set("organizer_username", p.organizer_username || "");
+                      set("organizer_contacts", p.organizer_contacts || "");
+                      set("organizer_link",     p.organizer_link     || "");
+                      e.target.value = "";
+                    }}
+                    style={{
+                      ...inputStyle(),
+                      cursor: "pointer",
+                      appearance: "none",
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6890' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 14px center",
+                      paddingRight: 36,
+                    }}
+                  >
+                    <option value="" disabled>— select organizer to auto-fill —</option>
+                    {orgProfiles.map(p => {
+                      const fmtIcon = { private: "🔒", community: "✨", official: "🎉" }[p.format] || "👤";
+                      return (
+                        <option key={p.organizer_username} value={p.organizer_username}>
+                          {fmtIcon} {p.organizer_username}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+              <div>
+                <span style={label}>Organizer Name / Username</span>
+                <input
+                  style={inputStyle()}
+                  value={form.organizer_username}
+                  onChange={e => set("organizer_username", e.target.value)}
+                  placeholder="@username or Club Name"
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                />
+              </div>
+              <div>
+                <span style={label}>Organizer Contact</span>
+                <input
+                  style={inputStyle()}
+                  value={form.organizer_contacts}
+                  onChange={e => set("organizer_contacts", e.target.value)}
+                  placeholder="@username, phone, link…"
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                />
+              </div>
+              <div>
+                <span style={label}>Organizer Link</span>
+                <input
+                  style={inputStyle()}
+                  value={form.organizer_link}
+                  onChange={e => set("organizer_link", e.target.value)}
+                  placeholder="https://... (club site, TG channel, etc.)"
+                  onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                  onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                />
+              </div>
+              <div>
+                <span style={label}>Format</span>
+                <select
+                  value={form.format || "community"}
+                  onChange={e => set("format", e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 14px",
+                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 10, color: "#e8e6f0", fontFamily: "inherit", fontSize: 14,
+                  }}
+                >
+                  <option value="private">🔒 Private</option>
+                  <option value="community">✨ Community</option>
+                  <option value="official">🎉 Official</option>
+                </select>
+              </div>
+            </div>
+          )}
+          {activeTab === "details" && (<>
+
+          {/* ── Cover image ── */}
+          <div>
+            <span style={label}>Cover Image</span>
+            {form.cover_image_url ? (
+              <ImagePositioner
+                src={form.cover_image_url}
+                position={form.cover_position}
+                onChange={p => set("cover_position", p)}
+              />
+            ) : (
+              <div style={{
+                height: 140, borderRadius: 12,
+                border: "2px dashed rgba(255,255,255,0.08)",
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                color: "#4a4868", fontSize: 13, gap: 6,
+              }}>
+                <span style={{ fontSize: 28 }}>🖼</span>
+                No cover image yet
+              </div>
+            )}
+
+            {/* BUG 1 FIX: removed file upload button + hidden file input entirely */}
+            {form.cover_image_url && (
+              <div style={{ marginTop: 10 }}>
+                <button onClick={() => set("cover_image_url", "")} style={{
+                  padding: "7px 14px", borderRadius: 8, cursor: "pointer",
+                  background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
+                  color: "#ef4444", fontSize: 12, fontFamily: "inherit",
+                }}>Remove image</button>
+              </div>
+            )}
+
+            <div style={{ marginTop: 12 }}>
+              <span style={{ ...label, marginBottom: 6 }}>Image URL</span>
+              <input
+                style={inputStyle(errors.cover_url)}
+                value={form.cover_image_url}
+                onChange={e => set("cover_image_url", e.target.value)}
+                placeholder="Paste image URL (https://...)"
+                onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                onBlur={ev  => ev.target.style.borderColor = errors.cover_url ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+              />
+              {errors.cover_url && (
+                <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.cover_url}</div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Title ── */}
+          <div>
+            <span style={label}>Title *</span>
+            <input
+              style={inputStyle(errors.title)}
+              value={form.title}
+              onChange={e => set("title", e.target.value)}
+              placeholder="Event title"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.title ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            {errors.title && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.title}</div>}
+          </div>
+
+          {/* ── Description ── */}
+          <div>
+            <span style={label}>Description *</span>
+            <textarea
+              style={{ ...inputStyle(errors.description), minHeight: 110, resize: "vertical" }}
+              value={form.description}
+              onChange={e => set("description", e.target.value)}
+              placeholder="What's this event about?"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.description ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            <div style={{ fontSize: 11, color: errors.description ? "#fca5a5" : "#4a4868", marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+              <span>{errors.description || ""}</span>
+              <span>{form.description.length}/1000</span>
+            </div>
+          </div>
+
+          {/* ── Category + City ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <span style={label}>Category</span>
+              <select style={inputStyle()} value={form.category} onChange={e => set("category", e.target.value)}>
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <span style={label}>City</span>
+              <select style={inputStyle()} value={form.location_city} onChange={e => set("location_city", e.target.value)}>
+                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          {/* ── Address ── */}
+          <div>
+            <span style={label}>Address *</span>
+            <input
+              style={inputStyle(errors.address)}
+              value={form.location_address}
+              onChange={e => set("location_address", e.target.value)}
+              placeholder="Venue address"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.address ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            {errors.address && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.address}</div>}
+          </div>
+
+          {/* ── Dates ── */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={label}>Date & Time *</span>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, color: "#6b6890" }}>
+                <input type="checkbox" checked={multiDay} onChange={e => setMultiDay(e.target.checked)}
+                  style={{ accentColor: "#a78bfa" }} />
+                Multi-day
+              </label>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: multiDay ? "1fr 1fr" : "1fr", gap: 12 }}>
+              <div>
+                <span style={{ ...label, marginBottom: 4 }}>{multiDay ? "Start" : "Date"}</span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+                  <input type="date" style={inputStyle(errors.date_start)}
+                    value={form.date_start} onChange={e => set("date_start", e.target.value)}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                  />
+                  <input type="time" style={{ ...inputStyle(errors.date_start), width: 110 }}
+                    value={form.time_start} onChange={e => set("time_start", e.target.value)}
+                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                    onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                  />
+                </div>
+                {errors.date_start && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_start}</div>}
+              </div>
+              {multiDay && (
+                <div>
+                  <span style={{ ...label, marginBottom: 4 }}>End</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+                    <input type="date" style={inputStyle(errors.date_end)}
+                      value={form.date_end} onChange={e => set("date_end", e.target.value)}
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                    />
+                    <input type="time" style={{ ...inputStyle(errors.date_end), width: 110 }}
+                      value={form.time_end} onChange={e => set("time_end", e.target.value)}
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                    />
+                  </div>
+                  {errors.date_end && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_end}</div>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Max participants ── */}
+          <div>
+            <span style={label}>Max Participants</span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {["", "10", "20", "30", "50", "100"].map(v => (
+                <button key={v} onClick={() => set("max_participants", v)} style={{
+                  padding: "7px 14px", borderRadius: 9, cursor: "pointer",
+                  background: form.max_participants === v ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${form.max_participants === v ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  color: form.max_participants === v ? "#a78bfa" : "#6b6890",
+                  fontSize: 12, fontFamily: "inherit",
+                }}>{v === "" ? "No limit" : v}</button>
+              ))}
+              <input
+                style={{ ...inputStyle(), width: 90, padding: "7px 10px" }}
+                value={["", "10", "20", "30", "50", "100"].includes(String(form.max_participants)) ? "" : form.max_participants}
+                onChange={e => set("max_participants", e.target.value)}
+                placeholder="Custom"
+                type="number" min="1"
+              />
+            </div>
+          </div>
+
+          {/* ── External URL ── */}
+          <div>
+            <span style={label}>Registration URL</span>
+            <input
+              style={inputStyle(errors.external_url)}
+              value={form.external_url}
+              onChange={e => set("external_url", e.target.value)}
+              placeholder="https://... (optional)"
+              onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+              onBlur={ev  => ev.target.style.borderColor = errors.external_url ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+            />
+            {errors.external_url && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.external_url}</div>}
+          </div>
+
+          {/* ── Status (edit only) ── */}
+          {isEdit && (
+            <div>
+              <span style={label}>Status</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {["pending", "published", "cancelled"].map(s => {
+                  const colors = {
+                    pending:   ["#f59e0b", "rgba(245,158,11,0.15)", "rgba(245,158,11,0.35)"],
+                    published: ["#10b981", "rgba(16,185,129,0.15)", "rgba(16,185,129,0.35)"],
+                    cancelled: ["#ef4444", "rgba(239,68,68,0.15)", "rgba(239,68,68,0.35)"],
+                  };
+                  const [c, bg, border] = colors[s];
+                  const active = form.status === s;
+                  return (
+                    <button key={s} onClick={() => set("status", s)} style={{
+                      flex: 1, padding: "8px 0", borderRadius: 9, cursor: "pointer",
+                      background: active ? bg : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? border : "rgba(255,255,255,0.08)"}`,
+                      color: active ? c : "#4a4868",
+                      fontSize: 12, fontFamily: "inherit", textTransform: "capitalize",
+                    }}>{s}</button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Promo toggle ── */}
+          <div
+            onClick={() => set("is_promo", !form.is_promo)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "13px 16px", borderRadius: 12, cursor: "pointer",
+              background: form.is_promo
+                ? "linear-gradient(135deg, rgba(124,58,237,0.18), rgba(6,182,212,0.12))"
+                : "rgba(255,255,255,0.03)",
+              border: form.is_promo
+                ? "1px solid rgba(167,139,250,0.4)"
+                : "1px solid rgba(255,255,255,0.08)",
+              transition: "all 0.2s",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: form.is_promo ? "#c4b5fd" : "#e8e6f0" }}>
+                ⭐ Promo Event
+              </div>
+              <div style={{ fontSize: 11, color: "#6b6890", marginTop: 2 }}>
+                Pinned to top · Upcoming only · Bot CTA in modal
+              </div>
+            </div>
+            <div style={{
+              width: 38, height: 22, borderRadius: 999, flexShrink: 0,
+              background: form.is_promo
+                ? "linear-gradient(135deg, #7c3aed, #06b6d4)"
+                : "rgba(255,255,255,0.1)",
+              position: "relative", transition: "all 0.2s",
+            }}>
+              <div style={{
+                position: "absolute", top: 3,
+                left: form.is_promo ? 19 : 3,
+                width: 16, height: 16, borderRadius: "50%",
+                background: "#fff", transition: "left 0.2s",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+              }} />
+            </div>
+          </div>
+
+          </>)}{/* end details tab */}
+
+        </div>{/* end scrollable body */}
+
+        {/* Footer */}
+        <div style={{
+          padding: "16px 24px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", gap: 10, flexShrink: 0,
+          background: "#13131f",
+        }}>
+          <button onClick={handleClose} style={{
+            flex: 1, padding: "11px 0", borderRadius: 10, cursor: "pointer",
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+            color: "#6b6890", fontSize: 14, fontFamily: "inherit",
+          }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{
+            flex: 2, padding: "11px 0", borderRadius: 10, cursor: saving ? "default" : "pointer",
+            background: saving ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg, #7c3aed, #a78bfa)",
+            border: "none", color: "#fff", fontSize: 14, fontWeight: 700,
+            fontFamily: "inherit", opacity: saving ? 0.7 : 1,
+            boxShadow: saving ? "none" : "0 4px 16px rgba(124,58,237,0.35)",
+          }}>
+            {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Event"}
+          </button>
+        </div>
+
       </div>
-      <style>{`
-        @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-      `}</style>
-    </div>
+    </>
   );
 }
