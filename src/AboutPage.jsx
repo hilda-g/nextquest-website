@@ -296,19 +296,20 @@ export default function AboutPage({ onBack }) {
           <div className="nq-about-left">
             <div className="nq-about-story">
               <p>
-                Hi! I'm <strong>Hilda</strong>, a board-game addict who moved to Cyprus and
-                immediately lost track of every cool event happening around me.
+                Hi! I'm <strong>Catherine</strong> — video game producer by day, and... well,
+                not much changes after hours. Tabletop RPG campaigns, LARP events, board game
+                nights — if it involves dice and a table, count me in!
               </p>
               <p>
-                After missing one too many RPG nights and cosplay meetups, I decided to build
-                the thing I actually needed — one place for{" "}
+                After missing one too many RPG nights and Board Games meetups, I decided to
+                build the thing I actually needed — one place for{" "}
                 <strong>every geek event on the island</strong>, from tabletop nights in
                 Limassol to conventions in Nicosia.
               </p>
               <p>
-                My partner in crime <strong>[Friend's name]</strong> jumped in and we turned
-                a very messy spreadsheet into NextQuest. We keep it running on passion,
-                caffeine, and the occasional dungeon crawl. 🎲
+                My partner in crime <strong>Dimitris</strong> jumped in and we turned a very
+                messy spreadsheet into NextQuest. We keep it running on passion, caffeine, and
+                the occasional dungeon crawl. 🎲
               </p>
             </div>
 
