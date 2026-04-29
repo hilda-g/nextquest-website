@@ -141,32 +141,29 @@ export default function AboutPage({ onBack }) {
         .nq-about-btn-sub   { display: block; font-size: 10px; opacity: 0.65; margin-top: 1px; }
 
         /* ── photos ── */
-        .nq-about-photos { display: flex; flex-direction: column; gap: 14px; }
+        .nq-about-photos { display: flex; flex-direction: column; }
         .nq-about-photo {
           position: relative;
           border-radius: 14px;
           overflow: hidden;
-          aspect-ratio: 4/3;
+          aspect-ratio: 3/4;
           border: 1px solid rgba(255,255,255,0.06);
           background: #1a1a2e;
         }
         .nq-about-photo img {
           width: 100%; height: 100%;
-          object-fit: cover; display: block;
+          object-fit: cover;
+          object-position: center top;
+          display: block;
+          filter: grayscale(20%);
+          transition: filter 0.3s;
         }
-        .nq-about-photo-ph {
-          width: 100%; height: 100%;
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 8px;
-          background: linear-gradient(135deg, #1a1a2e 0%, #16162a 100%);
-        }
-        .nq-about-photo-ph span:first-child { font-size: 28px; opacity: 0.22; }
-        .nq-about-photo-ph span:last-child  { font-size: 11px; color: #3d3a5c; font-weight: 500; letter-spacing: 0.05em; }
+        .nq-about-photo:hover img { filter: grayscale(0%); }
         .nq-about-photo-cap {
           position: absolute; bottom: 0; left: 0; right: 0;
-          padding: 20px 14px 10px;
-          background: linear-gradient(to top, rgba(15,15,26,0.9) 0%, transparent 100%);
-          font-size: 11px; color: rgba(200,196,220,0.6); font-style: italic;
+          padding: 32px 16px 14px;
+          background: linear-gradient(to top, rgba(15,15,26,0.92) 0%, transparent 100%);
+          font-size: 12px; color: rgba(200,196,220,0.65); font-style: italic;
         }
 
         /* ── beliefs ── */
@@ -258,11 +255,10 @@ export default function AboutPage({ onBack }) {
         /* ── mobile ── */
         @media (max-width: 640px) {
           .nq-about-grid { grid-template-columns: 1fr; }
-          .nq-about-photos { flex-direction: row; }
-          .nq-about-photo  { flex: 1; }
           .nq-about-cta    { grid-template-columns: 1fr; }
           .nq-about-wrap   { padding: 28px 16px 60px; }
           .nq-about-nav    { margin-bottom: 32px; }
+          .nq-about-photo  { aspect-ratio: 4/3; }
         }
       `}</style>
 
@@ -347,21 +343,7 @@ export default function AboutPage({ onBack }) {
           {/* Photos */}
           <div className="nq-about-photos">
             <div className="nq-about-photo">
-              {/* Replace src with real photo URL, e.g. src="/photos/hilda.jpg" */}
-              <div className="nq-about-photo-ph">
-                <span>📸</span>
-                <span>Your photo here</span>
-              </div>
-              <div className="nq-about-photo-cap">Hilda at a board game night, Limassol</div>
-            </div>
-
-            <div className="nq-about-photo">
-              {/* Replace with real photo URL */}
-              <div className="nq-about-photo-ph">
-                <span>🎲</span>
-                <span>Friend's photo here</span>
-              </div>
-              <div className="nq-about-photo-cap">At some point we also played the games</div>
+              <img src="/photo.png" alt="Hilda and friend in Team Rocket cosplay" />
             </div>
           </div>
         </div>
