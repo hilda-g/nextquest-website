@@ -72,6 +72,7 @@ function mapEvent(row) {
     format: row.format || "official",
     registrationClosed: row.registration_closed || false,
     isPromo:            row.is_promo            || false,
+    languages:          row.event_languages     || [],
   };
 }
 
@@ -115,6 +116,29 @@ function formatTime(date) {
 }
 function getCatColor(id) { return CATEGORIES.find(c => c.id === id)?.color || "#6b7280"; }
 function getCatLabel(id) { return CATEGORIES.find(c => c.id === id)?.label || id; }
+
+// ─── Language badges ──────────────────────────────────────────
+const LANG_BADGES = [
+  { code: "en", label: "EN" },
+  { code: "el", label: "GR" },
+  { code: "ru", label: "RU" },
+  { code: "uk", label: "UKR" },
+];
+function LangBadges({ languages }) {
+  if (!languages || languages.length === 0) return null;
+  return (
+    <div style={{ display: "flex", gap: 3, alignItems: "center", marginLeft: "auto", flexShrink: 0 }}>
+      {LANG_BADGES.filter(l => languages.includes(l.code)).map(l => (
+        <span key={l.code} style={{
+          fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+          background: "rgba(255,255,255,0.07)", color: "#6b6890",
+          border: "1px solid rgba(255,255,255,0.1)", letterSpacing: "0.04em",
+          lineHeight: "14px",
+        }}>{l.label}</span>
+      ))}
+    </div>
+  );
+}
 
 function getDeepLinkId() {
   const params = new URLSearchParams(window.location.search);
@@ -649,6 +673,7 @@ export default function NextQuest() {
             </span>
             <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
             <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.isPromo ? t.promoCity : event.city}</span>
+            <LangBadges languages={event.languages} />
           </div>
 
           <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>

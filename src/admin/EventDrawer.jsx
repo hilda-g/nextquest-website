@@ -36,6 +36,7 @@ const EMPTY_FORM = {
   status:           "pending",
   format:           "community",
   is_promo:         false,
+  languages:        [],
 };
 
 // Split an ISO/datetime string into { date: "YYYY-MM-DD", time: "HH:MM" }
@@ -295,6 +296,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
           organizer_link:     event.organizer_link     || "",
           format:             event.format             || "community",
           is_promo:           event.is_promo           || false,
+          languages:          event.event_languages    || [],
         }
       : { ...EMPTY_FORM };
     setForm(initial);
@@ -407,6 +409,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
         organizer_link:     form.organizer_link.trim()     || null,
         format:             form.format                    || null,
         is_promo:           form.is_promo                  || false,
+        event_languages:    form.languages.length > 0 ? form.languages : null,
       };
 
       await onSave(payload);
@@ -897,6 +900,42 @@ export default function EventDrawer({ event, onSave, onClose }) {
                 background: "#fff", transition: "left 0.2s",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
               }} />
+            </div>
+          </div>
+
+          {/* ── Event Languages ── */}
+          <div>
+            <span style={{ fontSize: 11, color: "#6b6890", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8, display: "block" }}>
+              Event Languages
+            </span>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { code: "en",  label: "EN" },
+                { code: "el",  label: "GR" },
+                { code: "ru",  label: "RU" },
+                { code: "uk",  label: "UKR" },
+              ].map(({ code, label }) => {
+                const active = form.languages.includes(code);
+                return (
+                  <button
+                    key={code}
+                    onClick={() => {
+                      const next = active
+                        ? form.languages.filter(l => l !== code)
+                        : [...form.languages, code];
+                      set("languages", next);
+                    }}
+                    style={{
+                      flex: 1, padding: "8px 0", borderRadius: 9, cursor: "pointer",
+                      background: active ? "rgba(167,139,250,0.18)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? "rgba(167,139,250,0.5)" : "rgba(255,255,255,0.08)"}`,
+                      color: active ? "#c4b5fd" : "#4a4868",
+                      fontSize: 12, fontWeight: 700, fontFamily: "inherit",
+                      letterSpacing: "0.06em", transition: "all 0.15s",
+                    }}
+                  >{label}</button>
+                );
+              })}
             </div>
           </div>
 

@@ -376,6 +376,8 @@ export function ViewEventModal({ event, onClose }) {
     organizerName:       event.organizer_name || event.organizer_username || null,
     maxParticipants:     event.max_participants || null,
     registrationClosed:  event.registration_closed || false,
+    isPromo:             event.is_promo            || false,
+    languages:           event.event_languages     || [],
   };
 
   // Admin panel is always in English

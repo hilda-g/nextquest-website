@@ -74,6 +74,29 @@ const FMT_COLORS = {
   official:  { bg: "rgba(16,185,129,0.12)",  color: "#10b981", border: "rgba(16,185,129,0.3)"   },
 };
 
+// ─── Language badges (modal) ─────────────────────────────────
+const LANG_BADGES_MODAL = [
+  { code: "en", label: "EN" },
+  { code: "el", label: "GR" },
+  { code: "ru", label: "RU" },
+  { code: "uk", label: "UKR" },
+];
+function LangBadgesModal({ languages }) {
+  if (!languages || languages.length === 0) return null;
+  return (
+    <div style={{ display: "flex", gap: 3, alignItems: "center", marginLeft: "auto", flexShrink: 0 }}>
+      {LANG_BADGES_MODAL.filter(l => languages.includes(l.code)).map(l => (
+        <span key={l.code} style={{
+          fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+          background: "rgba(255,255,255,0.07)", color: "#6b6890",
+          border: "1px solid rgba(255,255,255,0.1)", letterSpacing: "0.04em",
+          lineHeight: "14px",
+        }}>{l.label}</span>
+      ))}
+    </div>
+  );
+}
+
 // ─── EventCardModal ───────────────────────────────────────────
 // The full event detail card — rendered inside whatever modal wrapper the caller provides.
 export function EventCardBody({
@@ -158,7 +181,7 @@ export function EventCardBody({
 
         <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 18 }}>
 
-          {/* Format pill + organizer */}
+          {/* Format pill + organizer + lang badges */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
 
             {/* Format pill + ℹ tooltip */}
@@ -229,6 +252,7 @@ export function EventCardBody({
                 {displayName}
               </span>
             ))}
+            <LangBadgesModal languages={event.languages} />
           </div>
 
           {/* Date */}
@@ -306,7 +330,7 @@ export function EventCardBody({
                 fontFamily: "inherit", fontWeight: 700,
               }}
             >
-              ⭐ {t.promoAddEvent}
+              {t.promoAddEvent}
             </a>
           ) : event.status !== "cancelled" && (() => {
             if (event.externalUrl) {
