@@ -171,24 +171,61 @@ export default function AboutPage({ onBack }) {
         .nq-about-hint-inline .nq-about-hint-text a:hover { border-bottom-color: rgba(103,232,249,0.6); }
 
         /* ── photo (right column, fills full height of left) ── */
+        .nq-about-photo-wrap {
+          position: relative;
+          height: 100%;
+        }
+        .nq-about-photo-wrap::before {
+          content: '';
+          position: absolute;
+          inset: -24px;
+          background: radial-gradient(ellipse at center, rgba(124,58,237,0.2) 0%, transparent 70%);
+          z-index: 0;
+          animation: nq-pulse 3.5s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes nq-pulse {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50%       { opacity: 1;   transform: scale(1.05); }
+        }
         .nq-about-photo {
           position: relative;
           border-radius: 14px;
           overflow: hidden;
           height: 100%;
           min-height: 420px;
-          border: 1px solid rgba(255,255,255,0.06);
+          border: 1px solid rgba(167,139,250,0.25);
           background: #1a1a2e;
+          z-index: 1;
+          box-shadow: 0 0 0 1px rgba(124,58,237,0.1), 0 24px 60px rgba(0,0,0,0.4);
+          transition: box-shadow 0.4s, border-color 0.4s;
         }
+        .nq-about-photo:hover {
+          border-color: rgba(167,139,250,0.5);
+          box-shadow: 0 0 0 1px rgba(124,58,237,0.3), 0 0 40px rgba(124,58,237,0.2), 0 24px 60px rgba(0,0,0,0.4);
+        }
+        .nq-about-photo::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(124,58,237,0.2) 0%, transparent 50%, rgba(6,182,212,0.1) 100%);
+          z-index: 1;
+          transition: opacity 0.4s;
+          pointer-events: none;
+        }
+        .nq-about-photo:hover::before { opacity: 0; }
         .nq-about-photo img {
           width: 100%; height: 100%;
           object-fit: cover;
           object-position: center top;
           display: block;
-          filter: grayscale(15%);
-          transition: filter 0.3s;
+          filter: grayscale(25%) contrast(1.05);
+          transition: filter 0.5s, transform 0.5s;
         }
-        .nq-about-photo:hover img { filter: grayscale(0%); }
+        .nq-about-photo:hover img {
+          filter: grayscale(0%) contrast(1.0);
+          transform: scale(1.03);
+        }
 
         /* ── beliefs ── */
         .nq-about-beliefs {
@@ -259,7 +296,8 @@ export default function AboutPage({ onBack }) {
         /* ── mobile ── */
         @media (max-width: 640px) {
           .nq-about-grid { grid-template-columns: 1fr; }
-          .nq-about-photo { min-height: 280px; height: 280px; order: -1; }
+          .nq-about-photo-wrap { order: -1; height: 280px; }
+          .nq-about-photo  { min-height: 280px; height: 280px; }
           .nq-about-cta    { grid-template-columns: 1fr; }
           .nq-about-wrap   { padding: 28px 16px 60px; }
           .nq-about-nav    { margin-bottom: 32px; }
@@ -284,10 +322,10 @@ export default function AboutPage({ onBack }) {
           About
         </div>
         <h1 className="nq-about-h1">
-          Two geeks mapping<br />
-          <span className="nq-accent">Cyprus' nerd scene.</span>
+          Built by geeks.<br />
+          <span className="nq-accent">For geeks.</span>
         </h1>
-        <p className="nq-about-sub">Because someone had to.</p>
+        <p className="nq-about-sub">All your quests in one place.</p>
 
         {/* Main grid */}
         <div className="nq-about-grid">
@@ -359,8 +397,10 @@ export default function AboutPage({ onBack }) {
           </div>
 
           {/* RIGHT: Photo fills full column height */}
-          <div className="nq-about-photo">
-            <img src="/photo.png" alt="Hilda and friend in Team Rocket cosplay" />
+          <div className="nq-about-photo-wrap">
+            <div className="nq-about-photo">
+              <img src="/photo.png" alt="Catherine and Dimitris in Team Rocket cosplay" />
+            </div>
           </div>
 
         </div>
@@ -397,7 +437,7 @@ export default function AboutPage({ onBack }) {
           {/* Replace href with your real Ko-fi / Buy Me a Coffee link */}
           <a
             className="nq-about-btn-donate"
-            href="https://ko-fi.com/"
+            href="https://revolut.me/ekater8sqp"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -408,10 +448,8 @@ export default function AboutPage({ onBack }) {
         {/* Contact */}
         <p className="nq-about-contact">
           Questions or ideas?{" "}
-          <a href="mailto:hello@nextquest.today">hello@nextquest.today</a>
-          {" "}or{" "}
           <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer">
-            drop a message on Telegram
+            Drop a message on Telegram
           </a>
         </p>
 
