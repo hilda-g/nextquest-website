@@ -880,6 +880,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
             </div>
           )}
 
+          </>)}{/* end details tab */}
+
         </div>{/* end scrollable body */}
 
         {/* Footer */}
