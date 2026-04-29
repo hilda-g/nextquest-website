@@ -293,7 +293,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
           organizer_contacts: event.organizer_contacts || "",
           organizer_link:     event.organizer_link     || "",
           format:             event.format             || "community",
-          registration_closed: event.registration_closed || false,
         }
       : { ...EMPTY_FORM };
     setForm(initial);
@@ -405,7 +404,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
         organizer_contacts: form.organizer_contacts.trim() || null,
         organizer_link:     form.organizer_link.trim()     || null,
         format:             form.format                    || null,
-        registration_closed: form.registration_closed       || false,
       };
 
       await onSave(payload);
@@ -856,27 +854,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* ── Registration (edit only, when limit is set) ── */}
-          {isEdit && form.max_participants && (
-            <div>
-              <span style={label}>Registration</span>
-              <button
-                onClick={() => set("registration_closed", !form.registration_closed)}
-                style={{
-                  width: "100%", padding: "10px 0", borderRadius: 9, cursor: "pointer",
-                  background: form.registration_closed
-                    ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.10)",
-                  border: `1px solid ${form.registration_closed
-                    ? "rgba(16,185,129,0.35)" : "rgba(239,68,68,0.30)"}`,
-                  color: form.registration_closed ? "#10b981" : "#ef4444",
-                  fontSize: 13, fontFamily: "inherit", fontWeight: 600,
-                }}
-              >
-                {form.registration_closed ? "♻️ Re-Open Registration" : "🔒 Close Registration"}
-              </button>
             </div>
           )}
 
