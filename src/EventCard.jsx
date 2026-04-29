@@ -306,7 +306,7 @@ export function EventCardBody({
                 fontFamily: "inherit", fontWeight: 700,
               }}
             >
-              ⭐ Add Your Event
+              ⭐ {t.promoAddEvent}
             </a>
           ) : event.status !== "cancelled" && (() => {
             if (event.externalUrl) {

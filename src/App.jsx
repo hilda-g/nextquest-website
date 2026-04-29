@@ -559,32 +559,25 @@ export default function NextQuest() {
   const todayMidnight = new Date();
   todayMidnight.setHours(0, 0, 0, 0);
 
-  const filtered = (() => {
-    let list = events.filter(e => {
-      // Use day-based past check: today's events are always "upcoming"
-      const isPast = e.dateStart < todayMidnight;
-      // Promo events only appear in Upcoming — never in Calendar or Archive
-      if (e.isPromo && tab !== "upcoming") return false;
-      if (tab === "upcoming" && isPast)  return false;
-      if (tab === "archive"  && !isPast) return false;
-      if (tab === "calendar") {
-        // Calendar shows all non-past events regardless of category/city filters in the grid
-        // But we still respect search
-      }
-      if (e.status === "cancelled" && tab !== "archive") return false;
-      if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
-      if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
-      if (formatFilter !== "all" && e.format !== formatFilter) return false;
-      const q = search.toLowerCase();
-      if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
-      return true;
-    });
-    // Pin promo events to top of Upcoming
-    if (tab === "upcoming") {
-      list = [...list.filter(e => e.isPromo), ...list.filter(e => !e.isPromo)];
+  const filtered = events.filter(e => {
+    // Use day-based past check: today's events are always "upcoming"
+    const isPast = e.dateStart < todayMidnight;
+    // Promo events only appear in Upcoming — never in Calendar or Archive
+    if (e.isPromo && tab !== "upcoming") return false;
+    if (tab === "upcoming" && isPast)  return false;
+    if (tab === "archive"  && !isPast) return false;
+    if (tab === "calendar") {
+      // Calendar shows all non-past events regardless of category/city filters in the grid
+      // But we still respect search
     }
-    return list;
-  })();
+    if (e.status === "cancelled" && tab !== "archive") return false;
+    if (catFilters.size > 0 && !catFilters.has(e.category)) return false;
+    if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
+    if (formatFilter !== "all" && e.format !== formatFilter) return false;
+    const q = search.toLowerCase();
+    if (q && !e.title.toLowerCase().includes(q) && !e.city.toLowerCase().includes(q)) return false;
+    return true;
+  });
 
   // Count badges for tabs (day-based: today counts as upcoming)
   const upcomingCount = events.filter(e => e.dateStart >= todayMidnight && e.status !== "cancelled").length;
@@ -655,10 +648,10 @@ export default function NextQuest() {
                 : ` · ${formatTime(event.dateStart)}`}
             </span>
             <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
-            <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.city}</span>
+            <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.isPromo ? t.promoCity : event.city}</span>
           </div>
 
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.3, textAlign: "left" }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
             {event.maxParticipants ? (
