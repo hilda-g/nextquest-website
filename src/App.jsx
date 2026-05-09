@@ -150,7 +150,7 @@ function getDeepLinkId() {
 // ─── Generate Google Calendar URL ─────────────────────────────
 function makeGCalUrl(event) {
   const fmt = d => d.toISOString().replace(/[-:]/g, "").replace(".000", "");
-  const end = event.dateEnd || new Date(event.dateStart.getTime() + 2 * 60 * 60 * 1000);
+  const end = event.dateEnd || new Date(event.dateStart.getTime() + 4 * 60 * 60 * 1000);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text:   event.title,
