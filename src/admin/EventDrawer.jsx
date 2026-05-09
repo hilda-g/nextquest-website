@@ -303,7 +303,10 @@ export default function EventDrawer({ event, onSave, onClose }) {
       : { ...EMPTY_FORM };
     setForm(initial);
     initialForm.current = JSON.stringify(initial);
-    setMultiDay(!!event?.date_end);
+    setMultiDay(
+      !!(event?.date_end && event?.date_start &&
+        event.date_end.slice(0, 10) !== event.date_start.slice(0, 10))
+    );
     setErrors({});
     setDirty(false);
     setUploadError("");
@@ -429,11 +432,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
         location_city:    form.location_city,
         location_address: form.location_address.trim(),
         date_start:       (form.date_start && form.time_start) ? `${form.date_start}T${form.time_start}:00` : null,
-        date_end:         multiDay && form.date_end && form.time_end
-                            ? `${form.date_end}T${form.time_end}:00`
-                            : !multiDay && form.time_end && form.date_start
-                              ? `${form.date_start}T${form.time_end}:00`
-                              : null,
+        date_end:         multiDay && form.date_end && form.time_end ? `${form.date_end}T${form.time_end}:00` : null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
         external_url:     form.external_url.trim() || null,
         // BUG 2 FIX: use null (allowed by some schemas) or empty string fallback
@@ -820,19 +819,16 @@ export default function EventDrawer({ event, onSave, onClose }) {
                 Multi-day
               </label>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {/* Start row */}
+            <div style={{ display: "grid", gridTemplateColumns: multiDay ? "1fr 1fr" : "1fr", gap: 12 }}>
               <div>
                 <span style={{ ...label, marginBottom: 4 }}>{multiDay ? "Start" : "Date"}</span>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 90px", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
                   <input type="date" style={inputStyle(errors.date_start)}
                     value={form.date_start} onChange={e => set("date_start", e.target.value)}
                     onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
                     onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
                   />
-                  <input
-                    type="text" placeholder="HH:MM" maxLength={5}
-                    style={{ ...inputStyle(errors.date_start), width: "100%", textAlign: "center" }}
+                  <input type="time" style={{ ...inputStyle(errors.date_start), width: 110 }}
                     value={form.time_start} onChange={e => set("time_start", e.target.value)}
                     onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
                     onBlur={ev  => ev.target.style.borderColor = errors.date_start ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
@@ -840,32 +836,24 @@ export default function EventDrawer({ event, onSave, onClose }) {
                 </div>
                 {errors.date_start && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_start}</div>}
               </div>
-              {/* End row — always visible */}
-              <div>
-                <span style={{ ...label, marginBottom: 4 }}>End {!multiDay && <span style={{ color: "#4a4868", fontWeight: 400 }}>(same day)</span>}</span>
-                <div style={{ display: "grid", gridTemplateColumns: multiDay ? "1fr 90px" : "1fr 90px", gap: 8 }}>
-                  {multiDay && (
+              {multiDay && (
+                <div>
+                  <span style={{ ...label, marginBottom: 4 }}>End</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
                     <input type="date" style={inputStyle(errors.date_end)}
                       value={form.date_end} onChange={e => set("date_end", e.target.value)}
                       onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
                       onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
                     />
-                  )}
-                  {!multiDay && (
-                    <div style={{ ...inputStyle(), display: "flex", alignItems: "center", color: "#4a4868", fontSize: 13 }}>
-                      {form.date_start || "—"}
-                    </div>
-                  )}
-                  <input
-                    type="text" placeholder="HH:MM" maxLength={5}
-                    style={{ ...inputStyle(errors.date_end), width: "100%", textAlign: "center" }}
-                    value={form.time_end} onChange={e => set("time_end", e.target.value)}
-                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-                    onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
-                  />
+                    <input type="time" style={{ ...inputStyle(errors.date_end), width: 110 }}
+                      value={form.time_end} onChange={e => set("time_end", e.target.value)}
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = errors.date_end ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}
+                    />
+                  </div>
+                  {errors.date_end && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_end}</div>}
                 </div>
-                {errors.date_end && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_end}</div>}
-              </div>
+              )}
             </div>
           </div>
 
