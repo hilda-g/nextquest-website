@@ -354,7 +354,6 @@ export default function EventDrawer({ event, onSave, onClose }) {
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
           "Content-Type": file.type || "image/jpeg",
-          "x-upsert": "true",
         },
         body: file,
       });
