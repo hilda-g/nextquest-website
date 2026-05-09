@@ -269,6 +269,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
   const [visible, setVisible]   = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [orgProfiles, setOrgProfiles] = useState([]);
+  const [uploading, setUploading]     = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const initialForm = useRef(null);
 
   useEffect(() => {
@@ -304,6 +306,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
     setMultiDay(!!event?.date_end);
     setErrors({});
     setDirty(false);
+    setUploadError("");
     setActiveTab("details");
     requestAnimationFrame(() => setVisible(true));
   }, [event]);
@@ -334,6 +337,39 @@ export default function EventDrawer({ event, onSave, onClose }) {
       })
       .catch(() => {});
   }, []);
+
+  async function handleUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ""; // reset so same file can be re-selected after removal
+    setUploadError("");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop().toLowerCase() || "jpg";
+      const fileName = `covers/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/event-covers/${fileName}`;
+      const res = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": file.type || "image/jpeg",
+          "x-upsert": "true",
+        },
+        body: file,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Upload failed (${res.status})`);
+      }
+      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/event-covers/${fileName}`;
+      set("cover_image_url", publicUrl);
+    } catch (err) {
+      setUploadError(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }));
@@ -664,7 +700,27 @@ export default function EventDrawer({ event, onSave, onClose }) {
               </div>
             )}
 
-            {/* BUG 1 FIX: removed file upload button + hidden file input entirely */}
+            {/* Upload button */}
+            <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <label style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "7px 14px", borderRadius: 8,
+                cursor: uploading ? "default" : "pointer",
+                background: uploading ? "rgba(167,139,250,0.06)" : "rgba(167,139,250,0.1)",
+                border: "1px solid rgba(167,139,250,0.3)",
+                color: uploading ? "#6b6890" : "#a78bfa",
+                fontSize: 12, fontFamily: "inherit",
+                opacity: uploading ? 0.7 : 1,
+                pointerEvents: uploading ? "none" : "auto",
+              }}>
+                {uploading ? "⏳ Uploading…" : "⬆️ Upload image"}
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleUpload} />
+              </label>
+              {uploadError && (
+                <span style={{ fontSize: 11, color: "#fca5a5" }}>{uploadError}</span>
+              )}
+            </div>
+
             {form.cover_image_url && (
               <div style={{ marginTop: 10 }}>
                 <button onClick={() => set("cover_image_url", "")} style={{
