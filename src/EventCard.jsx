@@ -48,7 +48,7 @@ function formatDate(date, lang) {
 }
 function formatTime(date) {
   if (!date || isNaN(date)) return "";
-  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 function makeGCalUrl(event) {
   const fmt = d => d.toISOString().replace(/[-:]/g, "").replace(".000", "");
@@ -272,7 +272,9 @@ export function EventCardBody({
               {formatDate(event.dateStart, lang)}
               {event.multiDay && event.dateEnd
                 ? ` — ${formatDate(event.dateEnd, lang)}`
-                : ` · ${formatTime(event.dateStart)}`}
+                : event.dateEnd
+                  ? ` · ${formatTime(event.dateStart)} - ${formatTime(event.dateEnd)}`
+                  : ` · ${formatTime(event.dateStart)}`}
             </span>
           </div>
 
