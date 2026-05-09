@@ -330,7 +330,7 @@ function fmtDate(iso) {
 }
 function fmtTime(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 function makeGCalUrl(ev) {
   const fmt = d => new Date(d).toISOString().replace(/[-:]/g, "").replace(".000", "");
@@ -362,7 +362,7 @@ export function ViewEventModal({ event, onClose }) {
     status:              event.status,
     dateStart:           new Date(event.date_start),
     dateEnd:             event.date_end ? new Date(event.date_end) : null,
-    multiDay:            !!(event.date_end && event.date_end !== event.date_start),
+    multiDay:            !!(event.date_end && event.date_start && event.date_end.slice(0, 10) !== event.date_start.slice(0, 10)),
     city:                event.location_city,
     address:             event.location_address,
     description:         event.description || "",
