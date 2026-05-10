@@ -627,6 +627,8 @@ export default function NextQuest() {
             : "1px solid rgba(255,255,255,0.06)",
           borderRadius: 16, overflow: "hidden",
           opacity: event.status === "cancelled" ? 0.6 : 1,
+          filter: event.isPast ? "grayscale(100%)" : "none",
+          transition: "filter 0.3s ease",
           boxShadow: event.isPromo
             ? "0 0 0 1px rgba(6,182,212,0.18), 0 8px 32px rgba(124,58,237,0.18)"
             : "none",
@@ -655,6 +657,17 @@ export default function NextQuest() {
           {event.status === "cancelled" && (
             <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(239,68,68,0.85)", color: "#fff", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
               {t.cancelled}
+            </div>
+          )}
+          {event.isPast && event.status !== "cancelled" && (
+            <div style={{
+              position: "absolute", top: 10, right: 10,
+              background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+              color: "#a09cbc", borderRadius: 6, padding: "2px 10px",
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.05em",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}>
+              {t.ended}
             </div>
           )}
           {event.multiDay && (
@@ -785,6 +798,7 @@ export default function NextQuest() {
         </div>
 
         {/* Full event modal — shared component */}
+        <div style={{ filter: selected?.isPast ? "grayscale(100%)" : "none" }}>
         <EventCardModal
           event={selected}
           onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", "/"); }}
@@ -803,11 +817,10 @@ export default function NextQuest() {
             setNotifyTooltip(null);
           }}
         />
+        </div>
       </>
     );
   }
-
-  // ── Render ────────────────────────────────────────────────────
   return (
     <>
       <style>{`
@@ -1218,6 +1231,7 @@ export default function NextQuest() {
         </footer>
 
         {/* ── EVENT MODAL ── */}
+        <div style={{ filter: selected?.isPast ? "grayscale(100%)" : "none" }}>
         <EventCardModal
           event={selected}
           onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", "/"); }}
