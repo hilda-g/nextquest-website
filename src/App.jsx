@@ -413,9 +413,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                   {ev.title}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "3px 10px", fontSize: 11, color: "#6b6890" }}>
-                  {!ev.multiDay && (
-                    <span>⏰ {formatTime(ev.dateStart)}{ev.dateEnd ? ` - ${formatTime(ev.dateEnd)}` : ""}</span>
-                  )}
+                  {!ev.multiDay && (<span>⏰ {formatTime(ev.dateStart)}{ev.dateEnd ? ` - ${formatTime(ev.dateEnd)}` : ""}</span>)}
                   <span>📍 {ev.city}</span>
                   <span style={{ color: getCatColor(ev.category) }}>{getCatLabel(ev.category)}</span>
                   {ev.registrationClosed ? (
@@ -798,7 +796,6 @@ export default function NextQuest() {
         </div>
 
         {/* Full event modal — shared component */}
-        <div style={{ filter: selected?.isPast ? "grayscale(100%)" : "none" }}>
         <EventCardModal
           event={selected}
           onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", "/"); }}
@@ -817,10 +814,11 @@ export default function NextQuest() {
             setNotifyTooltip(null);
           }}
         />
-        </div>
       </>
     );
   }
+
+  // ── Render ────────────────────────────────────────────────────
   return (
     <>
       <style>{`
@@ -1231,7 +1229,6 @@ export default function NextQuest() {
         </footer>
 
         {/* ── EVENT MODAL ── */}
-        <div style={{ filter: selected?.isPast ? "grayscale(100%)" : "none" }}>
         <EventCardModal
           event={selected}
           onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", "/"); }}
@@ -1250,7 +1247,6 @@ export default function NextQuest() {
             setNotifyTooltip(null);
           }}
         />
-        </div>
 
         {/* ── SCROLL TO TOP ── */}
         <ScrollToTop />
