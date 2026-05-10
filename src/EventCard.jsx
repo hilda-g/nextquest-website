@@ -300,7 +300,7 @@ export function EventCardBody({
             ) : (
               <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
             )}
-            {event.maxParticipants && (
+            {(event.externalUrl || event.maxParticipants) && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>{t.registrationNeeded}</span>
             )}
           </div>
