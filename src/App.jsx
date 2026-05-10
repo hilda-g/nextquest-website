@@ -1250,6 +1250,7 @@ export default function NextQuest() {
             setNotifyTooltip(null);
           }}
         />
+        </div>
 
         {/* ── SCROLL TO TOP ── */}
         <ScrollToTop />
