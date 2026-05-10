@@ -60,7 +60,7 @@ function mapEvent(row) {
     externalUrl:      row.external_url,
     organizerContacts: row.organizer_contacts || null,
     status:   row.status,
-    multiDay: !!(row.date_end && row.date_end !== row.date_start),
+    multiDay: !!(row.date_end && row.date_start && row.date_end.slice(0, 10) !== row.date_start.slice(0, 10)),
     // isPast = true only if the event START day is strictly before today's calendar date
     // (an event happening today at 11:00 is still "upcoming" even if it's now 13:00)
     isPast:   (() => {
@@ -150,7 +150,7 @@ function getDeepLinkId() {
 // ─── Generate Google Calendar URL ─────────────────────────────
 function makeGCalUrl(event) {
   const fmt = d => d.toISOString().replace(/[-:]/g, "").replace(".000", "");
-  const end = event.dateEnd || new Date(event.dateStart.getTime() + 2 * 60 * 60 * 1000);
+  const end = event.dateEnd || new Date(event.dateStart.getTime() + 4 * 60 * 60 * 1000);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text:   event.title,
@@ -413,7 +413,9 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                   {ev.title}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "3px 10px", fontSize: 11, color: "#6b6890" }}>
-                  {!ev.multiDay && <span>⏰ {formatTime(ev.dateStart)}</span>}
+                  {!ev.multiDay && (
+                    <span>⏰ {formatTime(ev.dateStart)}{ev.dateEnd ? ` - ${formatTime(ev.dateEnd)}` : ""}</span>
+                  )}
                   <span>📍 {ev.city}</span>
                   <span style={{ color: getCatColor(ev.category) }}>{getCatLabel(ev.category)}</span>
                   {ev.registrationClosed ? (
@@ -669,7 +671,9 @@ export default function NextQuest() {
               {formatDate(event.dateStart, lang)}
               {event.multiDay && event.dateEnd
                 ? ` — ${formatDate(event.dateEnd, lang)}`
-                : ` · ${formatTime(event.dateStart)}`}
+                : event.dateEnd
+                  ? ` · ${formatTime(event.dateStart)} - ${formatTime(event.dateEnd)}`
+                  : ` · ${formatTime(event.dateStart)}`}
             </span>
             <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
             <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.isPromo ? t.promoCity : event.city}</span>
