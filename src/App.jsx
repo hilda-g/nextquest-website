@@ -495,7 +495,10 @@ export default function NextQuest() {
     const bl = navigator.language?.slice(0, 2) || "en";
     return ["en","ru","el","uk"].includes(bl) ? bl : "en";
   });
-  const [tab, setTab]               = useState("upcoming");
+  const [tab, setTab]               = useState(() => {
+    const p = new URLSearchParams(window.location.search).get("tab");
+    return ["upcoming", "calendar", "archive"].includes(p) ? p : "upcoming";
+  });
   const [search, setSearch]         = useState("");
   const [catFilters, setCatFilters]   = useState(new Set());
   const [cityFilters, setCityFilters] = useState(new Set());
@@ -798,7 +801,7 @@ export default function NextQuest() {
         {/* Full event modal — shared component */}
         <EventCardModal
           event={selected}
-          onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", "/"); }}
+          onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", `/?tab=${tab}`); }}
           lang={lang} t={t}
           onOrganizerClick={username => {
             setSelected(null);
@@ -1088,13 +1091,13 @@ export default function NextQuest() {
 
           {/* Tabs with count badges */}
           <div className="nq-tabs" style={{ display: "flex", gap: 24, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <button className={`tab-btn${tab === "upcoming" ? " active" : ""}`} onClick={() => setTab("upcoming")}>
+            <button className={`tab-btn${tab === "upcoming" ? " active" : ""}`} onClick={() => { setTab("upcoming"); window.history.pushState({}, "", "/?tab=upcoming"); }}>
               {t.upcoming} <span className="tab-count">{upcomingCount}</span>
             </button>
-            <button className={`tab-btn${tab === "calendar" ? " active" : ""}`} onClick={() => setTab("calendar")}>
+            <button className={`tab-btn${tab === "calendar" ? " active" : ""}`} onClick={() => { setTab("calendar"); window.history.pushState({}, "", "/?tab=calendar"); }}>
               📅 {t.calendar} <span className="tab-count">{calendarCount}</span>
             </button>
-            <button className={`tab-btn${tab === "archive" ? " active" : ""}`} onClick={() => setTab("archive")}>
+            <button className={`tab-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); window.history.pushState({}, "", "/?tab=archive"); }}>
               {t.archive} <span className="tab-count">{archiveCount}</span>
             </button>
           </div>
@@ -1231,7 +1234,7 @@ export default function NextQuest() {
         {/* ── EVENT MODAL ── */}
         <EventCardModal
           event={selected}
-          onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", "/"); }}
+          onClose={() => { setSelected(null); setNotifyTooltip(null); window.history.pushState({}, "", `/?tab=${tab}`); }}
           lang={lang} t={t}
           onOrganizerClick={username => {
             setSelected(null);
