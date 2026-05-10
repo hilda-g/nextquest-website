@@ -356,8 +356,8 @@ export function EventCardBody({
                 </a>
               );
             }
-            // No URL, has limit → Contact organizer button
-            if (event.organizerContacts && event.maxParticipants) {
+            // No URL → Contact button (regardless of limit)
+            if (event.organizerContacts) {
               const raw  = event.organizerContacts;
               const href = raw.startsWith("http") ? raw
                 : raw.startsWith("@") ? `https://t.me/${raw.slice(1)}`
