@@ -48,11 +48,11 @@ function formatDate(date, lang) {
 }
 function formatTime(date) {
   if (!date || isNaN(date)) return "";
-  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 function makeGCalUrl(event) {
   const fmt = d => d.toISOString().replace(/[-:]/g, "").replace(".000", "");
-  const end = event.dateEnd || new Date(event.dateStart.getTime() + 4 * 60 * 60 * 1000);
+  const end = event.dateEnd || new Date(event.dateStart.getTime() + 2 * 60 * 60 * 1000);
   const params = new URLSearchParams({
     action:   "TEMPLATE",
     text:     event.title,
@@ -271,10 +271,8 @@ export function EventCardBody({
             <span>
               {formatDate(event.dateStart, lang)}
               {event.multiDay && event.dateEnd
-                ? ` — ${formatDate(event.dateEnd, lang)} · ${formatTime(event.dateStart)} - ${formatTime(event.dateEnd)}`
-                : event.dateEnd
-                  ? ` · ${formatTime(event.dateStart)} - ${formatTime(event.dateEnd)}`
-                  : ` · ${formatTime(event.dateStart)}`}
+                ? ` — ${formatDate(event.dateEnd, lang)}`
+                : ` · ${formatTime(event.dateStart)}`}
             </span>
           </div>
 
@@ -292,13 +290,15 @@ export function EventCardBody({
 
           {/* Spots + status */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 14, color: "#a09cbc" }}>
-              👥 {event.maxParticipants ? `${event.maxParticipants} ${t.participants}` : t.noLimit}
-            </span>
+            {event.maxParticipants && (
+              <span style={{ fontSize: 14, color: "#a09cbc" }}>
+                👥 {event.maxParticipants} {t.participants}
+              </span>
+            )}
             {event.maxParticipants && event.registrationClosed ? (
               <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
             ) : (
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.registrationOpen}</span>
             )}
           </div>
         </div>
@@ -335,6 +335,7 @@ export function EventCardBody({
               {t.promoAddEvent}
             </a>
           ) : event.status !== "cancelled" && (() => {
+            // Has registration URL → Register button
             if (event.externalUrl) {
               return (
                 <a
@@ -352,7 +353,8 @@ export function EventCardBody({
                 </a>
               );
             }
-            if (event.organizerContacts) {
+            // No URL but has limit → Contact organizer button
+            if (event.organizerContacts && event.maxParticipants) {
               const raw  = event.organizerContacts;
               const href = raw.startsWith("http") ? raw
                 : raw.startsWith("@") ? `https://t.me/${raw.slice(1)}`
@@ -421,7 +423,8 @@ export function EventCardBody({
                 </div>
               );
             }
-            return <div style={{ flex: 1 }} />;
+            // No URL, no limit → no button
+            return null;
           })()}
 
           {/* 2. Notify me — hidden for promo events */}
