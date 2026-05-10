@@ -298,7 +298,10 @@ export function EventCardBody({
             {event.maxParticipants && event.registrationClosed ? (
               <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
             ) : (
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.registrationOpen}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
+            )}
+            {event.maxParticipants && (
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>{t.registrationNeeded}</span>
             )}
           </div>
         </div>
@@ -335,7 +338,7 @@ export function EventCardBody({
               {t.promoAddEvent}
             </a>
           ) : event.status !== "cancelled" && (() => {
-            // Has registration URL → Register button
+            // Has registration URL → Register button (regardless of limit)
             if (event.externalUrl) {
               return (
                 <a
@@ -353,7 +356,7 @@ export function EventCardBody({
                 </a>
               );
             }
-            // No URL but has limit → Contact organizer button
+            // No URL, has limit → Contact organizer button
             if (event.organizerContacts && event.maxParticipants) {
               const raw  = event.organizerContacts;
               const href = raw.startsWith("http") ? raw
