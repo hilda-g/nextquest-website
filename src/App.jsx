@@ -638,6 +638,7 @@ export default function NextQuest() {
         {/* Cover image */}
         <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
           <img src={event.cover} alt={event.title}
+            loading="lazy"
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             onError={e => { e.target.style.display = "none"; }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(19,19,31,1) 0%, transparent 60%)" }} />
@@ -1093,13 +1094,13 @@ export default function NextQuest() {
           {/* Tabs with count badges */}
           <div className="nq-tabs" style={{ display: "flex", gap: 24, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <button className={`tab-btn${tab === "upcoming" ? " active" : ""}`} onClick={() => { setTab("upcoming"); window.history.pushState({}, "", "/?tab=upcoming"); }}>
-              {t.upcoming} <span className="tab-count">{upcomingCount}</span>
+              <h2 style={{ all: "unset" }}>{t.upcoming}</h2> <span className="tab-count">{upcomingCount}</span>
             </button>
             <button className={`tab-btn${tab === "calendar" ? " active" : ""}`} onClick={() => { setTab("calendar"); window.history.pushState({}, "", "/?tab=calendar"); }}>
-              📅 {t.calendar} <span className="tab-count">{calendarCount}</span>
+              📅 <h2 style={{ all: "unset" }}>{t.calendar}</h2> <span className="tab-count">{calendarCount}</span>
             </button>
             <button className={`tab-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); window.history.pushState({}, "", "/?tab=archive"); }}>
-              {t.archive} <span className="tab-count">{archiveCount}</span>
+              <h2 style={{ all: "unset" }}>{t.archive}</h2> <span className="tab-count">{archiveCount}</span>
             </button>
           </div>
 
