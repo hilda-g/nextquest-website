@@ -35,8 +35,10 @@ const EMPTY_FORM = {
   cover_position:   { x: 50, y: 50 },
   status:           "pending",
   format:           "community",
-  is_promo:         false,
-  languages:        [],
+  is_promo:              false,
+  languages:             [],
+  is_recurring:          false,
+  recurrence_interval:   "weekly",
 };
 
 // Split an ISO/datetime string into { date: "YYYY-MM-DD", time: "HH:MM" }
@@ -297,8 +299,10 @@ export default function EventDrawer({ event, onSave, onClose }) {
           organizer_contacts: event.organizer_contacts || "",
           organizer_link:     event.organizer_link     || "",
           format:             event.format             || "community",
-          is_promo:           event.is_promo           || false,
-          languages:          event.event_languages    || [],
+          is_promo:              event.is_promo           || false,
+          languages:             event.event_languages    || [],
+          is_recurring:          event.is_recurring       || false,
+          recurrence_interval:   event.recurrence_interval || "weekly",
         }
       : { ...EMPTY_FORM };
     setForm(initial);
@@ -452,6 +456,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
         format:             form.format                    || null,
         is_promo:           form.is_promo                  || false,
         event_languages:    form.languages.length > 0 ? form.languages : null,
+        is_recurring:       form.is_recurring               || false,
+        recurrence_interval: form.is_recurring ? (form.recurrence_interval || "weekly") : null,
       };
 
       await onSave(payload);
@@ -869,6 +875,75 @@ export default function EventDrawer({ event, onSave, onClose }) {
                 {errors.date_end && <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 4 }}>{errors.date_end}</div>}
               </div>
             </div>
+          </div>
+
+          {/* ── Recurring event ── */}
+          <div>
+            <div
+              onClick={() => set("is_recurring", !form.is_recurring)}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "13px 16px", borderRadius: 12, cursor: "pointer",
+                background: form.is_recurring
+                  ? "rgba(16,185,129,0.08)"
+                  : "rgba(255,255,255,0.03)",
+                border: form.is_recurring
+                  ? "1px solid rgba(16,185,129,0.35)"
+                  : "1px solid rgba(255,255,255,0.08)",
+                transition: "all 0.2s",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: form.is_recurring ? "#6ee7b7" : "#e8e6f0" }}>
+                  🔁 Recurring Event
+                </div>
+                <div style={{ fontSize: 11, color: "#6b6890", marginTop: 2 }}>
+                  Regular meetup — enables "Create next occurrence" in menu
+                </div>
+              </div>
+              <div style={{
+                width: 38, height: 22, borderRadius: 999, flexShrink: 0,
+                background: form.is_recurring ? "#10b981" : "rgba(255,255,255,0.1)",
+                position: "relative", transition: "all 0.2s",
+              }}>
+                <div style={{
+                  position: "absolute", top: 3,
+                  left: form.is_recurring ? 19 : 3,
+                  width: 16, height: 16, borderRadius: "50%",
+                  background: "#fff", transition: "left 0.2s",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+                }} />
+              </div>
+            </div>
+
+            {form.is_recurring && (
+              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                {[
+                  { value: "weekly",    label: "Weekly",    hint: "+7 days" },
+                  { value: "biweekly",  label: "Biweekly",  hint: "+14 days" },
+                  { value: "monthly",   label: "Monthly",   hint: "+1 month" },
+                ].map(({ value, label: lbl, hint }) => {
+                  const active = form.recurrence_interval === value;
+                  return (
+                    <button
+                      key={value}
+                      onClick={e => { e.stopPropagation(); set("recurrence_interval", value); }}
+                      style={{
+                        flex: 1, padding: "9px 0", borderRadius: 9, cursor: "pointer",
+                        background: active ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${active ? "rgba(16,185,129,0.45)" : "rgba(255,255,255,0.08)"}`,
+                        color: active ? "#6ee7b7" : "#6b6890",
+                        fontSize: 12, fontFamily: "inherit",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                      }}
+                    >
+                      <span style={{ fontWeight: 700 }}>{lbl}</span>
+                      <span style={{ fontSize: 10, opacity: 0.7 }}>{hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* ── Max participants ── */}

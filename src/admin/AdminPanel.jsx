@@ -104,6 +104,106 @@ export default function AdminPanel() {
     toasts.success(`Status updated to ${newStatus}`);
   }
 
+  // ── Duplicate Event ──────────────────────────────────────
+  async function handleDuplicate(event) {
+    try {
+      const copy = {
+        title:               `Copy — ${event.title}`,
+        description:         event.description         || null,
+        description_ru:      event.description_ru      || null,
+        description_el:      event.description_el      || null,
+        description_uk:      event.description_uk      || null,
+        category:            event.category,
+        location_city:       event.location_city,
+        location_address:    event.location_address,
+        date_start:          event.date_start,
+        date_end:            event.date_end             || null,
+        max_participants:    event.max_participants     || null,
+        external_url:        event.external_url         || null,
+        cover_image_url:     event.cover_image_url      || null,
+        cover_position:      event.cover_position       || { x: 50, y: 50 },
+        organizer_username:  event.organizer_username   || null,
+        organizer_contacts:  event.organizer_contacts   || null,
+        organizer_link:      event.organizer_link       || null,
+        format:              event.format               || null,
+        is_promo:            event.is_promo             || false,
+        event_languages:     event.event_languages      || null,
+        is_recurring:        event.is_recurring         || false,
+        recurrence_interval: event.recurrence_interval  || null,
+        status:              "pending",
+        organizer_tg_id:     218915869,
+      };
+      await ev.createEvent(copy);
+      toasts.success("Duplicate created as Pending");
+    } catch (err) {
+      toasts.error(`Duplicate failed: ${err.message}`);
+    }
+  }
+
+  // ── Create Next Occurrence ───────────────────────────────
+  async function handleNextOccurrence(event) {
+    try {
+      if (!event.date_start) {
+        toasts.error("Event has no start date");
+        return;
+      }
+      const interval = event.recurrence_interval || "weekly";
+      const base = new Date(event.date_start);
+      if (isNaN(base.getTime())) {
+        toasts.error("Could not parse event date");
+        return;
+      }
+
+      function shiftDate(d, iv) {
+        const n = new Date(d);
+        if (iv === "weekly")   n.setDate(n.getDate() + 7);
+        if (iv === "biweekly") n.setDate(n.getDate() + 14);
+        if (iv === "monthly")  n.setMonth(n.getMonth() + 1);
+        return n;
+      }
+
+      function toLocalISO(d) {
+        // Keep local time, avoid UTC shift — same pattern used elsewhere in the project
+        const pad = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+      }
+
+      const newStart = shiftDate(base, interval);
+      const newEnd   = event.date_end ? toLocalISO(shiftDate(new Date(event.date_end), interval)) : null;
+
+      const copy = {
+        title:               event.title,
+        description:         event.description         || null,
+        description_ru:      event.description_ru      || null,
+        description_el:      event.description_el      || null,
+        description_uk:      event.description_uk      || null,
+        category:            event.category,
+        location_city:       event.location_city,
+        location_address:    event.location_address,
+        date_start:          toLocalISO(newStart),
+        date_end:            newEnd,
+        max_participants:    event.max_participants     || null,
+        external_url:        event.external_url         || null,
+        cover_image_url:     event.cover_image_url      || null,
+        cover_position:      event.cover_position       || { x: 50, y: 50 },
+        organizer_username:  event.organizer_username   || null,
+        organizer_contacts:  event.organizer_contacts   || null,
+        organizer_link:      event.organizer_link       || null,
+        format:              event.format               || null,
+        is_promo:            false,
+        event_languages:     event.event_languages      || null,
+        is_recurring:        true,
+        recurrence_interval: interval,
+        status:              "pending",
+        organizer_tg_id:     218915869,
+      };
+      await ev.createEvent(copy);
+      toasts.success(`Next occurrence created (+${interval === "weekly" ? "7 days" : interval === "biweekly" ? "14 days" : "1 month"}) — status: Pending`);
+    } catch (err) {
+      toasts.error(`Could not create next occurrence: ${err.message}`);
+    }
+  }
+
   // ── End Registration ─────────────────────────────────────
   async function handleEndRegistration() {
     if (!endRegTarget) return;
@@ -292,6 +392,8 @@ export default function AdminPanel() {
                 onViewEvent={setViewTarget}
                 onEndRegistration={setEndRegTarget}
                 onReopenRegistration={setReopenTarget}
+                onDuplicate={handleDuplicate}
+                onNextOccurrence={handleNextOccurrence}
               />
             ))
           )}

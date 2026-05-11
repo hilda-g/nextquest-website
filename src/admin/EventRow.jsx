@@ -39,7 +39,7 @@ function menuItem(color) {
 }
 
 // ─── ThreeDotMenu ─────────────────────────────────────────────
-function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration }) {
+function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration, onDuplicate, onNextOccurrence }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -142,6 +142,24 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
+              <button
+                onClick={() => { onDuplicate(event); setOpen(false); }}
+                style={menuItem("#a78bfa")}
+              >
+                📋 Duplicate event
+              </button>
+
+              {event.is_recurring && (
+                <button
+                  onClick={() => { onNextOccurrence(event); setOpen(false); }}
+                  style={menuItem("#6ee7b7")}
+                >
+                  📅 Create next occurrence
+                </button>
+              )}
+
+              <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
+
               <button onClick={() => { onDelete(event); setOpen(false); }} style={menuItem("#ef4444")}>
                 🗑 Delete event
               </button>
@@ -167,7 +185,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 }
 
 // ─── EventRow ────────────────────────────────────────────────
-export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration }) {
+export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration, onDuplicate, onNextOccurrence }) {
   const isDeleted = !!event.deleted_at;
   const date      = event.date_start ? event.date_start.slice(0, 10) : "—";
   const cover     = event.cover_image_url;
@@ -207,6 +225,14 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
               letterSpacing: "0.06em", textTransform: "uppercase",
             }}>⭐ Promo</span>
           )}
+          {event.is_recurring && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999, flexShrink: 0,
+              background: "rgba(16,185,129,0.1)",
+              border: "1px solid rgba(16,185,129,0.3)", color: "#6ee7b7",
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>🔁 {event.recurrence_interval || "recurring"}</span>
+          )}
         </div>
         <div style={{ fontSize: 12, color: "#4a4868" }}>
           {date} · {event.location_city} · {CATEGORIES[event.category] || event.category}
@@ -228,6 +254,8 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
         onViewEvent={onViewEvent}
         onEndRegistration={onEndRegistration}
         onReopenRegistration={onReopenRegistration}
+        onDuplicate={onDuplicate}
+        onNextOccurrence={onNextOccurrence}
       />
     </div>
   );
