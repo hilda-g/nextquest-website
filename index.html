@@ -1,22 +1,93 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- ── Favicons & PWA ─────────────────────────────────── -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0d0d14" />
+
+    <!-- ── Viewport & basics ──────────────────────────────── -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="NextQuest — Cyprus Geek Events. Find board game nights, LARPs, RPG sessions, cosplay events and festivals in Cyprus." />
-    <meta property="og:title" content="NextQuest — Cyprus Geek Events" />
-    <meta property="og:description" content="Find geek events in Cyprus: board games, LARP, RPG, cosplay and more." />
-    <meta property="og:type" content="website" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://nextquest.today/" />
+
+    <!-- ── Primary SEO ───────────────────────────────────── -->
     <title>NextQuest — Cyprus Geek Events</title>
+    <meta name="description" content="Find board game nights, tabletop RPG sessions, LARPs, cosplay events and geek festivals in Cyprus. NextQuest aggregates all geek community events in Nicosia, Limassol, Larnaca and Paphos." />
+    <meta name="keywords" content="Cyprus events, board games Cyprus, LARP Cyprus, RPG Cyprus, cosplay Cyprus, geek events, Nicosia events, tabletop games, NextQuest" />
+    <meta name="author" content="NextQuest" />
+
+    <!-- ── Open Graph (Facebook, Telegram, WhatsApp, Discord) ── -->
+    <meta property="og:site_name" content="NextQuest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nextquest.today/" />
+    <meta property="og:title" content="NextQuest — Cyprus Geek Events" />
+    <meta property="og:description" content="Find board game nights, tabletop RPG sessions, LARPs, cosplay events and geek festivals in Cyprus. All your quests in one place." />
+    <meta property="og:image" content="https://nextquest.today/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="NextQuest — Cyprus Geek Events" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ru_RU" />
+    <meta property="og:locale:alternate" content="el_GR" />
+
+    <!-- ── Twitter / X Card ──────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nextquestcy" />
+    <meta name="twitter:title" content="NextQuest — Cyprus Geek Events" />
+    <meta name="twitter:description" content="Find board game nights, tabletop RPG sessions, LARPs, cosplay events and geek festivals in Cyprus. All your quests in one place." />
+    <meta name="twitter:image" content="https://nextquest.today/og-image.png" />
+    <meta name="twitter:image:alt" content="NextQuest — Cyprus Geek Events" />
+
+    <!-- ── Structured Data (JSON-LD) ─────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "NextQuest",
+      "alternateName": "NextQuest Cyprus",
+      "url": "https://nextquest.today/",
+      "description": "Community platform aggregating geek and tabletop culture events across Cyprus — board games, LARP, RPG, cosplay, anime, esports and more.",
+      "inLanguage": ["en", "ru", "el", "uk"],
+      "publisher": {
+        "@type": "Organization",
+        "name": "NextQuest",
+        "url": "https://nextquest.today/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://nextquest.today/android-chrome-512x512.png",
+          "width": 512,
+          "height": 512
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "url": "https://t.me/CatherineC"
+        },
+        "sameAs": [
+          "https://t.me/nextquestcy"
+        ]
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://nextquest.today/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <script type="module" crossorigin src="/assets/index.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index.css" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
