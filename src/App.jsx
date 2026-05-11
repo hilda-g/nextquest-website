@@ -1020,12 +1020,13 @@ export default function NextQuest() {
               <span className="nq-logo-text" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#fff" }}>NextQuest</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button
-                onClick={() => { window.history.pushState({}, "", "/about"); setAboutOpen(true); }}
-                style={{ background: "none", border: "none", color: "#6b6890", fontFamily: "inherit", fontSize: 13, fontWeight: 500, cursor: "pointer", padding: "4px 8px", borderRadius: 6, transition: "color 0.2s" }}
+              <a
+                href="/about"
+                onClick={e => { e.preventDefault(); window.history.pushState({}, "", "/about"); setAboutOpen(true); }}
+                style={{ background: "none", border: "none", color: "#6b6890", fontFamily: "inherit", fontSize: 13, fontWeight: 500, cursor: "pointer", padding: "4px 8px", borderRadius: 6, transition: "color 0.2s", textDecoration: "none" }}
                 onMouseEnter={e => e.currentTarget.style.color = "#a78bfa"}
                 onMouseLeave={e => e.currentTarget.style.color = "#6b6890"}
-              >About</button>
+              >About</a>
               <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.08)" }} />
               <div style={{ display: "flex", gap: 4 }}>
                 {["en","ru","el","uk"].map(l => (
@@ -1207,12 +1208,13 @@ export default function NextQuest() {
               <span style={{ color: "#2e2b45", fontSize: 12 }}>© 2026</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => { window.history.pushState({}, "", "/about"); setAboutOpen(true); }}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s, border-color 0.2s" }}
+              <a
+                href="/about"
+                onClick={e => { e.preventDefault(); window.history.pushState({}, "", "/about"); setAboutOpen(true); }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "color 0.2s, border-color 0.2s", textDecoration: "none" }}
                 onMouseEnter={e => { e.currentTarget.style.color = "#a78bfa"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.3)"; }}
                 onMouseLeave={e => { e.currentTarget.style.color = "#6b6890"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
-              >About us</button>
+              >About us</a>
               <a href="https://t.me/nextquestcy" target="_blank" rel="noopener noreferrer"
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(124,58,237,0.1)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(167,139,250,0.5)"}
