@@ -605,7 +605,7 @@ export default function NextQuest() {
     setError(null);
 
     sbFetch("events", {
-      select: "*",
+      select: "id,title,title_ru,title_el,title_uk,category,date_start,date_end,location_city,location_address,description,description_ru,description_el,description_uk,organizer_tg_id,organizer_username,organizer_name,organizer_contacts,organizer_link,max_participants,cover_image_url,external_url,status,format,registration_closed,is_promo,is_recurring,recurrence_interval,event_languages,hidden_from_upcoming,notify_channel",
       status: "eq.published",
       order:  "date_start.asc",
     })
@@ -767,7 +767,6 @@ export default function NextQuest() {
     return (
       <>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Syne:wght@700;800&display=swap');
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           html, body, #root { background: #0d0d14; min-height: 100vh; font-family: 'Outfit', sans-serif; }
         `}</style>
@@ -798,7 +797,6 @@ export default function NextQuest() {
     return (
       <>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Syne:wght@700;800&display=swap');
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           html, body, #root { background: #0d0d14; min-height: 100vh; font-family: 'Outfit', sans-serif; }
           .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; cursor: pointer; }
@@ -876,7 +874,6 @@ export default function NextQuest() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Syne:wght@700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { background: #0d0d14; }
         body { background: #0d0d14; min-height: 100vh; }
