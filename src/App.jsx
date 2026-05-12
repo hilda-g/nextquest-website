@@ -1042,7 +1042,6 @@ export default function NextQuest() {
         backgroundImage: "url('/Background.png')",
         backgroundSize: "cover",
         backgroundPosition: "center top",
-        backgroundAttachment: "fixed",
         fontFamily: "'Outfit', sans-serif",
         color: "#e8e6f0",
         position: "relative",
