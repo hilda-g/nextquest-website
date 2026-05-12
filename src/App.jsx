@@ -190,11 +190,10 @@ function eventsForDay(events, year, month, day) {
 }
 
 // ─── CALENDAR TAB COMPONENT ──────────────────────────────────
-function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFilters, toggleCity, formatFilter, setFormatFilter }) {
+function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFilters, toggleCity, formatFilter, setFormatFilter, popover, setPopover }) {
   const now  = new Date();
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
-  const [popover,  setPopover]  = useState(null); // { day, events, rect }
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
@@ -368,80 +367,6 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
           );
         })}
       </div>
-
-      {/* ── Day popover ── */}
-      {popover && (
-        <>
-          {/* Backdrop — click outside to close */}
-          <div
-            style={{ position: "fixed", inset: 0, zIndex: 60 }}
-            onClick={() => setPopover(null)}
-          />
-          <div style={{
-            position: "fixed",
-            top: (() => {
-              const spaceBelow = window.innerHeight - popover.rect.bottom - 6;
-              const popoverHeight = 44 + popover.events.length * 46; // header + rows estimate
-              return spaceBelow >= popoverHeight
-                ? popover.rect.bottom + 6                          // open downward
-                : Math.max(popover.rect.top - popoverHeight - 6, 8); // flip upward
-            })(),
-            left: Math.min(Math.max(popover.rect.left, 8), window.innerWidth - 240),
-            zIndex: 61,
-            width: 228,
-            background: "#1e1e32",
-            border: "1px solid rgba(167,139,250,0.3)",
-            borderRadius: 12,
-            boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
-            padding: "10px 0 6px",
-            animation: "popIn 0.15s cubic-bezier(0.34,1.56,0.64,1)",
-            fontFamily: "'Outfit', sans-serif",
-          }}>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: "#6b6890",
-              textTransform: "uppercase", letterSpacing: "0.08em",
-              padding: "0 12px 8px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
-              marginBottom: 6,
-            }}>
-              {popover.day} {t.monthNames[popover.month]}  · {popover.events.length} events
-            </div>
-            {popover.events.map((ev, i) => (
-              <div
-                key={i}
-                onClick={() => { setPopover(null); onSelect(ev); }}
-                style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "7px 12px", cursor: "pointer",
-                  transition: "background 0.12s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              >
-                <div style={{
-                  width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                  background: getCatColor(ev.category),
-                }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 12, fontWeight: 600, color: "#e8e6f0",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                  }}>{ev.title}</div>
-                  <div style={{ fontSize: 10, color: "#6b6890", marginTop: 1 }}>
-                    {formatTime(ev.dateStart)}{ev.dateEnd ? ` - ${formatTime(ev.dateEnd)}` : ""} · {ev.city}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <style>{`
-            @keyframes popIn {
-              from { opacity: 0; transform: scale(0.92) translateY(-4px); }
-              to   { opacity: 1; transform: scale(1) translateY(0); }
-            }
-          `}</style>
-        </>
-      )}
 
       {/* Agenda list */}
       <div style={{ marginBottom: 10 }}>
@@ -628,7 +553,8 @@ export default function NextQuest() {
   };
   const [selected, setSelected]     = useState(null);
   const [subscribed, setSubscribed] = useState({});
-  const [notifyTooltip, setNotifyTooltip] = useState(null); // event id showing tooltip
+  const [notifyTooltip, setNotifyTooltip] = useState(null);
+  const [calPopover, setCalPopover] = useState(null); // { day, month, year, events, rect }
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
@@ -1258,6 +1184,8 @@ export default function NextQuest() {
               toggleCity={toggleCity}
               formatFilter={formatFilter}
               setFormatFilter={setFormatFilter}
+              popover={calPopover}
+              setPopover={setCalPopover}
             />
           )}
 
@@ -1353,6 +1281,73 @@ export default function NextQuest() {
             setNotifyTooltip(null);
           }}
         />
+
+        {/* ── CALENDAR DAY POPOVER — rendered at top level to escape backdrop-filter ancestors ── */}
+        {calPopover && (
+          <>
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 200 }}
+              onClick={() => setCalPopover(null)}
+            />
+            <div style={{
+              position: "fixed",
+              top: (() => {
+                const spaceBelow = window.innerHeight - calPopover.rect.bottom - 6;
+                const popoverHeight = 44 + calPopover.events.length * 46;
+                return spaceBelow >= popoverHeight
+                  ? calPopover.rect.bottom + 6
+                  : Math.max(calPopover.rect.top - popoverHeight - 6, 8);
+              })(),
+              left: Math.min(Math.max(calPopover.rect.left, 8), window.innerWidth - 240),
+              zIndex: 201,
+              width: 228,
+              background: "#1e1e32",
+              border: "1px solid rgba(167,139,250,0.3)",
+              borderRadius: 12,
+              boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
+              padding: "10px 0 6px",
+              fontFamily: "'Outfit', sans-serif",
+              animation: "popIn 0.15s cubic-bezier(0.34,1.56,0.64,1)",
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: "#6b6890",
+                textTransform: "uppercase", letterSpacing: "0.08em",
+                padding: "0 12px 8px",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                marginBottom: 6,
+              }}>
+                {calPopover.day} {t.monthNames[calPopover.month]} · {calPopover.events.length} events
+              </div>
+              {calPopover.events.map((ev, i) => (
+                <div
+                  key={i}
+                  onClick={() => { setCalPopover(null); setSelected(ev); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "7px 12px", cursor: "pointer",
+                    transition: "background 0.12s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  <div style={{
+                    width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                    background: getCatColor(ev.category),
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 12, fontWeight: 600, color: "#e8e6f0",
+                      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                    }}>{ev.title}</div>
+                    <div style={{ fontSize: 10, color: "#6b6890", marginTop: 1 }}>
+                      {formatTime(ev.dateStart)}{ev.dateEnd ? ` - ${formatTime(ev.dateEnd)}` : ""} · {ev.city}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* ── SCROLL TO TOP ── */}
         <ScrollToTop />
