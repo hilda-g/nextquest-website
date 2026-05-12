@@ -139,6 +139,7 @@ export default function AdminPanel() {
         event_languages:     event.event_languages      || null,
         is_recurring:        event.is_recurring         || false,
         recurrence_interval: event.recurrence_interval  || null,
+        hidden_from_upcoming: false,
         status:              "pending",
         organizer_tg_id:     218915869,
       };
@@ -157,8 +158,17 @@ export default function AdminPanel() {
         return;
       }
       const interval = event.recurrence_interval || "weekly";
-      const base = new Date(event.date_start);
-      if (isNaN(base.getTime())) {
+
+      // Normalise DB string to "YYYY-MM-DDTHH:MM" (replace space separator)
+      // so JS treats it as LOCAL time, not UTC — avoids time and date shift.
+      function parseLocal(str) {
+        if (!str) return null;
+        const n = new Date(str.slice(0, 16).replace(" ", "T"));
+        return isNaN(n.getTime()) ? null : n;
+      }
+
+      const base = parseLocal(event.date_start);
+      if (!base) {
         toasts.error("Could not parse event date");
         return;
       }
@@ -172,13 +182,13 @@ export default function AdminPanel() {
       }
 
       function toLocalISO(d) {
-        // Keep local time, avoid UTC shift — same pattern used elsewhere in the project
         const pad = n => String(n).padStart(2, "0");
         return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
       }
 
       const newStart = shiftDate(base, interval);
-      const newEnd   = event.date_end ? toLocalISO(shiftDate(new Date(event.date_end), interval)) : null;
+      const baseEnd  = parseLocal(event.date_end);
+      const newEnd   = baseEnd ? toLocalISO(shiftDate(baseEnd, interval)) : null;
 
       const copy = {
         title:               event.title,
@@ -203,11 +213,13 @@ export default function AdminPanel() {
         event_languages:     event.event_languages      || null,
         is_recurring:        true,
         recurrence_interval: interval,
-        status:              "pending",
+        hidden_from_upcoming: false,
+        notify_channel:      false,
+        status:              "published",
         organizer_tg_id:     218915869,
       };
       await ev.createEvent(copy);
-      toasts.success(`Next occurrence created (+${interval === "weekly" ? "7 days" : interval === "biweekly" ? "14 days" : "1 month"}) — status: Pending`);
+      toasts.success(`Next occurrence created (+${interval === "weekly" ? "7 days" : interval === "biweekly" ? "14 days" : "1 month"}) — published silently`);
     } catch (err) {
       toasts.error(`Could not create next occurrence: ${err.message}`);
     }

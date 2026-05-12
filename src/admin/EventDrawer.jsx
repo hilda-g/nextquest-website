@@ -39,6 +39,7 @@ const EMPTY_FORM = {
   languages:             [],
   is_recurring:          false,
   recurrence_interval:   "weekly",
+  hidden_from_upcoming:  false,
 };
 
 // Split an ISO/datetime string into { date: "YYYY-MM-DD", time: "HH:MM" }
@@ -303,6 +304,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
           languages:             event.event_languages    || [],
           is_recurring:          event.is_recurring       || false,
           recurrence_interval:   event.recurrence_interval || "weekly",
+          hidden_from_upcoming:  event.hidden_from_upcoming || false,
         }
       : { ...EMPTY_FORM };
     setForm(initial);
@@ -458,6 +460,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
         event_languages:    form.languages.length > 0 ? form.languages : null,
         is_recurring:       form.is_recurring               || false,
         recurrence_interval: form.is_recurring ? (form.recurrence_interval || "weekly") : null,
+        hidden_from_upcoming: form.hidden_from_upcoming      || false,
       };
 
       await onSave(payload);
@@ -944,6 +947,44 @@ export default function EventDrawer({ event, onSave, onClose }) {
                 })}
               </div>
             )}
+          </div>
+
+          {/* ── Hide from Upcoming ── */}
+          <div
+            onClick={() => set("hidden_from_upcoming", !form.hidden_from_upcoming)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "13px 16px", borderRadius: 12, cursor: "pointer",
+              background: form.hidden_from_upcoming
+                ? "rgba(245,158,11,0.08)"
+                : "rgba(255,255,255,0.03)",
+              border: form.hidden_from_upcoming
+                ? "1px solid rgba(245,158,11,0.35)"
+                : "1px solid rgba(255,255,255,0.08)",
+              transition: "all 0.2s",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: form.hidden_from_upcoming ? "#fbbf24" : "#e8e6f0" }}>
+                👁 Hide from Upcoming
+              </div>
+              <div style={{ fontSize: 11, color: "#6b6890", marginTop: 2 }}>
+                Event still appears in Calendar, Archive and via direct link
+              </div>
+            </div>
+            <div style={{
+              width: 38, height: 22, borderRadius: 999, flexShrink: 0,
+              background: form.hidden_from_upcoming ? "#f59e0b" : "rgba(255,255,255,0.1)",
+              position: "relative", transition: "all 0.2s",
+            }}>
+              <div style={{
+                position: "absolute", top: 3,
+                left: form.hidden_from_upcoming ? 19 : 3,
+                width: 16, height: 16, borderRadius: "50%",
+                background: "#fff", transition: "left 0.2s",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+              }} />
+            </div>
           </div>
 
           {/* ── Max participants ── */}

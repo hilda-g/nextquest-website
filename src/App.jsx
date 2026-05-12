@@ -72,6 +72,7 @@ function mapEvent(row) {
     format: row.format || "official",
     registrationClosed: row.registration_closed || false,
     isPromo:            row.is_promo            || false,
+    isHiddenFromUpcoming: row.hidden_from_upcoming || false,
     languages:          row.event_languages     || [],
   };
 }
@@ -193,6 +194,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
   const now  = new Date();
   const [calYear,  setCalYear]  = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
+  const [popover,  setPopover]  = useState(null); // { day, events, rect }
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
@@ -307,8 +309,11 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                 padding: "5px 4px 4px",
                 cursor: dayEvents.length ? "pointer" : "default",
                 overflow: "hidden",
+                position: "relative",
               }}
-              onClick={() => dayEvents.length === 1 && onSelect(dayEvents[0])}
+              onClick={() => {
+                if (dayEvents.length === 1) onSelect(dayEvents[0]);
+              }}
             >
               <div className="nq-cal-day-num" style={{
                 fontSize: 11, fontWeight: 700, marginBottom: 3, lineHeight: 1,
@@ -337,12 +342,100 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
               ))}
 
               {dayEvents.length > 2 && (
-                <div className="nq-cal-overflow" style={{ fontSize: 9, color: "#4a4868", paddingLeft: 4 }}>+{dayEvents.length - 2}</div>
+                <button
+                  className="nq-cal-overflow"
+                  onClick={e => {
+                    e.stopPropagation();
+                    const rect = e.currentTarget.closest(".nq-cal-cell").getBoundingClientRect();
+                    setPopover(p =>
+                      p && p.day === day && p.month === calMonth && p.year === calYear
+                        ? null
+                        : { day, month: calMonth, year: calYear, events: dayEvents, rect }
+                    );
+                  }}
+                  style={{
+                    display: "block", width: "100%", textAlign: "left",
+                    background: "rgba(167,139,250,0.18)",
+                    border: "1px solid rgba(167,139,250,0.35)",
+                    borderRadius: 3, padding: "2px 4px",
+                    fontSize: 9, fontWeight: 700, color: "#a78bfa",
+                    cursor: "pointer", fontFamily: "inherit",
+                    letterSpacing: "0.02em",
+                  }}
+                >+{dayEvents.length - 2} more</button>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* ── Day popover ── */}
+      {popover && (
+        <>
+          {/* Backdrop — click outside to close */}
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 60 }}
+            onClick={() => setPopover(null)}
+          />
+          <div style={{
+            position: "fixed",
+            top: Math.min(popover.rect.bottom + 6, window.innerHeight - 260),
+            left: Math.min(Math.max(popover.rect.left, 8), window.innerWidth - 240),
+            zIndex: 61,
+            width: 228,
+            background: "#1e1e32",
+            border: "1px solid rgba(167,139,250,0.3)",
+            borderRadius: 12,
+            boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
+            padding: "10px 0 6px",
+            animation: "popIn 0.15s cubic-bezier(0.34,1.56,0.64,1)",
+            fontFamily: "'Outfit', sans-serif",
+          }}>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: "#6b6890",
+              textTransform: "uppercase", letterSpacing: "0.08em",
+              padding: "0 12px 8px",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              marginBottom: 6,
+            }}>
+              {popover.day} {t.monthNames[popover.month]}  · {popover.events.length} events
+            </div>
+            {popover.events.map((ev, i) => (
+              <div
+                key={i}
+                onClick={() => { setPopover(null); onSelect(ev); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "7px 12px", cursor: "pointer",
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <div style={{
+                  width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                  background: getCatColor(ev.category),
+                }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600, color: "#e8e6f0",
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  }}>{ev.title}</div>
+                  <div style={{ fontSize: 10, color: "#6b6890", marginTop: 1 }}>
+                    {formatTime(ev.dateStart)}{ev.dateEnd ? ` - ${formatTime(ev.dateEnd)}` : ""} · {ev.city}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <style>{`
+            @keyframes popIn {
+              from { opacity: 0; transform: scale(0.92) translateY(-4px); }
+              to   { opacity: 1; transform: scale(1) translateY(0); }
+            }
+          `}</style>
+        </>
+      )}
 
       {/* Agenda list */}
       <div style={{ marginBottom: 10 }}>
@@ -592,6 +685,7 @@ export default function NextQuest() {
     // Promo events only appear in Upcoming — never in Calendar or Archive
     if (e.isPromo && tab !== "upcoming") return false;
     if (tab === "upcoming" && isPast)  return false;
+    if (tab === "upcoming" && e.isHiddenFromUpcoming) return false;
     if (tab === "archive"  && !isPast) return false;
     if (tab === "calendar") {
       // Calendar shows all non-past events regardless of category/city filters in the grid
