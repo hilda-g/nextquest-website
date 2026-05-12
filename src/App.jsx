@@ -877,7 +877,7 @@ export default function NextQuest() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { background: #0d0d14; }
         body { background: #0d0d14; min-height: 100vh; }
-        #root { background: #0d0d14; min-height: 100vh; }
+        #root { min-height: 100vh; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #1a1a2e; }
         ::-webkit-scrollbar-thumb { background: #3d3a5c; border-radius: 2px; }
@@ -1039,8 +1039,8 @@ export default function NextQuest() {
       <div style={{
         minHeight: "100vh",
         backgroundImage: "url('/Background.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center top",
+        backgroundSize: "auto",
+        backgroundRepeat: "repeat",
         fontFamily: "'Outfit', sans-serif",
         color: "#e8e6f0",
         position: "relative",
