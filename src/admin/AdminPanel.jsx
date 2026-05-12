@@ -104,6 +104,15 @@ export default function AdminPanel() {
     toasts.success(`Status updated to ${newStatus}`);
   }
 
+  async function handleSilentPublish(event) {
+    try {
+      await ev.updateEvent(event.id, { status: "published", notify_channel: false });
+      toasts.success("Published silently (no Telegram post)");
+    } catch (err) {
+      toasts.error(`Silent publish failed: ${err.message}`);
+    }
+  }
+
   // ── Duplicate Event ──────────────────────────────────────
   async function handleDuplicate(event) {
     try {
@@ -394,6 +403,7 @@ export default function AdminPanel() {
                 onReopenRegistration={setReopenTarget}
                 onDuplicate={handleDuplicate}
                 onNextOccurrence={handleNextOccurrence}
+                onSilentPublish={handleSilentPublish}
               />
             ))
           )}

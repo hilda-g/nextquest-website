@@ -39,7 +39,7 @@ function menuItem(color) {
 }
 
 // ─── ThreeDotMenu ─────────────────────────────────────────────
-function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration, onDuplicate, onNextOccurrence }) {
+function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration, onDuplicate, onNextOccurrence, onSilentPublish }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -101,6 +101,11 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
               {event.status !== "published" && (
                 <button onClick={() => { onStatusChange(event, "published"); setOpen(false); }} style={menuItem()}>
                   ✅ Publish
+                </button>
+              )}
+              {event.status !== "published" && (
+                <button onClick={() => { onSilentPublish(event); setOpen(false); }} style={menuItem("#9ca3af")}>
+                  🔕 Silent Publish
                 </button>
               )}
               {event.status !== "pending" && (
@@ -185,7 +190,7 @@ function ThreeDotMenu({ event, isDeleted, onEdit, onDelete, onRestore, onStatusC
 }
 
 // ─── EventRow ────────────────────────────────────────────────
-export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration, onDuplicate, onNextOccurrence }) {
+export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusChange, onCreatePost, onViewEvent, onEndRegistration, onReopenRegistration, onDuplicate, onNextOccurrence, onSilentPublish }) {
   const isDeleted = !!event.deleted_at;
   const date      = event.date_start ? event.date_start.slice(0, 10) : "—";
   const cover     = event.cover_image_url;
@@ -250,6 +255,7 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
         onDelete={onDelete}
         onRestore={onRestore}
         onStatusChange={onStatusChange}
+        onSilentPublish={onSilentPublish}
         onCreatePost={onCreatePost}
         onViewEvent={onViewEvent}
         onEndRegistration={onEndRegistration}
