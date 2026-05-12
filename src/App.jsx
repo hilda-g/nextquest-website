@@ -208,6 +208,8 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
   const firstDaySlot = getFirstDayOfMonth(calYear, calMonth);
 
   // Events that fall within this month (for the agenda list), filtered by category + city
+  const todayMidnightCal = new Date();
+  todayMidnightCal.setHours(0, 0, 0, 0);
   const monthEvents = events.filter(e => {
     const s = e.dateStart;
     const end = e.dateEnd || e.dateStart;
@@ -218,7 +220,12 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
     if (cityFilters.size > 0 && !cityFilters.has(e.city))   return false;
     if (formatFilter !== "all" && e.format !== formatFilter) return false;
     return true;
-  }).sort((a, b) => a.dateStart - b.dateStart);
+  }).sort((a, b) => {
+    const aPast = a.dateStart < todayMidnightCal;
+    const bPast = b.dateStart < todayMidnightCal;
+    if (aPast !== bPast) return aPast ? 1 : -1; // past events sink to bottom
+    return a.dateStart - b.dateStart;            // within each group, chronological
+  });
 
   const isToday = (d) =>
     d === now.getDate() && calMonth === now.getMonth() && calYear === now.getFullYear();
@@ -381,9 +388,23 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {monthEvents.map(ev => (
+          {monthEvents.map((ev, idx) => {
+            const isPast = ev.dateStart < todayMidnightCal;
+            const prevIsPast = idx > 0 && monthEvents[idx - 1].dateStart < todayMidnightCal;
+            const showDivider = isPast && !prevIsPast && idx > 0;
+            return (
+              <div key={ev.id}>
+                {showDivider && (
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    margin: "4px 0 4px",
+                  }}>
+                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                    <span style={{ fontSize: 10, color: "#3a3858", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0 }}>Past</span>
+                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                  </div>
+                )}
             <div
-              key={ev.id}
               className="nq-agenda-item"
               onClick={() => onSelect(ev)}
               style={{
@@ -393,6 +414,7 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                 borderLeft: `3px solid ${getCatColor(ev.category)}`,
                 borderRadius: 10, padding: "10px 14px",
                 cursor: "pointer", transition: "background 0.15s",
+                opacity: isPast ? 0.5 : 1,
               }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
               onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
@@ -466,7 +488,9 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
                 title="Add to Google Calendar"
               >📅+</a>
             </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
