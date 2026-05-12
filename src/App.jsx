@@ -379,7 +379,13 @@ function CalendarTab({ events, lang, t, onSelect, catFilters, toggleCat, cityFil
           />
           <div style={{
             position: "fixed",
-            top: Math.min(popover.rect.bottom + 6, window.innerHeight - 260),
+            top: (() => {
+              const spaceBelow = window.innerHeight - popover.rect.bottom - 6;
+              const popoverHeight = 44 + popover.events.length * 46; // header + rows estimate
+              return spaceBelow >= popoverHeight
+                ? popover.rect.bottom + 6                          // open downward
+                : Math.max(popover.rect.top - popoverHeight - 6, 8); // flip upward
+            })(),
             left: Math.min(Math.max(popover.rect.left, 8), window.innerWidth - 240),
             zIndex: 61,
             width: 228,
