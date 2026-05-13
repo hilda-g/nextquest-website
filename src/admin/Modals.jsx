@@ -223,7 +223,7 @@ function buildPreviewText(ev) {
   ].join("\n");
 }
 
-export function CreatePostModal({ event, onConfirm, onClose }) {
+export function CreatePostModal({ event, onConfirm, onTestConfirm, onClose }) {
   const [loading, setLoading] = useState(false);
 
   async function handleSend() {
@@ -291,6 +291,22 @@ export function CreatePostModal({ event, onConfirm, onClose }) {
         >
           {loading ? "Sending…" : "✅ Send to channel"}
         </button>
+        {onTestConfirm && (
+          <button
+            onClick={onTestConfirm}
+            disabled={loading}
+            style={{
+              padding: "11px 16px", borderRadius: 11,
+              cursor: loading ? "wait" : "pointer",
+              background: "rgba(251,191,36,0.12)",
+              border: "1px solid rgba(251,191,36,0.3)",
+              color: "#fbbf24", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
+              transition: "background 0.2s", whiteSpace: "nowrap",
+            }}
+            onMouseEnter={e => { if (!loading) e.target.style.background = "rgba(251,191,36,0.22)"; }}
+            onMouseLeave={e => { if (!loading) e.target.style.background = "rgba(251,191,36,0.12)"; }}
+          >🧪 Test</button>
+        )}
         <button
           onClick={onClose}
           disabled={loading}

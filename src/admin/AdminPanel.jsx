@@ -281,6 +281,32 @@ export default function AdminPanel() {
     }
   }
 
+  // ── Create Test Post ─────────────────────────────────────
+  async function handleCreateTestPost() {
+    if (!postTarget) return;
+    if (!NOTIFIER_URL) {
+      toasts.error("VITE_NOTIFIER_URL is not configured");
+      return;
+    }
+    try {
+      const res = await fetch(`${NOTIFIER_URL}/post/test`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Secret": NOTIFIER_SECRET,
+        },
+        body: JSON.stringify({ record: postTarget }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || `HTTP ${res.status}`);
+      }
+      toasts.success("Posted to TEST channel ✓");
+    } catch (err) {
+      toasts.error(`Could not post to test: ${err.message}`);
+    }
+  }
+
   // ── Render ───────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100vh", background: "#080810", fontFamily: "'Outfit', sans-serif", color: "#e8e6f0" }}>
@@ -436,7 +462,7 @@ export default function AdminPanel() {
       <RestoreModal    event={restoreTarget} onConfirm={handleRestore}    onClose={() => setRestoreTarget(null)} />
       <EndRegistrationModal  event={endRegTarget}  onConfirm={handleEndRegistration}  onClose={() => setEndRegTarget(null)} />
       <ReopenRegistrationModal event={reopenTarget} onConfirm={handleReopenRegistration} onClose={() => setReopenTarget(null)} />
-      <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onClose={() => setPostTarget(null)}    />
+      <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onTestConfirm={handleCreateTestPost} onClose={() => setPostTarget(null)}    />
       <ViewEventModal  event={viewTarget}                                 onClose={() => setViewTarget(null)}    />
 
       {/* ── Toasts ── */}
