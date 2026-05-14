@@ -223,7 +223,7 @@ function buildPreviewText(ev) {
   ].join("\n");
 }
 
-export function CreatePostModal({ event, onConfirm, onTestConfirm, onClose }) {
+export function CreatePostModal({ event, onConfirm, onTestConfirm, onFBPost, onClose }) {
   const [loading, setLoading] = useState(false);
 
   async function handleSend() {
@@ -274,7 +274,7 @@ export function CreatePostModal({ event, onConfirm, onTestConfirm, onClose }) {
       </div>
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: 10 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button
           onClick={handleSend}
           disabled={loading}
@@ -307,6 +307,22 @@ export function CreatePostModal({ event, onConfirm, onTestConfirm, onClose }) {
             onMouseLeave={e => { if (!loading) e.target.style.background = "rgba(251,191,36,0.12)"; }}
           >🧪 Test</button>
         )}
+        {onFBPost && (
+          <button
+            onClick={onFBPost}
+            disabled={loading}
+            style={{
+              padding: "11px 16px", borderRadius: 11,
+              cursor: loading ? "wait" : "pointer",
+              background: "rgba(24,119,242,0.12)",
+              border: "1px solid rgba(24,119,242,0.35)",
+              color: "#5b8dee", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
+              transition: "background 0.2s", whiteSpace: "nowrap",
+            }}
+            onMouseEnter={e => { if (!loading) e.target.style.background = "rgba(24,119,242,0.22)"; }}
+            onMouseLeave={e => { if (!loading) e.target.style.background = "rgba(24,119,242,0.12)"; }}
+          >📘 FB Post</button>
+        )}
         <button
           onClick={onClose}
           disabled={loading}
@@ -316,6 +332,157 @@ export function CreatePostModal({ event, onConfirm, onTestConfirm, onClose }) {
             color: "#6b6890", fontSize: 14, fontFamily: "inherit",
           }}
         >❌ Cancel</button>
+      </div>
+    </ConfirmModal>
+  );
+}
+
+// ─── FB Post Modal ────────────────────────────────────────────
+
+const FB_HASHTAGS = {
+  boardgames: "#boardgames #tabletopgames #boardgamescyprus",
+  rpg:        "#ttrpg #tabletoproleplay #rpg #dnd",
+  larp:       "#larp #larpcyprus #liveactionroleplay",
+  festival:   "#festival #geekfestival #cyprusfestival",
+  cosplay:    "#cosplay #cosplaycyprus #cosplayer",
+  lectures:   "#lectures #geektalks #scienceandtech",
+  market:     "#market #geekmarket #tabletopmarket",
+  other:      "#gaming #geekculture #tabletop",
+};
+
+const FB_MONTHS   = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const FB_WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+function fbFormatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso.slice(0, 16).replace(" ", "T"));
+  const weekday = FB_WEEKDAYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
+  const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${weekday}, ${d.getDate()} ${FB_MONTHS[d.getMonth()]} · ${time}`;
+}
+
+function fbFormatDateRange(startIso, endIso) {
+  if (!endIso) return fbFormatDate(startIso);
+  const s = new Date(startIso.slice(0, 16).replace(" ", "T"));
+  const e = new Date(endIso.slice(0, 16).replace(" ", "T"));
+  if (s.toDateString() === e.toDateString()) {
+    const endTime = `${String(e.getHours()).padStart(2, "0")}:${String(e.getMinutes()).padStart(2, "0")}`;
+    return `${fbFormatDate(startIso)} – ${endTime}`;
+  }
+  return `${fbFormatDate(startIso)} → ${fbFormatDate(endIso)}`;
+}
+
+function buildFBPostText(ev) {
+  if (!ev) return "";
+  const lines = [];
+
+  lines.push(`📌 ${ev.title.toUpperCase()}`);
+  lines.push("");
+
+  const desc = (ev.description || "").trim();
+  if (desc) {
+    lines.push(desc.length > 400 ? desc.slice(0, 400) + "…" : desc);
+    lines.push("");
+  }
+
+  lines.push(`📅 ${fbFormatDateRange(ev.date_start, ev.date_end || null)}`);
+
+  const loc = [ev.location_city, ev.location_address].filter(Boolean).join(" · ");
+  if (loc) lines.push(`📍 ${loc}`);
+
+  const langs = ev.event_languages;
+  if (langs && langs.length > 0) lines.push(`🗣 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
+
+  const org = ev.organizer_username || ev.organizer_name || "";
+  if (org) lines.push(`🎪 ${org.startsWith("@") ? org : `@${org}`}`);
+
+  const regUrl = ev.external_url || (ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null);
+  if (regUrl) {
+    lines.push(`📋 Register: ${regUrl}`);
+  } else if (ev.max_participants) {
+    lines.push(`📋 Contact the organizer to register · 👥 ${ev.max_participants} spots`);
+  }
+
+  lines.push("");
+  lines.push(`🌐 ${SITE_URL}/events/${ev.id}`);
+  lines.push("");
+
+  const catTags = FB_HASHTAGS[ev.category] || FB_HASHTAGS.other;
+  lines.push(`${catTags} #nextquest #cyprus #geekscyprus`);
+
+  return lines.join("\n");
+}
+
+export function FBPostModal({ event, onClose }) {
+  const [copied, setCopied] = useState(false);
+
+  const postText = buildFBPostText(event);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(postText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <ConfirmModal visible={!!event} onClose={onClose}>
+      {/* Icon + title */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+          background: "rgba(24,119,242,0.15)", border: "1px solid rgba(24,119,242,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+        }}>📘</div>
+        <div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff", lineHeight: 1.2 }}>
+            Facebook Post
+          </div>
+          <div style={{ fontSize: 12, color: "#6b6890", marginTop: 3 }}>
+            Copy and paste into Facebook manually
+          </div>
+        </div>
+      </div>
+
+      {/* Cover image */}
+      {event?.cover_image_url && (
+        <div style={{ marginBottom: 14, borderRadius: 12, overflow: "hidden", maxHeight: 160, border: "1px solid rgba(255,255,255,0.06)" }}>
+          <img src={event.cover_image_url} alt="cover" style={{ width: "100%", objectFit: "cover", maxHeight: 160, display: "block" }} />
+        </div>
+      )}
+
+      {/* Post text preview */}
+      <div style={{
+        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 12, padding: "14px 16px", marginBottom: 20,
+        fontFamily: "monospace", fontSize: 12, color: "#a09cbc",
+        lineHeight: 1.65, whiteSpace: "pre-wrap", maxHeight: 220, overflowY: "auto",
+      }}>
+        {postText}
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 10 }}>
+        <button
+          onClick={handleCopy}
+          style={{
+            flex: 1, padding: "11px 0", borderRadius: 11, cursor: "pointer",
+            background: copied ? "rgba(16,185,129,0.85)" : "rgba(24,119,242,0.85)",
+            border: `1px solid ${copied ? "rgba(16,185,129,0.6)" : "rgba(24,119,242,0.6)"}`,
+            color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
+            transition: "background 0.2s, border-color 0.2s",
+          }}
+        >
+          {copied ? "✅ Copied!" : "📋 Copy post"}
+        </button>
+        <button
+          onClick={onClose}
+          style={{
+            padding: "11px 20px", borderRadius: 11, cursor: "pointer",
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+            color: "#6b6890", fontSize: 14, fontFamily: "inherit",
+          }}
+        >❌ Close</button>
       </div>
     </ConfirmModal>
   );
