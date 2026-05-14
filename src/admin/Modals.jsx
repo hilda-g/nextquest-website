@@ -223,7 +223,7 @@ function buildPreviewText(ev) {
   ].join("\n");
 }
 
-export function CreatePostModal({ event, onConfirm, onTestConfirm, onFBPost, onClose }) {
+export function CreatePostModal({ event, onConfirm, onTestConfirm, onFBPost, onWAPost, onClose }) {
   const [loading, setLoading] = useState(false);
 
   async function handleSend() {
@@ -323,6 +323,22 @@ export function CreatePostModal({ event, onConfirm, onTestConfirm, onFBPost, onC
             onMouseLeave={e => { if (!loading) e.target.style.background = "rgba(24,119,242,0.12)"; }}
           >📘 FB Post</button>
         )}
+        {onWAPost && (
+          <button
+            onClick={onWAPost}
+            disabled={loading}
+            style={{
+              padding: "11px 16px", borderRadius: 11,
+              cursor: loading ? "wait" : "pointer",
+              background: "rgba(37,211,102,0.12)",
+              border: "1px solid rgba(37,211,102,0.35)",
+              color: "#25d366", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
+              transition: "background 0.2s", whiteSpace: "nowrap",
+            }}
+            onMouseEnter={e => { if (!loading) e.target.style.background = "rgba(37,211,102,0.22)"; }}
+            onMouseLeave={e => { if (!loading) e.target.style.background = "rgba(37,211,102,0.12)"; }}
+          >💬 WA Post</button>
+        )}
         <button
           onClick={onClose}
           disabled={loading}
@@ -337,7 +353,7 @@ export function CreatePostModal({ event, onConfirm, onTestConfirm, onFBPost, onC
   );
 }
 
-// ─── FB Post Modal ────────────────────────────────────────────
+// ─── Shared helpers ───────────────────────────────────────────
 
 const FB_HASHTAGS = {
   boardgames: "#boardgames #tabletopgames #boardgamescyprus",
@@ -350,7 +366,7 @@ const FB_HASHTAGS = {
   other:      "#gaming #geekculture #tabletop",
 };
 
-const FB_CAT_LABELS = {
+const CAT_LABELS = {
   boardgames: "🎲 Board Games",
   rpg:        "🧙 Tabletop RPG",
   larp:       "⚔️ LARP",
@@ -361,33 +377,40 @@ const FB_CAT_LABELS = {
   other:      "🃏 Other",
 };
 
-const FB_MONTHS   = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const FB_WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const EN_MONTHS   = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const EN_WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
-function fbFormatDate(iso) {
+function enFormatDate(iso) {
   if (!iso) return "";
   const d = new Date(iso.slice(0, 16).replace(" ", "T"));
-  const weekday = FB_WEEKDAYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
+  const weekday = EN_WEEKDAYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
   const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  return `${weekday}, ${d.getDate()} ${FB_MONTHS[d.getMonth()]} · ${time}`;
+  return `${weekday}, ${d.getDate()} ${EN_MONTHS[d.getMonth()]} · ${time}`;
 }
 
-function fbFormatDateRange(startIso, endIso) {
-  if (!endIso) return fbFormatDate(startIso);
+function enFormatDateRange(startIso, endIso) {
+  if (!endIso) return enFormatDate(startIso);
   const s = new Date(startIso.slice(0, 16).replace(" ", "T"));
   const e = new Date(endIso.slice(0, 16).replace(" ", "T"));
   if (s.toDateString() === e.toDateString()) {
     const endTime = `${String(e.getHours()).padStart(2, "0")}:${String(e.getMinutes()).padStart(2, "0")}`;
-    return `${fbFormatDate(startIso)} – ${endTime}`;
+    return `${enFormatDate(startIso)} – ${endTime}`;
   }
-  return `${fbFormatDate(startIso)} → ${fbFormatDate(endIso)}`;
+  return `${s.getDate()} ${EN_MONTHS[s.getMonth()]} - ${e.getDate()} ${EN_MONTHS[e.getMonth()]}, ${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")} - ${String(e.getHours()).padStart(2,"0")}:${String(e.getMinutes()).padStart(2,"0")}`;
 }
+
+function buildEventLink(ev, lang = "en") {
+  if (!ev) return "";
+  return `${SITE_URL}/events/${ev.id}?lang=${lang}`;
+}
+
+// ─── FB Post Modal ────────────────────────────────────────────
 
 function buildFBPostText(ev) {
   if (!ev) return "";
   const lines = [];
 
-  const catLabel = FB_CAT_LABELS[ev.category] || "";
+  const catLabel = CAT_LABELS[ev.category] || "";
   lines.push(catLabel
     ? `📌 ${ev.title.toUpperCase()} (${catLabel})`
     : `📌 ${ev.title.toUpperCase()}`
@@ -400,7 +423,7 @@ function buildFBPostText(ev) {
     lines.push("");
   }
 
-  lines.push(`📅 ${fbFormatDateRange(ev.date_start, ev.date_end || null)}`);
+  lines.push(`📅 ${enFormatDateRange(ev.date_start, ev.date_end || null)}`);
 
   const loc = [ev.location_city, ev.location_address].filter(Boolean).join(" · ");
   if (loc) lines.push(`📍 ${loc}`);
@@ -425,17 +448,12 @@ function buildFBPostText(ev) {
   return lines.join("\n");
 }
 
-function buildFBEventLink(ev) {
-  if (!ev) return "";
-  return `${SITE_URL}/events/${ev.id}`;
-}
-
 export function FBPostModal({ event, onClose }) {
   const [copiedPost, setCopiedPost] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const postText  = buildFBPostText(event);
-  const eventLink = buildFBEventLink(event);
+  const eventLink = buildEventLink(event, "en");
 
   function handleCopyPost() {
     navigator.clipboard.writeText(postText).then(() => {
@@ -453,7 +471,6 @@ export function FBPostModal({ event, onClose }) {
 
   return (
     <ConfirmModal visible={!!event} onClose={onClose}>
-      {/* Icon + title */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
         <div style={{
           width: 48, height: 48, borderRadius: 14, flexShrink: 0,
@@ -461,23 +478,17 @@ export function FBPostModal({ event, onClose }) {
           display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
         }}>📘</div>
         <div>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff", lineHeight: 1.2 }}>
-            Facebook Post
-          </div>
-          <div style={{ fontSize: 12, color: "#6b6890", marginTop: 3 }}>
-            Copy and paste into Facebook manually
-          </div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff", lineHeight: 1.2 }}>Facebook Post</div>
+          <div style={{ fontSize: 12, color: "#6b6890", marginTop: 3 }}>Copy and paste into Facebook manually</div>
         </div>
       </div>
 
-      {/* Cover image */}
       {event?.cover_image_url && (
         <div style={{ marginBottom: 14, borderRadius: 12, overflow: "hidden", maxHeight: 160, border: "1px solid rgba(255,255,255,0.06)" }}>
           <img src={event.cover_image_url} alt="cover" style={{ width: "100%", objectFit: "cover", maxHeight: 160, display: "block" }} />
         </div>
       )}
 
-      {/* Post text box */}
       <div style={{
         background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
         borderRadius: 12, padding: "14px 16px", marginBottom: 10,
@@ -487,7 +498,6 @@ export function FBPostModal({ event, onClose }) {
         {postText}
       </div>
 
-      {/* Link box */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
@@ -495,47 +505,155 @@ export function FBPostModal({ event, onClose }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 13, color: "#6b6890", flexShrink: 0 }}>Learn more:</span>
-          <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5b8dee", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {eventLink}
-          </span>
+          <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5b8dee", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eventLink}</span>
         </div>
-        <button
-          onClick={handleCopyLink}
-          style={{
-            flexShrink: 0, padding: "5px 12px", borderRadius: 8, cursor: "pointer",
-            background: copiedLink ? "rgba(16,185,129,0.15)" : "rgba(24,119,242,0.12)",
-            border: `1px solid ${copiedLink ? "rgba(16,185,129,0.4)" : "rgba(24,119,242,0.3)"}`,
-            color: copiedLink ? "#6ee7b7" : "#5b8dee",
-            fontSize: 12, fontWeight: 700, fontFamily: "inherit",
-            transition: "all 0.2s", whiteSpace: "nowrap",
-          }}
-        >
-          {copiedLink ? "✅ Copied" : "📋 Copy"}
-        </button>
+        <button onClick={handleCopyLink} style={{
+          flexShrink: 0, padding: "5px 12px", borderRadius: 8, cursor: "pointer",
+          background: copiedLink ? "rgba(16,185,129,0.15)" : "rgba(24,119,242,0.12)",
+          border: `1px solid ${copiedLink ? "rgba(16,185,129,0.4)" : "rgba(24,119,242,0.3)"}`,
+          color: copiedLink ? "#6ee7b7" : "#5b8dee",
+          fontSize: 12, fontWeight: 700, fontFamily: "inherit", transition: "all 0.2s", whiteSpace: "nowrap",
+        }}>{copiedLink ? "✅ Copied" : "📋 Copy"}</button>
       </div>
 
-      {/* Actions */}
       <div style={{ display: "flex", gap: 10 }}>
-        <button
-          onClick={handleCopyPost}
-          style={{
-            flex: 1, padding: "11px 0", borderRadius: 11, cursor: "pointer",
-            background: copiedPost ? "rgba(16,185,129,0.85)" : "rgba(24,119,242,0.85)",
-            border: `1px solid ${copiedPost ? "rgba(16,185,129,0.6)" : "rgba(24,119,242,0.6)"}`,
-            color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
-            transition: "background 0.2s, border-color 0.2s",
-          }}
-        >
-          {copiedPost ? "✅ Copied!" : "📋 Copy post"}
-        </button>
-        <button
-          onClick={onClose}
-          style={{
-            padding: "11px 20px", borderRadius: 11, cursor: "pointer",
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
-            color: "#6b6890", fontSize: 14, fontFamily: "inherit",
-          }}
-        >❌ Close</button>
+        <button onClick={handleCopyPost} style={{
+          flex: 1, padding: "11px 0", borderRadius: 11, cursor: "pointer",
+          background: copiedPost ? "rgba(16,185,129,0.85)" : "rgba(24,119,242,0.85)",
+          border: `1px solid ${copiedPost ? "rgba(16,185,129,0.6)" : "rgba(24,119,242,0.6)"}`,
+          color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit", transition: "background 0.2s, border-color 0.2s",
+        }}>{copiedPost ? "✅ Copied!" : "📋 Copy post"}</button>
+        <button onClick={onClose} style={{
+          padding: "11px 20px", borderRadius: 11, cursor: "pointer",
+          background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+          color: "#6b6890", fontSize: 14, fontFamily: "inherit",
+        }}>❌ Close</button>
+      </div>
+    </ConfirmModal>
+  );
+}
+
+// ─── WhatsApp Post Modal ──────────────────────────────────────
+
+function buildWAPostText(ev) {
+  if (!ev) return "";
+  const lines = [];
+
+  const catLabel = CAT_LABELS[ev.category] || "";
+  lines.push(catLabel
+    ? `*${ev.title}* ${catLabel}`
+    : `*${ev.title}*`
+  );
+  lines.push("");
+
+  const desc = (ev.description || "").trim();
+  // Trim to ~280 chars for mobile readability
+  if (desc) {
+    lines.push(desc.length > 280 ? desc.slice(0, 280) + "…" : desc);
+    lines.push("");
+  }
+
+  lines.push(`📅 ${enFormatDateRange(ev.date_start, ev.date_end || null)}`);
+
+  const loc = [ev.location_city, ev.location_address].filter(Boolean).join(" · ");
+  if (loc) lines.push(`📍 ${loc}`);
+
+  const langs = ev.event_languages;
+  if (langs && langs.length > 0) lines.push(`🗣 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
+
+  const org = ev.organizer_username || ev.organizer_name || "";
+  if (org) lines.push(`🎪 ${org.startsWith("@") ? org : `@${org}`}`);
+
+  const regUrl = ev.external_url || (ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null);
+  if (regUrl) {
+    lines.push(`📋 Register: ${regUrl}`);
+  } else if (ev.max_participants) {
+    lines.push(`📋 Contact the organizer · 👥 ${ev.max_participants} spots`);
+  }
+
+  return lines.join("\n");
+}
+
+export function WAPostModal({ event, onClose }) {
+  const [copiedPost, setCopiedPost] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const postText  = buildWAPostText(event);
+  const eventLink = buildEventLink(event, "en");
+
+  function handleCopyPost() {
+    navigator.clipboard.writeText(postText).then(() => {
+      setCopiedPost(true);
+      setTimeout(() => setCopiedPost(false), 2000);
+    });
+  }
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(eventLink).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    });
+  }
+
+  return (
+    <ConfirmModal visible={!!event} onClose={onClose}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+          background: "rgba(37,211,102,0.15)", border: "1px solid rgba(37,211,102,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+        }}>💬</div>
+        <div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff", lineHeight: 1.2 }}>WhatsApp Post</div>
+          <div style={{ fontSize: 12, color: "#6b6890", marginTop: 3 }}>Copy and paste into WhatsApp manually</div>
+        </div>
+      </div>
+
+      {event?.cover_image_url && (
+        <div style={{ marginBottom: 14, borderRadius: 12, overflow: "hidden", maxHeight: 160, border: "1px solid rgba(255,255,255,0.06)" }}>
+          <img src={event.cover_image_url} alt="cover" style={{ width: "100%", objectFit: "cover", maxHeight: 160, display: "block" }} />
+        </div>
+      )}
+
+      <div style={{
+        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 12, padding: "14px 16px", marginBottom: 10,
+        fontFamily: "monospace", fontSize: 12, color: "#a09cbc",
+        lineHeight: 1.65, whiteSpace: "pre-wrap", maxHeight: 220, overflowY: "auto",
+      }}>
+        {postText}
+      </div>
+
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 12, padding: "10px 14px", marginBottom: 20,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <span style={{ fontSize: 13, color: "#6b6890", flexShrink: 0 }}>Link:</span>
+          <span style={{ fontFamily: "monospace", fontSize: 12, color: "#25d366", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eventLink}</span>
+        </div>
+        <button onClick={handleCopyLink} style={{
+          flexShrink: 0, padding: "5px 12px", borderRadius: 8, cursor: "pointer",
+          background: copiedLink ? "rgba(16,185,129,0.15)" : "rgba(37,211,102,0.12)",
+          border: `1px solid ${copiedLink ? "rgba(16,185,129,0.4)" : "rgba(37,211,102,0.3)"}`,
+          color: copiedLink ? "#6ee7b7" : "#25d366",
+          fontSize: 12, fontWeight: 700, fontFamily: "inherit", transition: "all 0.2s", whiteSpace: "nowrap",
+        }}>{copiedLink ? "✅ Copied" : "📋 Copy"}</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={handleCopyPost} style={{
+          flex: 1, padding: "11px 0", borderRadius: 11, cursor: "pointer",
+          background: copiedPost ? "rgba(16,185,129,0.85)" : "rgba(37,211,102,0.85)",
+          border: `1px solid ${copiedPost ? "rgba(16,185,129,0.6)" : "rgba(37,211,102,0.6)"}`,
+          color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit", transition: "background 0.2s, border-color 0.2s",
+        }}>{copiedPost ? "✅ Copied!" : "📋 Copy post"}</button>
+        <button onClick={onClose} style={{
+          padding: "11px 20px", borderRadius: 11, cursor: "pointer",
+          background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+          color: "#6b6890", fontSize: 14, fontFamily: "inherit",
+        }}>❌ Close</button>
       </div>
     </ConfirmModal>
   );

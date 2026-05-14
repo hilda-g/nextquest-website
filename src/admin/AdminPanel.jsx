@@ -5,7 +5,7 @@ import { useToasts, ToastContainer } from "./Toast.jsx";
 import LoginScreen from "./LoginScreen.jsx";
 import EventDrawer from "./EventDrawer.jsx";
 import EventRow    from "./EventRow.jsx";
-import { DeleteModal, RestoreModal, EndRegistrationModal, ReopenRegistrationModal, CreatePostModal, FBPostModal, ViewEventModal } from "./Modals.jsx";
+import { DeleteModal, RestoreModal, EndRegistrationModal, ReopenRegistrationModal, CreatePostModal, FBPostModal, WAPostModal, ViewEventModal } from "./Modals.jsx";
 
 // channel_notifier URL + secret come from .env
 // Add to your .env:
@@ -45,6 +45,7 @@ export default function AdminPanel() {
   const [reopenTarget,  setReopenTarget]  = useState(null);  // event to re-open registration
   const [viewTarget,    setViewTarget]    = useState(null);  // event to view
   const [fbPostTarget,  setFbPostTarget]  = useState(null);  // event for FB post generator
+  const [waPostTarget,  setWaPostTarget]  = useState(null);  // event for WA post generator
 
   // ── Filter events ────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -463,8 +464,9 @@ export default function AdminPanel() {
       <RestoreModal    event={restoreTarget} onConfirm={handleRestore}    onClose={() => setRestoreTarget(null)} />
       <EndRegistrationModal  event={endRegTarget}  onConfirm={handleEndRegistration}  onClose={() => setEndRegTarget(null)} />
       <ReopenRegistrationModal event={reopenTarget} onConfirm={handleReopenRegistration} onClose={() => setReopenTarget(null)} />
-      <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onTestConfirm={handleCreateTestPost} onFBPost={() => { setFbPostTarget(postTarget); setPostTarget(null); }} onClose={() => setPostTarget(null)}    />
+      <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onTestConfirm={handleCreateTestPost} onFBPost={() => { setFbPostTarget(postTarget); setPostTarget(null); }} onWAPost={() => { setWaPostTarget(postTarget); setPostTarget(null); }} onClose={() => setPostTarget(null)}    />
       <FBPostModal     event={fbPostTarget}  onClose={() => setFbPostTarget(null)} />
+      <WAPostModal     event={waPostTarget}  onClose={() => setWaPostTarget(null)} />
       <ViewEventModal  event={viewTarget}                                 onClose={() => setViewTarget(null)}    />
 
       {/* ── Toasts ── */}
