@@ -342,8 +342,8 @@ function buildFBPostText(ev) {
   const fmtLabel = ev.format === "official" ? "🎉 Official" : ev.format === "community" ? "✨ Community" : ev.format === "private" ? "🔒 Private" : "";
   const brackets = [catLabel, fmtLabel].filter(Boolean).join(", ");
   lines.push(brackets
-    ? `📌 ${ev.title.toUpperCase()} (${brackets})`
-    : `📌 ${ev.title.toUpperCase()}`
+    ? `${ev.title.toUpperCase()} (${brackets})`
+    : `${ev.title.toUpperCase()}`
   );
   lines.push("");
 
@@ -421,7 +421,7 @@ export function FBPostModal({ event, onClose }) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "10px 14px", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 13, color: "#6b6890", flexShrink: 0 }}>Learn more:</span>
+          <span style={{ fontSize: 13, color: "#6b6890", flexShrink: 0 }}>Learn more 🔥</span>
           <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5b8dee", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eventLink}</span>
         </div>
         <button onClick={handleCopyLink} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: copiedLink ? "rgba(16,185,129,0.15)" : "rgba(24,119,242,0.12)", border: `1px solid ${copiedLink ? "rgba(16,185,129,0.4)" : "rgba(24,119,242,0.3)"}`, color: copiedLink ? "#6ee7b7" : "#5b8dee", fontSize: 12, fontWeight: 700, fontFamily: "inherit", transition: "all 0.2s", whiteSpace: "nowrap" }}>
