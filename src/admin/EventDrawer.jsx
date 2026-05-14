@@ -18,6 +18,9 @@ const CITIES = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Other"];
 
 const EMPTY_FORM = {
   title:            "",
+  title_ru:         "",
+  title_el:         "",
+  title_uk:         "",
   description:      "",
   description_ru:   "",
   description_el:   "",
@@ -280,6 +283,9 @@ export default function EventDrawer({ event, onSave, onClose }) {
     const initial = event?.id
       ? {
           title:            event.title            || "",
+          title_ru:         event.title_ru         || "",
+          title_el:         event.title_el         || "",
+          title_uk:         event.title_uk         || "",
           description:      event.description      || "",
           description_ru:   event.description_ru   || "",
           description_el:   event.description_el   || "",
@@ -403,12 +409,13 @@ export default function EventDrawer({ event, onSave, onClose }) {
     try {
       const desc = form.description.trim();
 
-      // Auto-translate whenever description is present and any translation is missing
-      let desc_ru = form.description_ru.trim() || null;
-      let desc_el = form.description_el.trim() || null;
-      let desc_uk = form.description_uk.trim() || null;
+      // Auto-translate title whenever any translation is missing
+      let title_ru = form.title_ru.trim() || null;
+      let title_el = form.title_el.trim() || null;
+      let title_uk = form.title_uk.trim() || null;
 
-      if (desc && (!desc_ru || !desc_el || !desc_uk)) {
+      const titleText = form.title.trim();
+      if (titleText && (!title_ru || !title_el || !title_uk)) {
         async function gtranslate(text, lang) {
           try {
             const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`;
@@ -418,6 +425,22 @@ export default function EventDrawer({ event, onSave, onClose }) {
             return data[0].map(c => c[0]).join("");
           } catch { return null; }
         }
+        const [ru, el, uk] = await Promise.all([
+          title_ru ? Promise.resolve(title_ru) : gtranslate(titleText, "ru"),
+          title_el ? Promise.resolve(title_el) : gtranslate(titleText, "el"),
+          title_uk ? Promise.resolve(title_uk) : gtranslate(titleText, "uk"),
+        ]);
+        title_ru = ru || title_ru;
+        title_el = el || title_el;
+        title_uk = uk || title_uk;
+      }
+
+      // Auto-translate whenever description is present and any translation is missing
+      let desc_ru = form.description_ru.trim() || null;
+      let desc_el = form.description_el.trim() || null;
+      let desc_uk = form.description_uk.trim() || null;
+
+      if (desc && (!desc_ru || !desc_el || !desc_uk)) {
         const [ru, el, uk] = await Promise.all([
           desc_ru ? Promise.resolve(desc_ru) : gtranslate(desc, "ru"),
           desc_el ? Promise.resolve(desc_el) : gtranslate(desc, "el"),
@@ -430,6 +453,9 @@ export default function EventDrawer({ event, onSave, onClose }) {
 
       const payload = {
         title:            form.title.trim(),
+        title_ru:         title_ru,
+        title_el:         title_el,
+        title_uk:         title_uk,
         description:      desc,
         description_ru:   desc_ru,
         description_el:   desc_el,
@@ -570,25 +596,41 @@ export default function EventDrawer({ event, onSave, onClose }) {
           {activeTab === "translations" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
               <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", color: "#9996b8", fontSize: 12, lineHeight: 1.6 }}>
-                🤖 These translations are generated automatically when you publish an event via the bot. You can review and edit them here if needed.
+                🤖 These translations are generated automatically when you save. You can review and edit them here.
               </div>
               {[
-                ["description_ru", "🇷🇺 Russian"],
-                ["description_el", "🇬🇷 Greek"],
-                ["description_uk", "🇺🇦 Ukrainian"],
-              ].map(([field, langLabel]) => (
-                <div key={field}>
-                  <span style={label}>{langLabel}</span>
-                  <textarea
-                    style={{ ...inputStyle(), minHeight: 110, resize: "vertical" }}
-                    value={form[field]}
-                    onChange={e => set(field, e.target.value)}
-                    placeholder={`Translation will appear here after publishing…`}
-                    onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
-                    onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
-                  />
-                  <div style={{ fontSize: 11, color: "#4a4868", marginTop: 4, textAlign: "right" }}>
-                    {form[field].length} chars
+                ["ru", "🇷🇺 Russian",    "title_ru",  "description_ru"],
+                ["el", "🇬🇷 Greek",      "title_el",  "description_el"],
+                ["uk", "🇺🇦 Ukrainian",  "title_uk",  "description_uk"],
+              ].map(([, langLabel, titleField, descField]) => (
+                <div key={descField} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#a09cbc" }}>{langLabel}</div>
+
+                  <div>
+                    <span style={label}>Title</span>
+                    <input
+                      style={inputStyle()}
+                      value={form[titleField]}
+                      onChange={e => set(titleField, e.target.value)}
+                      placeholder="Title translation…"
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                    />
+                  </div>
+
+                  <div>
+                    <span style={label}>Description</span>
+                    <textarea
+                      style={{ ...inputStyle(), minHeight: 110, resize: "vertical" }}
+                      value={form[descField]}
+                      onChange={e => set(descField, e.target.value)}
+                      placeholder="Description translation…"
+                      onFocus={ev => ev.target.style.borderColor = "rgba(167,139,250,0.5)"}
+                      onBlur={ev  => ev.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                    />
+                    <div style={{ fontSize: 11, color: "#4a4868", marginTop: 4, textAlign: "right" }}>
+                      {form[descField].length} chars
+                    </div>
                   </div>
                 </div>
               ))}
