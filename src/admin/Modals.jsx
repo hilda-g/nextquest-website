@@ -350,6 +350,17 @@ const FB_HASHTAGS = {
   other:      "#gaming #geekculture #tabletop",
 };
 
+const FB_CAT_LABELS = {
+  boardgames: "🎲 Board Games",
+  rpg:        "🧙 Tabletop RPG",
+  larp:       "⚔️ LARP",
+  festival:   "🎪 Festival",
+  cosplay:    "👽 Cosplay",
+  lectures:   "🔭 Lectures",
+  market:     "🛍️ Market",
+  other:      "🃏 Other",
+};
+
 const FB_MONTHS   = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const FB_WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
@@ -376,7 +387,11 @@ function buildFBPostText(ev) {
   if (!ev) return "";
   const lines = [];
 
-  lines.push(`📌 ${ev.title.toUpperCase()}`);
+  const catLabel = FB_CAT_LABELS[ev.category] || "";
+  lines.push(catLabel
+    ? `📌 ${ev.title.toUpperCase()} (${catLabel})`
+    : `📌 ${ev.title.toUpperCase()}`
+  );
   lines.push("");
 
   const desc = (ev.description || "").trim();
@@ -404,24 +419,35 @@ function buildFBPostText(ev) {
   }
 
   lines.push("");
-  lines.push(`🌐 ${SITE_URL}/events/${ev.id}`);
-  lines.push("");
-
   const catTags = FB_HASHTAGS[ev.category] || FB_HASHTAGS.other;
   lines.push(`${catTags} #nextquest #cyprus #geekscyprus`);
 
   return lines.join("\n");
 }
 
+function buildFBEventLink(ev) {
+  if (!ev) return "";
+  return `${SITE_URL}/events/${ev.id}`;
+}
+
 export function FBPostModal({ event, onClose }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedPost, setCopiedPost] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
-  const postText = buildFBPostText(event);
+  const postText  = buildFBPostText(event);
+  const eventLink = buildFBEventLink(event);
 
-  function handleCopy() {
+  function handleCopyPost() {
     navigator.clipboard.writeText(postText).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedPost(true);
+      setTimeout(() => setCopiedPost(false), 2000);
+    });
+  }
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(eventLink).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     });
   }
 
@@ -451,29 +477,56 @@ export function FBPostModal({ event, onClose }) {
         </div>
       )}
 
-      {/* Post text preview */}
+      {/* Post text box */}
       <div style={{
         background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: 12, padding: "14px 16px", marginBottom: 20,
+        borderRadius: 12, padding: "14px 16px", marginBottom: 10,
         fontFamily: "monospace", fontSize: 12, color: "#a09cbc",
         lineHeight: 1.65, whiteSpace: "pre-wrap", maxHeight: 220, overflowY: "auto",
       }}>
         {postText}
       </div>
 
+      {/* Link box */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 12, padding: "10px 14px", marginBottom: 20,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <span style={{ fontSize: 13, color: "#6b6890", flexShrink: 0 }}>Learn more:</span>
+          <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5b8dee", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {eventLink}
+          </span>
+        </div>
+        <button
+          onClick={handleCopyLink}
+          style={{
+            flexShrink: 0, padding: "5px 12px", borderRadius: 8, cursor: "pointer",
+            background: copiedLink ? "rgba(16,185,129,0.15)" : "rgba(24,119,242,0.12)",
+            border: `1px solid ${copiedLink ? "rgba(16,185,129,0.4)" : "rgba(24,119,242,0.3)"}`,
+            color: copiedLink ? "#6ee7b7" : "#5b8dee",
+            fontSize: 12, fontWeight: 700, fontFamily: "inherit",
+            transition: "all 0.2s", whiteSpace: "nowrap",
+          }}
+        >
+          {copiedLink ? "✅ Copied" : "📋 Copy"}
+        </button>
+      </div>
+
       {/* Actions */}
       <div style={{ display: "flex", gap: 10 }}>
         <button
-          onClick={handleCopy}
+          onClick={handleCopyPost}
           style={{
             flex: 1, padding: "11px 0", borderRadius: 11, cursor: "pointer",
-            background: copied ? "rgba(16,185,129,0.85)" : "rgba(24,119,242,0.85)",
-            border: `1px solid ${copied ? "rgba(16,185,129,0.6)" : "rgba(24,119,242,0.6)"}`,
+            background: copiedPost ? "rgba(16,185,129,0.85)" : "rgba(24,119,242,0.85)",
+            border: `1px solid ${copiedPost ? "rgba(16,185,129,0.6)" : "rgba(24,119,242,0.6)"}`,
             color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "inherit",
             transition: "background 0.2s, border-color 0.2s",
           }}
         >
-          {copied ? "✅ Copied!" : "📋 Copy post"}
+          {copiedPost ? "✅ Copied!" : "📋 Copy post"}
         </button>
         <button
           onClick={onClose}
