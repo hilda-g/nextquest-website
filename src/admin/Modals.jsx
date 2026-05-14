@@ -359,16 +359,16 @@ function buildFBPostText(ev) {
   if (loc) lines.push(`📍 ${loc}`);
 
   const langs = ev.event_languages;
-  if (langs && langs.length > 0) lines.push(`🗣 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
+  if (langs && langs.length > 0) lines.push(`🔹 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
 
   const org = ev.organizer_username || ev.organizer_name || "";
-  if (org) lines.push(`🎪 ${org.startsWith("@") ? org : `@${org}`}`);
+  if (org) lines.push(`🔹 Organizer: ${org.startsWith("@") ? org.slice(1) : org}`);
 
   const regUrl = ev.external_url || (ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null);
   if (regUrl) {
-    lines.push(`📋 Register: ${regUrl}`);
+    lines.push(`🔹 Register: ${regUrl}`);
   } else if (ev.max_participants) {
-    lines.push(`📋 Contact the organizer to register · 👥 ${ev.max_participants} spots`);
+    lines.push(`🔹 Contact the organizer to register · 👥 ${ev.max_participants} spots`);
   }
 
   lines.push("");
