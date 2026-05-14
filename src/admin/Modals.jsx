@@ -393,7 +393,7 @@ export function FBPostModal({ event, onClose }) {
   }
 
   function handleCopyLink() {
-    navigator.clipboard.writeText(`Learn more: ${eventLink}`).then(() => {
+    navigator.clipboard.writeText(`🔥 Learn more: ${eventLink}`).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     });
