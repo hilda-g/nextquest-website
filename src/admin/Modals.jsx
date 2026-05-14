@@ -339,8 +339,10 @@ function buildFBPostText(ev) {
   const lines = [];
 
   const catLabel = CATEGORIES[ev.category] || "";
-  lines.push(catLabel
-    ? `📌 ${ev.title.toUpperCase()} (${catLabel})`
+  const fmtLabel = ev.format === "official" ? "🎉 Official" : ev.format === "community" ? "✨ Community" : ev.format === "private" ? "🔒 Private" : "";
+  const brackets = [catLabel, fmtLabel].filter(Boolean).join(", ");
+  lines.push(brackets
+    ? `📌 ${ev.title.toUpperCase()} (${brackets})`
     : `📌 ${ev.title.toUpperCase()}`
   );
   lines.push("");
@@ -391,7 +393,7 @@ export function FBPostModal({ event, onClose }) {
   }
 
   function handleCopyLink() {
-    navigator.clipboard.writeText(eventLink).then(() => {
+    navigator.clipboard.writeText(`Learn more: ${eventLink}`).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     });
