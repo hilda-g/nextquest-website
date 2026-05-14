@@ -443,55 +443,58 @@ function buildWAPostText(ev) {
   if (!ev) return "";
   const lines = [];
 
+  // Title + [category, format] header
   const catLabel = CATEGORIES[ev.category] || "";
-  lines.push(catLabel ? `*${ev.title}* ${catLabel}` : `*${ev.title}*`);
+  const fmtLabel = ev.format === "official" ? "🎉 Official" : ev.format === "community" ? "✨ Community" : ev.format === "private" ? "🔒 Private" : "";
+  const brackets = [catLabel, fmtLabel].filter(Boolean).join(", ");
+  lines.push(brackets
+    ? `*${ev.title}* [ ${brackets} ]`
+    : `*${ev.title}*`
+  );
   lines.push("");
 
+  // Description (280 chars max)
   const desc = (ev.description || "").trim();
   if (desc) {
     lines.push(desc.length > 280 ? desc.slice(0, 280) + "…" : desc);
     lines.push("");
   }
 
+  // Date & location on separate lines
   lines.push(`📅 ${enFormatDateRange(ev.date_start, ev.date_end || null)}`);
-
   const loc = [ev.location_city, ev.location_address].filter(Boolean).join(" · ");
   if (loc) lines.push(`📍 ${loc}`);
 
+  // Bullet lines
   const langs = ev.event_languages;
-  if (langs && langs.length > 0) lines.push(`🗣 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
+  if (langs && langs.length > 0) lines.push(`🔹 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
 
   const org = ev.organizer_username || ev.organizer_name || "";
-  if (org) lines.push(`🎪 ${org.startsWith("@") ? org : `@${org}`}`);
+  if (org) lines.push(`🔹 Organizer: ${org.startsWith("@") ? org.slice(1) : org}`);
 
   const regUrl = ev.external_url || (ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null);
   if (regUrl) {
-    lines.push(`📋 Register: ${regUrl}`);
+    lines.push(`🔹 Register: ${regUrl}`);
   } else if (ev.max_participants) {
-    lines.push(`📋 Contact the organizer · 👥 ${ev.max_participants} spots`);
+    lines.push(`🔹 Register: Contact the organizer · 👥 ${ev.max_participants} spots`);
   }
+
+  // Link inside post
+  lines.push("");
+  lines.push(`➡️ Learn more: ${SITE_URL}/events/${ev.id}?lang=en`);
 
   return lines.join("\n");
 }
 
 export function WAPostModal({ event, onClose }) {
   const [copiedPost, setCopiedPost] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
 
-  const postText  = buildWAPostText(event);
-  const eventLink = buildEventLink(event, "en");
+  const postText = buildWAPostText(event);
 
   function handleCopyPost() {
     navigator.clipboard.writeText(postText).then(() => {
       setCopiedPost(true);
       setTimeout(() => setCopiedPost(false), 2000);
-    });
-  }
-
-  function handleCopyLink() {
-    navigator.clipboard.writeText(eventLink).then(() => {
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
     });
   }
 
@@ -511,18 +514,8 @@ export function WAPostModal({ event, onClose }) {
         </div>
       )}
 
-      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px", marginBottom: 10, fontFamily: "monospace", fontSize: 12, color: "#a09cbc", lineHeight: 1.65, whiteSpace: "pre-wrap", maxHeight: 220, overflowY: "auto" }}>
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px", marginBottom: 20, fontFamily: "monospace", fontSize: 12, color: "#a09cbc", lineHeight: 1.65, whiteSpace: "pre-wrap", maxHeight: 260, overflowY: "auto" }}>
         {postText}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "10px 14px", marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 13, color: "#6b6890", flexShrink: 0 }}>Link:</span>
-          <span style={{ fontFamily: "monospace", fontSize: 12, color: "#25d366", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eventLink}</span>
-        </div>
-        <button onClick={handleCopyLink} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: 8, cursor: "pointer", background: copiedLink ? "rgba(16,185,129,0.15)" : "rgba(37,211,102,0.12)", border: `1px solid ${copiedLink ? "rgba(16,185,129,0.4)" : "rgba(37,211,102,0.3)"}`, color: copiedLink ? "#6ee7b7" : "#25d366", fontSize: 12, fontWeight: 700, fontFamily: "inherit", transition: "all 0.2s", whiteSpace: "nowrap" }}>
-          {copiedLink ? "✅ Copied" : "📋 Copy"}
-        </button>
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
