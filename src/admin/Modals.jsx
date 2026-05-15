@@ -480,25 +480,22 @@ function buildWAPostText(ev) {
   const langs = ev.event_languages;
   if (langs && langs.length > 0) lines.push(`🔹 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
 
-  // Organizer name + contact link separately
+  // Organizer + contact URL on same line
   const org = ev.organizer_username || ev.organizer_name || "";
-  if (org) lines.push(`🔹 Organizer: ${org.startsWith("@") ? org.slice(1) : org}`);
-
   const contactUrl = ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null;
-  if (contactUrl) lines.push(`🔹 Contact: ${contactUrl}`);
+  if (org && contactUrl) lines.push(`🔹 Organizer: ${org.startsWith("@") ? org.slice(1) : org}: ${contactUrl}`);
+  else if (org) lines.push(`🔹 Organizer: ${org.startsWith("@") ? org.slice(1) : org}`);
 
-  // Registration — only if there's a URL, no fallback text
+  // Registration — only text, only if URL exists
   const regUrl = ev.external_url || null;
-  if (regUrl) lines.push(`🔹 Registration needed: ${regUrl}`);
+  if (regUrl) lines.push(`🔹 Registration needed`);
 
   // Learn more link
   lines.push("");
   lines.push(`➡️ Learn more: ${SITE_URL}/events/${ev.id}?lang=en`);
 
-  // Google Calendar
-  lines.push(`📅 Add to Google Calendar: ${buildGCalUrl(ev)}`);
-
   // Bot CTA
+  lines.push("");
   lines.push(`⭐️ Hosting your own event! Add it with our bot: https://t.me/${BOT_USERNAME}?start=start`);
 
   return lines.join("\n");
