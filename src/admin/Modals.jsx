@@ -441,6 +441,15 @@ export function FBPostModal({ event, onClose }) {
 
 // ─── WhatsApp Post Modal ──────────────────────────────────────
 
+function buildGCalUrl(ev) {
+  function fmt(iso) {
+    return iso.slice(0, 16).replace(" ", "T").replace(/[-:]/g, "") + "00";
+  }
+  const end = ev.date_end || ev.date_start;
+  const loc = [ev.location_city, ev.location_address].filter(Boolean).join(", ");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${fmt(ev.date_start)}/${fmt(end)}&location=${encodeURIComponent(loc)}&details=${encodeURIComponent(`${SITE_URL}/events/${ev.id}?lang=en`)}`;
+}
+
 function buildWAPostText(ev) {
   if (!ev) return "";
   const lines = [];
@@ -462,7 +471,7 @@ function buildWAPostText(ev) {
     lines.push("");
   }
 
-  // Date & location on separate lines
+  // Date & location
   lines.push(`📅 ${enFormatDateRange(ev.date_start, ev.date_end || null)}`);
   const loc = [ev.location_city, ev.location_address].filter(Boolean).join(" · ");
   if (loc) lines.push(`📍 ${loc}`);
@@ -471,19 +480,26 @@ function buildWAPostText(ev) {
   const langs = ev.event_languages;
   if (langs && langs.length > 0) lines.push(`🔹 ${langs.map(l => l.toUpperCase()).join(" · ")}`);
 
+  // Organizer name + contact link separately
   const org = ev.organizer_username || ev.organizer_name || "";
   if (org) lines.push(`🔹 Organizer: ${org.startsWith("@") ? org.slice(1) : org}`);
 
-  const regUrl = ev.external_url || (ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null);
-  if (regUrl) {
-    lines.push(`🔹 Register: ${regUrl}`);
-  } else if (ev.max_participants) {
-    lines.push(`🔹 Register: Contact the organizer · 👥 ${ev.max_participants} spots`);
-  }
+  const contactUrl = ev.organizer_contacts?.startsWith("http") ? ev.organizer_contacts : null;
+  if (contactUrl) lines.push(`🔹 Contact: ${contactUrl}`);
 
-  // Link inside post
+  // Registration — only if there's a URL, no fallback text
+  const regUrl = ev.external_url || null;
+  if (regUrl) lines.push(`🔹 Registration needed: ${regUrl}`);
+
+  // Learn more link
   lines.push("");
   lines.push(`➡️ Learn more: ${SITE_URL}/events/${ev.id}?lang=en`);
+
+  // Google Calendar
+  lines.push(`📅 Add to Google Calendar: ${buildGCalUrl(ev)}`);
+
+  // Bot CTA
+  lines.push(`⭐️ Hosting your own event! Add it with our bot: https://t.me/${BOT_USERNAME}?start=start`);
 
   return lines.join("\n");
 }
