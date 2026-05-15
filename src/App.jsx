@@ -1404,7 +1404,7 @@ export default function NextQuest() {
               ),
             },
             {
-              href: "https://chat.whatsapp.com/EdhAN298qVA90J3wqiTITe",
+              href: "https://whatsapp.com/channel/0029VbDKpBc6WaKpbVWhKs3J",
               label: "WhatsApp",
               color: "#25D366",
               bg: "rgba(37,211,102,0.12)",
