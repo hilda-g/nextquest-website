@@ -5,7 +5,7 @@ import { useToasts, ToastContainer } from "./Toast.jsx";
 import LoginScreen from "./LoginScreen.jsx";
 import EventDrawer from "./EventDrawer.jsx";
 import EventRow    from "./EventRow.jsx";
-import { DeleteModal, RestoreModal, EndRegistrationModal, ReopenRegistrationModal, CreatePostModal, FBPostModal, WAPostModal, ViewEventModal } from "./Modals.jsx";
+import { DeleteModal, RestoreModal, EndRegistrationModal, ReopenRegistrationModal, CreatePostModal, ViewEventModal } from "./Modals.jsx";
 
 // channel_notifier URL + secret come from .env
 // Add to your .env:
@@ -44,8 +44,6 @@ export default function AdminPanel() {
   const [endRegTarget,  setEndRegTarget]  = useState(null);  // event to end registration
   const [reopenTarget,  setReopenTarget]  = useState(null);  // event to re-open registration
   const [viewTarget,    setViewTarget]    = useState(null);  // event to view
-  const [fbPostTarget,  setFbPostTarget]  = useState(null);  // event for FB post generator
-  const [waPostTarget,  setWaPostTarget]  = useState(null);  // event for WA post generator
 
   // ── Filter events ────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -309,6 +307,34 @@ export default function AdminPanel() {
     }
   }
 
+  async function handleDigestPost() {
+    if (!NOTIFIER_URL) { toasts.error("VITE_NOTIFIER_URL is not configured"); return; }
+    try {
+      const res = await fetch(`${NOTIFIER_URL}/digest/post`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Secret": NOTIFIER_SECRET },
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || `HTTP ${res.status}`); }
+      toasts.success("Weekly digest posted to channel ✓");
+    } catch (err) {
+      toasts.error(`Digest post failed: ${err.message}`);
+    }
+  }
+
+  async function handleDigestTest() {
+    if (!NOTIFIER_URL) { toasts.error("VITE_NOTIFIER_URL is not configured"); return; }
+    try {
+      const res = await fetch(`${NOTIFIER_URL}/digest/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Secret": NOTIFIER_SECRET },
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || `HTTP ${res.status}`); }
+      toasts.success("Weekly digest posted to TEST channel ✓");
+    } catch (err) {
+      toasts.error(`Digest test failed: ${err.message}`);
+    }
+  }
+
   // ── Render ───────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100vh", background: "#080810", fontFamily: "'Outfit', sans-serif", color: "#e8e6f0" }}>
@@ -354,6 +380,21 @@ export default function AdminPanel() {
               onMouseEnter={e => e.target.style.color = "#a09cbc"}
               onMouseLeave={e => e.target.style.color = "#4a4868"}
             >← Site</a>
+
+            {/* Weekly Digest */}
+            <button onClick={handleDigestPost}
+              style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", fontSize: 12, fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap" }}
+              onMouseEnter={e => { e.target.style.background = "rgba(167,139,250,0.18)"; e.target.style.borderColor = "rgba(167,139,250,0.5)"; }}
+              onMouseLeave={e => { e.target.style.background = "rgba(167,139,250,0.08)"; e.target.style.borderColor = "rgba(167,139,250,0.25)"; }}
+              title="Post weekly digest to main channel"
+            >🗓 Digest</button>
+            <button onClick={handleDigestTest}
+              style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24", fontSize: 12, fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap" }}
+              onMouseEnter={e => { e.target.style.background = "rgba(251,191,36,0.18)"; e.target.style.borderColor = "rgba(251,191,36,0.5)"; }}
+              onMouseLeave={e => { e.target.style.background = "rgba(251,191,36,0.08)"; e.target.style.borderColor = "rgba(251,191,36,0.25)"; }}
+              title="Post weekly digest to TEST channel"
+            >🧪 Digest</button>
+
             <button onClick={auth.logout} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", fontSize: 12, transition: "all 0.15s" }}
               onMouseEnter={e => { e.target.style.background = "rgba(239,68,68,0.1)"; e.target.style.color = "#ef4444"; e.target.style.borderColor = "rgba(239,68,68,0.3)"; }}
               onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.04)"; e.target.style.color = "#6b6890"; e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
@@ -464,9 +505,7 @@ export default function AdminPanel() {
       <RestoreModal    event={restoreTarget} onConfirm={handleRestore}    onClose={() => setRestoreTarget(null)} />
       <EndRegistrationModal  event={endRegTarget}  onConfirm={handleEndRegistration}  onClose={() => setEndRegTarget(null)} />
       <ReopenRegistrationModal event={reopenTarget} onConfirm={handleReopenRegistration} onClose={() => setReopenTarget(null)} />
-      <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onTestConfirm={handleCreateTestPost} onFBPost={() => { setFbPostTarget(postTarget); setPostTarget(null); }} onWAPost={() => { setWaPostTarget(postTarget); setPostTarget(null); }} onClose={() => setPostTarget(null)}    />
-      <FBPostModal     event={fbPostTarget}  onClose={() => setFbPostTarget(null)} />
-      <WAPostModal     event={waPostTarget}  onClose={() => setWaPostTarget(null)} />
+      <CreatePostModal event={postTarget}    onConfirm={handleCreatePost} onTestConfirm={handleCreateTestPost} onClose={() => setPostTarget(null)}    />
       <ViewEventModal  event={viewTarget}                                 onClose={() => setViewTarget(null)}    />
 
       {/* ── Toasts ── */}
