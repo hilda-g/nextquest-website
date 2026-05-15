@@ -396,7 +396,7 @@ export default function AdminPanel() {
             <span style={{ fontSize: 16 }}>+</span> Add Event
           </button>
 
-          <div style={{ position: "relative", flex: 1, minWidth: 160, maxWidth: 360 }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
             <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 14, pointerEvents: "none" }}>🔍</span>
             <input
               value={search} onChange={e => setSearch(e.target.value)}
