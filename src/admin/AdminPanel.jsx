@@ -312,7 +312,7 @@ export default function AdminPanel() {
     try {
       const res = await fetch(`${NOTIFIER_URL}/digest/post`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Secret": NOTIFIER_SECRET },
+        headers: { "Content-Type": "application/json", "X-Webhook-Secret": NOTIFIER_SECRET },
       });
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || `HTTP ${res.status}`); }
       toasts.success("Weekly digest posted to channel ✓");
@@ -326,7 +326,7 @@ export default function AdminPanel() {
     try {
       const res = await fetch(`${NOTIFIER_URL}/digest/test`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Secret": NOTIFIER_SECRET },
+        headers: { "Content-Type": "application/json", "X-Webhook-Secret": NOTIFIER_SECRET },
       });
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || `HTTP ${res.status}`); }
       toasts.success("Weekly digest posted to TEST channel ✓");
@@ -380,21 +380,6 @@ export default function AdminPanel() {
               onMouseEnter={e => e.target.style.color = "#a09cbc"}
               onMouseLeave={e => e.target.style.color = "#4a4868"}
             >← Site</a>
-
-            {/* Weekly Digest */}
-            <button onClick={handleDigestPost}
-              style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", fontSize: 12, fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap" }}
-              onMouseEnter={e => { e.target.style.background = "rgba(167,139,250,0.18)"; e.target.style.borderColor = "rgba(167,139,250,0.5)"; }}
-              onMouseLeave={e => { e.target.style.background = "rgba(167,139,250,0.08)"; e.target.style.borderColor = "rgba(167,139,250,0.25)"; }}
-              title="Post weekly digest to main channel"
-            >🗓 Digest</button>
-            <button onClick={handleDigestTest}
-              style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24", fontSize: 12, fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap" }}
-              onMouseEnter={e => { e.target.style.background = "rgba(251,191,36,0.18)"; e.target.style.borderColor = "rgba(251,191,36,0.5)"; }}
-              onMouseLeave={e => { e.target.style.background = "rgba(251,191,36,0.08)"; e.target.style.borderColor = "rgba(251,191,36,0.25)"; }}
-              title="Post weekly digest to TEST channel"
-            >🧪 Digest</button>
-
             <button onClick={auth.logout} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", fontSize: 12, transition: "all 0.15s" }}
               onMouseEnter={e => { e.target.style.background = "rgba(239,68,68,0.1)"; e.target.style.color = "#ef4444"; e.target.style.borderColor = "rgba(239,68,68,0.3)"; }}
               onMouseLeave={e => { e.target.style.background = "rgba(255,255,255,0.04)"; e.target.style.color = "#6b6890"; e.target.style.borderColor = "rgba(255,255,255,0.08)"; }}
@@ -406,12 +391,12 @@ export default function AdminPanel() {
       {/* ── Main ── */}
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 28px" }}>
         {/* Action bar */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
           <button onClick={() => setDrawerEvent({})} style={{ padding: "10px 20px", borderRadius: 10, cursor: "pointer", background: "linear-gradient(135deg, #7c3aed, #a78bfa)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, boxShadow: "0 4px 16px rgba(124,58,237,0.35)", flexShrink: 0 }}>
             <span style={{ fontSize: 16 }}>+</span> Add Event
           </button>
 
-          <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 160, maxWidth: 360 }}>
             <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#4a4868", fontSize: 14, pointerEvents: "none" }}>🔍</span>
             <input
               value={search} onChange={e => setSearch(e.target.value)}
@@ -426,6 +411,25 @@ export default function AdminPanel() {
           </div>
 
           <button onClick={ev.loadEvents} disabled={ev.loading} style={{ padding: "10px 14px", borderRadius: 10, cursor: "pointer", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#6b6890", fontSize: 14, transition: "all 0.15s", flexShrink: 0 }} title="Refresh">↻</button>
+        </div>
+
+        {/* Weekly Digest box */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, padding: "12px 16px", borderRadius: 12, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.18)" }}>
+          <div style={{ fontSize: 20 }}>🗓</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", marginBottom: 2 }}>Weekly Digest</div>
+            <div style={{ fontSize: 11, color: "#6b6890" }}>Next 7 days · posts in Russian to Telegram channel</div>
+          </div>
+          <button onClick={handleDigestTest}
+            style={{ padding: "7px 14px", borderRadius: 9, cursor: "pointer", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24", fontSize: 12, fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(251,191,36,0.18)"; e.currentTarget.style.borderColor = "rgba(251,191,36,0.5)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(251,191,36,0.08)"; e.currentTarget.style.borderColor = "rgba(251,191,36,0.25)"; }}
+          >🧪 Test</button>
+          <button onClick={handleDigestPost}
+            style={{ padding: "7px 14px", borderRadius: 9, cursor: "pointer", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.35)", color: "#a78bfa", fontSize: 12, fontWeight: 700, fontFamily: "inherit", transition: "all 0.15s", whiteSpace: "nowrap" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(167,139,250,0.22)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.6)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(167,139,250,0.12)"; e.currentTarget.style.borderColor = "rgba(167,139,250,0.35)"; }}
+          >📢 Post digest</button>
         </div>
 
         {/* Tabs */}
