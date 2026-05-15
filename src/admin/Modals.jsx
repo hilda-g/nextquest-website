@@ -495,7 +495,6 @@ function buildWAPostText(ev) {
   lines.push(`➡️ Learn more: ${SITE_URL}/events/${ev.id}?lang=en`);
 
   // Bot CTA
-  lines.push("");
   lines.push(`⭐️ Hosting your own event! Add it with our bot: https://t.me/${BOT_USERNAME}?start=start`);
 
   return lines.join("\n");
