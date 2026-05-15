@@ -540,6 +540,8 @@ function ScrollToTop() {
 // ─── MAIN COMPONENT ──────────────────────────────────────────
 export default function NextQuest() {
   const [lang, setLang]             = useState(() => {
+    const urlLang = new URLSearchParams(window.location.search).get("lang");
+    if (urlLang && ["en","ru","el","uk"].includes(urlLang)) return urlLang;
     const bl = navigator.language?.slice(0, 2) || "en";
     return ["en","ru","el","uk"].includes(bl) ? bl : "en";
   });
