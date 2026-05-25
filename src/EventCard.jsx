@@ -361,8 +361,9 @@ export function EventCardBody({
                       alignItems: "center", justifyContent: "center",
                       background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
                       color: "#fff", border: "none", borderRadius: 8,
-                      padding: "0 20px", height: 42, fontSize: 14,
+                      padding: "8px 10px", minHeight: 42, fontSize: 12,
                       fontFamily: "inherit", fontWeight: 700, minWidth: 0,
+                      textAlign: "center", lineHeight: 1.3,
                     }}
                   >
                     {t.register}
@@ -380,13 +381,14 @@ export function EventCardBody({
                         setShowFmtInfo(false);
                       }}
                       style={{
-                        width: "100%", height: 42,
+                        width: "100%", minHeight: 42,
                         background: "rgba(249,115,22,0.12)",
                         border: "1px solid rgba(249,115,22,0.45)",
                         color: "#f97316", borderRadius: 8, cursor: "pointer",
-                        fontFamily: "inherit", fontWeight: 600, fontSize: 14,
-                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
-                        padding: hasUrl ? "0 16px" : "0 20px", whiteSpace: "nowrap",
+                        fontFamily: "inherit", fontWeight: 600, fontSize: 12,
+                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
+                        padding: hasUrl ? "8px 10px" : "8px 10px", whiteSpace: "nowrap",
+                        lineHeight: 1.3, textAlign: "center",
                       }}
                     >
                       📋 {t.contactOrganizer.replace(/📋\s?/, "").split(" ")[0]}
@@ -449,13 +451,14 @@ export function EventCardBody({
                 if (onNotify) onNotify();
               }}
               style={{
-                width: "100%", height: 42,
+                width: "100%", minHeight: 42,
                 border: subscribed ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(167,139,250,0.4)",
                 background: subscribed ? "rgba(16,185,129,0.08)" : "rgba(167,139,250,0.08)",
                 color: subscribed ? "#10b981" : "#a78bfa",
-                borderRadius: 8, fontSize: 14, fontFamily: "inherit",
+                borderRadius: 8, fontSize: 12, fontFamily: "inherit",
                 fontWeight: 600, cursor: subscribed ? "default" : "pointer",
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
+                padding: "8px 10px", lineHeight: 1.3, textAlign: "center",
                 transition: "all 0.2s",
               }}
             >
@@ -513,9 +516,10 @@ export function EventCardBody({
             style={{
               flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center",
               background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.25)",
-              color: "#06b6d4", borderRadius: 8, padding: "0 20px", height: 42,
-              fontSize: 14, fontFamily: "inherit", fontWeight: 600,
-              textDecoration: "none", gap: 6, transition: "all 0.2s",
+              color: "#06b6d4", borderRadius: 8, padding: "8px 10px", minHeight: 42,
+              fontSize: 12, fontFamily: "inherit", fontWeight: 600,
+              textDecoration: "none", gap: 4, transition: "all 0.2s",
+              lineHeight: 1.3, textAlign: "center",
             }}
           >
             📅 {t.addToCalendar}
