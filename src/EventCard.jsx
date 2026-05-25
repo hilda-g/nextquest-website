@@ -320,7 +320,7 @@ export function EventCardBody({
         )}
 
         {/* Action buttons */}
-        <div style={{ display: "flex", gap: 8, alignItems: "stretch", flexWrap: "wrap" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
 
           {/* 1. Register / Contact organizer — or bot CTA for promo events */}
           {event.isPromo ? (
@@ -350,20 +350,20 @@ export function EventCardBody({
               : raw ? `https://t.me/${raw}` : "";
 
             return (
-              <div style={{ display: "contents" }}>
+              <>
 
                 {/* Register button — only when externalUrl exists */}
                 {hasUrl && (
                   <a
                     href={event.externalUrl} target="_blank" rel="noopener noreferrer"
                     style={{
-                      flex: 1, textDecoration: "none", display: "inline-flex",
+                      display: "inline-flex", textDecoration: "none",
                       alignItems: "center", justifyContent: "center",
                       background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
                       color: "#fff", border: "none", borderRadius: 8,
                       padding: "8px 10px", minHeight: 42, fontSize: 12,
-                      fontFamily: "inherit", fontWeight: 700, minWidth: 0,
-                      textAlign: "center", lineHeight: 1.3,
+                      fontFamily: "inherit", fontWeight: 700, width: "100%",
+                      textAlign: "center", lineHeight: 1.3, boxSizing: "border-box",
                     }}
                   >
                     {t.register}
@@ -372,7 +372,7 @@ export function EventCardBody({
 
                 {/* Contact button — always shown when organizerContacts exists */}
                 {hasContacts && (
-                  <div style={{ flex: hasUrl ? "0 0 auto" : 1, position: "relative" }}>
+                  <div style={{ position: "relative" }}>
                     <button
                       onClick={e => {
                         const rect = e.currentTarget.getBoundingClientRect();
@@ -437,12 +437,10 @@ export function EventCardBody({
                   </div>
                 )}
 
-              </div>
-            );
-          })()}
+              </>
 
           {/* 2. Notify me — hidden for promo events */}
-          {!event.isPromo && <div style={{ flex: 1, position: "relative" }}>
+          {!event.isPromo && <div style={{ position: "relative" }}>
             <button
               onClick={() => {
                 if (subscribed) return;
@@ -514,12 +512,12 @@ export function EventCardBody({
           {!event.isPromo && <a
             href={makeGCalUrl(event)} target="_blank" rel="noopener noreferrer"
             style={{
-              flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
               background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.25)",
               color: "#06b6d4", borderRadius: 8, padding: "8px 10px", minHeight: 42,
-              fontSize: 12, fontFamily: "inherit", fontWeight: 600,
+              fontSize: 12, fontFamily: "inherit", fontWeight: 600, width: "100%",
               textDecoration: "none", gap: 4, transition: "all 0.2s",
-              lineHeight: 1.3, textAlign: "center",
+              lineHeight: 1.3, textAlign: "center", boxSizing: "border-box",
             }}
           >
             📅 {t.addToCalendar}
