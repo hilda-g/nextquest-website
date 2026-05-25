@@ -340,96 +340,103 @@ export function EventCardBody({
               {t.promoAddEvent}
             </a>
           ) : event.status !== "cancelled" && (() => {
-            // Has registration URL → Register button (regardless of limit)
-            if (event.externalUrl) {
-              return (
-                <a
-                  href={event.externalUrl} target="_blank" rel="noopener noreferrer"
-                  style={{
-                    flex: 1, textDecoration: "none", display: "inline-flex",
-                    alignItems: "center", justifyContent: "center",
-                    background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
-                    color: "#fff", border: "none", borderRadius: 8,
-                    padding: "0 20px", height: 42, fontSize: 14,
-                    fontFamily: "inherit", fontWeight: 700,
-                  }}
-                >
-                  {t.register}
-                </a>
-              );
-            }
-            // No URL → Contact button (regardless of limit)
-            if (event.organizerContacts) {
-              const raw  = event.organizerContacts;
-              const href = raw.startsWith("http") ? raw
-                : raw.startsWith("@") ? `https://t.me/${raw.slice(1)}`
-                : `https://t.me/${raw}`;
-              return (
-                <div style={{ flex: 1, position: "relative" }}>
-                  <button
-                    onClick={e => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setContactPos({ top: rect.top, left: rect.left + rect.width / 2 });
-                      setShowContacts(v => !v);
-                      setShowFmtInfo(false);
-                    }}
+            const hasUrl      = !!event.externalUrl;
+            const hasContacts = !!event.organizerContacts;
+            if (!hasUrl && !hasContacts) return null;
+
+            const raw  = hasContacts ? event.organizerContacts : "";
+            const href = raw.startsWith("http") ? raw
+              : raw.startsWith("@") ? `https://t.me/${raw.slice(1)}`
+              : raw ? `https://t.me/${raw}` : "";
+
+            return (
+              <div style={{ display: "contents" }}>
+
+                {/* Register button — only when externalUrl exists */}
+                {hasUrl && (
+                  <a
+                    href={event.externalUrl} target="_blank" rel="noopener noreferrer"
                     style={{
-                      width: "100%", height: 42,
-                      background: "rgba(249,115,22,0.12)",
-                      border: "1px solid rgba(249,115,22,0.45)",
-                      color: "#f97316", borderRadius: 8, cursor: "pointer",
-                      fontFamily: "inherit", fontWeight: 600, fontSize: 14,
-                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      flex: 1, textDecoration: "none", display: "inline-flex",
+                      alignItems: "center", justifyContent: "center",
+                      background: "linear-gradient(135deg, #7c3aed, #a78bfa)",
+                      color: "#fff", border: "none", borderRadius: 8,
+                      padding: "0 20px", height: 42, fontSize: 14,
+                      fontFamily: "inherit", fontWeight: 700, minWidth: 0,
                     }}
                   >
-                    📋 {t.contactOrganizer.replace(/📋\s?/, "").split(" ")[0]}
-                  </button>
+                    {t.register}
+                  </a>
+                )}
 
-                  {showContacts && (
-                    <div style={{
-                      position: "fixed",
-                      bottom: `calc(100vh - ${contactPos.top}px + 10px)`,
-                      left: contactPos.left,
-                      transform: "translateX(-50%)",
-                      background: "#1e1e36", border: "1px solid rgba(249,115,22,0.3)",
-                      borderRadius: 12, padding: "13px 15px", width: 240,
-                      boxShadow: "0 12px 40px rgba(0,0,0,0.6)", zIndex: 9999,
-                      animation: "fadeIn 0.15s ease",
-                    }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6890", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>
-                        {t.organizerContacts}
+                {/* Contact button — always shown when organizerContacts exists */}
+                {hasContacts && (
+                  <div style={{ flex: hasUrl ? "0 0 auto" : 1, position: "relative" }}>
+                    <button
+                      onClick={e => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setContactPos({ top: rect.top, left: rect.left + rect.width / 2 });
+                        setShowContacts(v => !v);
+                        setShowFmtInfo(false);
+                      }}
+                      style={{
+                        width: "100%", height: 42,
+                        background: "rgba(249,115,22,0.12)",
+                        border: "1px solid rgba(249,115,22,0.45)",
+                        color: "#f97316", borderRadius: 8, cursor: "pointer",
+                        fontFamily: "inherit", fontWeight: 600, fontSize: 14,
+                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        padding: hasUrl ? "0 16px" : "0 20px", whiteSpace: "nowrap",
+                      }}
+                    >
+                      📋 {t.contactOrganizer.replace(/📋\s?/, "").split(" ")[0]}
+                    </button>
+
+                    {showContacts && (
+                      <div style={{
+                        position: "fixed",
+                        bottom: `calc(100vh - ${contactPos.top}px + 10px)`,
+                        left: contactPos.left,
+                        transform: "translateX(-50%)",
+                        background: "#1e1e36", border: "1px solid rgba(249,115,22,0.3)",
+                        borderRadius: 12, padding: "13px 15px", width: 240,
+                        boxShadow: "0 12px 40px rgba(0,0,0,0.6)", zIndex: 9999,
+                        animation: "fadeIn 0.15s ease",
+                      }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6890", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>
+                          {t.organizerContacts}
+                        </div>
+                        <div style={{ fontSize: 14, color: "#f97316", fontWeight: 600, wordBreak: "break-all", marginBottom: 11 }}>
+                          {raw}
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <a
+                            href={href} target="_blank" rel="noopener noreferrer"
+                            onClick={() => setShowContacts(false)}
+                            style={{
+                              flex: 1, textAlign: "center", textDecoration: "none",
+                              background: "linear-gradient(135deg, #ea580c, #f97316)",
+                              color: "#fff", borderRadius: 8, padding: "8px 10px",
+                              fontSize: 12, fontWeight: 700, display: "inline-flex",
+                              alignItems: "center", justifyContent: "center", gap: 5,
+                            }}
+                          >✈️ Open</a>
+                          <button
+                            onClick={() => setShowContacts(false)}
+                            style={{
+                              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                              color: "#6b6890", borderRadius: 8, padding: "8px 11px",
+                              fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >✕</button>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 14, color: "#f97316", fontWeight: 600, wordBreak: "break-all", marginBottom: 11 }}>
-                        {raw}
-                      </div>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <a
-                          href={href} target="_blank" rel="noopener noreferrer"
-                          onClick={() => setShowContacts(false)}
-                          style={{
-                            flex: 1, textAlign: "center", textDecoration: "none",
-                            background: "linear-gradient(135deg, #ea580c, #f97316)",
-                            color: "#fff", borderRadius: 8, padding: "8px 10px",
-                            fontSize: 12, fontWeight: 700, display: "inline-flex",
-                            alignItems: "center", justifyContent: "center", gap: 5,
-                          }}
-                        >✈️ Open</a>
-                        <button
-                          onClick={() => setShowContacts(false)}
-                          style={{
-                            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                            color: "#6b6890", borderRadius: 8, padding: "8px 11px",
-                            fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                          }}
-                        >✕</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            }
-            // No URL, no limit → no button
-            return null;
+                    )}
+                  </div>
+                )}
+
+              </div>
+            );
           })()}
 
           {/* 2. Notify me — hidden for promo events */}
