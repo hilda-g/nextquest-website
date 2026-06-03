@@ -437,9 +437,7 @@ export function EventCardBody({
                   </div>
                 )}
 
-              </>
-
-          {/* 2. Notify me — hidden for promo events */}
+              {/* 2. Notify me — hidden for promo events */}
           {!event.isPromo && <div style={{ position: "relative" }}>
             <button
               onClick={() => {
@@ -523,6 +521,9 @@ export function EventCardBody({
             📅 {t.addToCalendar}
           </a>}
 
+            </>
+            );
+          })()}
         </div>
       </div>
 
