@@ -49,7 +49,7 @@ export const LANGS = {
     search: "Поиск событий…",
     notify: "🔔 Напомнить", notified: "✓ Подписан",
     location: "Место", organizer: "Организатор", register: "Регистрация →",
-    contactOrganizer: "📋 Контакты и детали", organizerContacts: "Контакт организатора",
+    contactOrganizer: "📋 Контакты", organizerContacts: "Контакт организатора",
     noEvents: "Событий не найдено", multiDay: "Многодневное", cancelled: "Отменено", ended: "Завершено", ended: "Завершено",
     participants: "мест", loading: "Загрузка…", error: "Не удалось загрузить события.",
     allCities: "Все города",

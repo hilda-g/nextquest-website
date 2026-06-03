@@ -391,7 +391,7 @@ export function EventCardBody({
                         lineHeight: 1.3, textAlign: "center",
                       }}
                     >
-                      📋 {t.contactOrganizer.replace(/📋\s?/, "").split(" ")[0]}
+                      {t.contactOrganizer}
                     </button>
 
                     {showContacts && (
@@ -437,7 +437,9 @@ export function EventCardBody({
                   </div>
                 )}
 
-              {/* 2. Notify me — hidden for promo events */}
+              </>
+
+          {/* 2. Notify me — hidden for promo events */}
           {!event.isPromo && <div style={{ position: "relative" }}>
             <button
               onClick={() => {
@@ -521,9 +523,6 @@ export function EventCardBody({
             📅 {t.addToCalendar}
           </a>}
 
-            </>
-            );
-          })()}
         </div>
       </div>
 
