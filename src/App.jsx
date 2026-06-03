@@ -670,7 +670,7 @@ export default function NextQuest() {
     const color = getCatColor(event.category);
     return (
       <div className="card-hover"
-        onClick={() => { setSelected(event); window.history.pushState({}, "", `/events/${event.id}`); }}
+        onClick={() => { setSelected(event); window.history.pushState({}, "", `/events/${event.id}?lang=${lang}`); }}
         style={{
           background: event.isPromo
             ? "linear-gradient(145deg, #1a1030 0%, #0f1f2e 100%)"
