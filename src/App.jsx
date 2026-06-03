@@ -1145,13 +1145,13 @@ export default function NextQuest() {
 
           {/* Tabs with count badges */}
           <div className="nq-tabs" style={{ display: "flex", gap: 24, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <button className={`tab-btn${tab === "upcoming" ? " active" : ""}`} onClick={() => { setTab("upcoming"); window.history.pushState({}, "", "/?tab=upcoming"); }}>
+            <button className={`tab-btn${tab === "upcoming" ? " active" : ""}`} onClick={() => { setTab("upcoming"); window.history.pushState({}, "", `/?tab=upcoming&lang=${lang}`); }}>
               <h2 style={{ all: "unset" }}>{t.upcoming}</h2> <span className="tab-count">{upcomingCount}</span>
             </button>
-            <button className={`tab-btn${tab === "calendar" ? " active" : ""}`} onClick={() => { setTab("calendar"); window.history.pushState({}, "", "/?tab=calendar"); }}>
+            <button className={`tab-btn${tab === "calendar" ? " active" : ""}`} onClick={() => { setTab("calendar"); window.history.pushState({}, "", `/?tab=calendar&lang=${lang}`); }}>
               📅 <h2 style={{ all: "unset" }}>{t.calendar}</h2> <span className="tab-count">{calendarCount}</span>
             </button>
-            <button className={`tab-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); window.history.pushState({}, "", "/?tab=archive"); }}>
+            <button className={`tab-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); window.history.pushState({}, "", `/?tab=archive&lang=${lang}`); }}>
               <h2 style={{ all: "unset" }}>{t.archive}</h2> <span className="tab-count">{archiveCount}</span>
             </button>
           </div>
