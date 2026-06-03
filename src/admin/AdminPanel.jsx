@@ -17,6 +17,7 @@ const NOTIFIER_SECRET = import.meta.env.VITE_NOTIFIER_SECRET || "";
 const TABS = [
   { key: "all",       label: "All"       },
   { key: "published", label: "Published" },
+  { key: "archive",   label: "Archive"   },
   { key: "pending",   label: "Pending"   },
   { key: "cancelled", label: "Cancelled" },
   { key: "deleted",   label: "Deleted"   },
@@ -25,6 +26,7 @@ const TABS = [
 const EMPTY_STATES = {
   all:       { icon: "🗓", text: "No events yet"        },
   published: { icon: "✅", text: "No published events"  },
+  archive:   { icon: "📦", text: "No archived events"   },
   pending:   { icon: "⏳", text: "No pending events"    },
   cancelled: { icon: "❌", text: "No cancelled events"  },
   deleted:   { icon: "🗑", text: "No deleted events"    },
@@ -49,11 +51,16 @@ export default function AdminPanel() {
 
   // ── Filter events ────────────────────────────────────────
   const filtered = useMemo(() => {
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
     return ev.events.filter(e => {
       const isDeleted = !!e.deleted_at;
       if (tab === "deleted") return isDeleted;
       if (isDeleted) return false;
-      if (tab !== "all" && e.status !== tab) return false;
+      const isPast = e.date_start && new Date(e.date_start.slice(0, 16).replace(" ", "T")) < todayMidnight;
+      if (tab === "archive"   && !(e.status === "published" && isPast))  return false;
+      if (tab === "published" && !(e.status === "published" && !isPast)) return false;
+      if (tab !== "all" && tab !== "archive" && tab !== "published" && e.status !== tab) return false;
       if (search) {
         const q = search.toLowerCase();
         return (
