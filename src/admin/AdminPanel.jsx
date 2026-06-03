@@ -73,6 +73,19 @@ export default function AdminPanel() {
     });
   }, [ev.events, tab, search]);
 
+  // ── Tab counts (published split by past/future) ──────────
+  const tabCounts = useMemo(() => {
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    let published = 0, archive = 0;
+    ev.events.forEach(e => {
+      if (e.deleted_at || e.status !== "published") return;
+      const isPast = e.date_start && new Date(e.date_start.slice(0, 16).replace(" ", "T")) < todayMidnight;
+      isPast ? archive++ : published++;
+    });
+    return { published, archive };
+  }, [ev.events]);
+
   // ── Login gate ───────────────────────────────────────────
   if (!auth.isAuthenticated) {
     return (
@@ -444,7 +457,7 @@ export default function AdminPanel() {
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 0 }}>
           {TABS.map(t => {
-            const count  = t.key === "all" ? ev.stats.total : t.key === "deleted" ? ev.stats.deleted : ev.stats[t.key] ?? 0;
+            const count  = t.key === "all" ? ev.stats.total : t.key === "deleted" ? ev.stats.deleted : t.key === "published" ? tabCounts.published : t.key === "archive" ? tabCounts.archive : ev.stats[t.key] ?? 0;
             const active = tab === t.key;
             return (
               <button key={t.key} onClick={() => setTab(t.key)} style={{ background: "none", border: "none", borderBottom: `2px solid ${active ? "#a78bfa" : "transparent"}`, color: active ? "#e8e6f0" : "#4a4868", fontSize: 13, fontWeight: active ? 600 : 400, padding: "8px 14px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 6, marginBottom: -1 }}>
