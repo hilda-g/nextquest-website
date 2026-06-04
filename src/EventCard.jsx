@@ -256,6 +256,12 @@ export function EventCardBody({
           </div>
 
           {/* Date */}
+          {event.isRecruiting ? (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#6ee7b7", fontSize: 14 }}>
+              <span>🎯</span>
+              <span>{event.recruitingMonth || "Open period"}</span>
+            </div>
+          ) : (
           <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
               <rect x="1" y="2" width="14" height="13" rx="2" fill="#3d3a5c"/>
@@ -277,6 +283,7 @@ export function EventCardBody({
                   : ` · ${formatTime(event.dateStart)}`}
             </span>
           </div>
+          )}
 
           {/* Location */}
           <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
