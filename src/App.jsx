@@ -765,7 +765,9 @@ export default function NextQuest() {
             {event.maxParticipants ? (
               <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
             ) : null}
-            {event.registrationClosed ? (
+            {event.isRecruiting ? (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.4)" }}>● Call for players</span>
+            ) : event.registrationClosed ? (
               <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
             ) : (
               <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }}>{t.statusOpen}</span>
@@ -1254,41 +1256,8 @@ export default function NextQuest() {
           {/* ── ORGANIZER FILTER BANNER ── */}
           {/* ── EVENT CARDS GRID ── */}
           {!loading && !error && tab !== "calendar" && filtered.length > 0 && (
-            <div>
-              {/* ── Looking for Players section ── */}
-              {(() => {
-                const recruitingPosts = filtered.filter(e => e.isRecruiting);
-                const regularEvents   = filtered.filter(e => !e.isRecruiting);
-                return (
-                  <>
-                    {recruitingPosts.length > 0 && (
-                      <div style={{ marginBottom: 28 }}>
-                        <div style={{
-                          display: "flex", alignItems: "center", gap: 10,
-                          marginBottom: 14,
-                        }}>
-                          <span style={{ fontSize: 18 }}>🎯</span>
-                          <span style={{
-                            fontSize: 14, fontWeight: 700, color: "#6ee7b7",
-                            letterSpacing: "0.03em",
-                          }}>
-                            {t.recruitingSection}
-                          </span>
-                          <div style={{ flex: 1, height: 1, background: "rgba(16,185,129,0.2)" }} />
-                        </div>
-                        <div className="event-grid">
-                          {recruitingPosts.map(event => <EventCard key={event.id} event={event} />)}
-                        </div>
-                      </div>
-                    )}
-                    {regularEvents.length > 0 && (
-                      <div className="event-grid">
-                        {regularEvents.map(event => <EventCard key={event.id} event={event} />)}
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
+            <div className="event-grid">
+              {[...filtered.filter(e => e.isRecruiting), ...filtered.filter(e => !e.isRecruiting)].map(event => <EventCard key={event.id} event={event} />)}
             </div>
           )}
         </main>
