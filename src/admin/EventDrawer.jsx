@@ -1197,6 +1197,10 @@ export default function EventDrawer({ event, onSave, onClose }) {
           )}
 
           {/* ── Event Languages ── */}
+          <div>
+            <span style={{ fontSize: 11, color: "#6b6890", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8, display: "block" }}>
+              Event Languages
+            </span>
             <div style={{ display: "flex", gap: 8 }}>
               {[
                 { code: "el",  label: "EL" },
