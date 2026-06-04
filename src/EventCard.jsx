@@ -257,8 +257,8 @@ export function EventCardBody({
 
           {/* Date */}
           {event.isRecruiting ? (
-            <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#6ee7b7", fontSize: 14 }}>
-              <span>🎯</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", color: "#a09cbc", fontSize: 14 }}>
+              <span>📅</span>
               <span>{event.recruitingMonth || "Open period"}</span>
             </div>
           ) : (
