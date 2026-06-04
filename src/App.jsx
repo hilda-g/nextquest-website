@@ -72,6 +72,8 @@ function mapEvent(row) {
     format: row.format || "official",
     registrationClosed: row.registration_closed || false,
     isPromo:            row.is_promo            || false,
+    isRecruiting:       row.is_recruiting       || false,
+    recruitingMonth:    row.recruiting_month    || null,
     isHiddenFromUpcoming: row.hidden_from_upcoming || false,
     languages:          row.event_languages     || [],
   };
@@ -642,7 +644,9 @@ export default function NextQuest() {
     const isPast = e.dateStart < todayMidnight;
     // Promo events only appear in Upcoming — never in Calendar or Archive
     if (e.isPromo && tab !== "upcoming") return false;
-    if (tab === "upcoming" && isPast)  return false;
+    // Recruiting posts only appear in Upcoming — never in Calendar or Archive
+    if (e.isRecruiting && tab !== "upcoming") return false;
+    if (tab === "upcoming" && isPast && !e.isRecruiting)  return false;
     if (tab === "upcoming" && e.isHiddenFromUpcoming) return false;
     if (tab === "archive"  && !isPast) return false;
     if (tab === "calendar") {
@@ -674,17 +678,23 @@ export default function NextQuest() {
         style={{
           background: event.isPromo
             ? "linear-gradient(145deg, #1a1030 0%, #0f1f2e 100%)"
-            : "#13131f",
+            : event.isRecruiting
+              ? "linear-gradient(145deg, #0a1f18 0%, #0d1f16 100%)"
+              : "#13131f",
           border: event.isPromo
             ? "1px solid rgba(124,58,237,0.55)"
-            : "1px solid rgba(255,255,255,0.06)",
+            : event.isRecruiting
+              ? "1px solid rgba(16,185,129,0.35)"
+              : "1px solid rgba(255,255,255,0.06)",
           borderRadius: 16, overflow: "hidden",
           opacity: event.status === "cancelled" ? 0.6 : 1,
           filter: event.isPast ? "grayscale(100%)" : "none",
           transition: "filter 0.3s ease",
           boxShadow: event.isPromo
             ? "0 0 0 1px rgba(6,182,212,0.18), 0 8px 32px rgba(124,58,237,0.18)"
-            : "none",
+            : event.isRecruiting
+              ? "0 0 0 1px rgba(16,185,129,0.1), 0 8px 24px rgba(16,185,129,0.1)"
+              : "none",
         }}>
 
         {/* Cover image */}
@@ -735,19 +745,21 @@ export default function NextQuest() {
         <div style={{ padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
             <span style={{ fontSize: 12, color: "#5a5878", fontWeight: 600 }}>
-              {formatDate(event.dateStart, lang)}
-              {event.multiDay && event.dateEnd
-                ? ` — ${formatDate(event.dateEnd, lang)}`
-                : event.dateEnd
-                  ? ` · ${formatTime(event.dateStart)} - ${formatTime(event.dateEnd)}`
-                  : ` · ${formatTime(event.dateStart)}`}
+              {event.isRecruiting
+                ? (event.recruitingMonth || "Open period")
+                : (formatDate(event.dateStart, lang) +
+                  (event.multiDay && event.dateEnd
+                    ? ` — ${formatDate(event.dateEnd, lang)}`
+                    : event.dateEnd
+                      ? ` · ${formatTime(event.dateStart)} - ${formatTime(event.dateEnd)}`
+                      : ` · ${formatTime(event.dateStart)}`))}
             </span>
             <span style={{ fontSize: 12, color: "#3a384e" }}>·</span>
             <span style={{ fontSize: 12, color: "#5a5878" }}>📍 {event.isPromo ? t.promoCity : event.city}</span>
             <LangBadges languages={event.languages} />
           </div>
 
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : event.isRecruiting ? { color: "#6ee7b7" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
             {event.maxParticipants ? (
@@ -1242,8 +1254,41 @@ export default function NextQuest() {
           {/* ── ORGANIZER FILTER BANNER ── */}
           {/* ── EVENT CARDS GRID ── */}
           {!loading && !error && tab !== "calendar" && filtered.length > 0 && (
-            <div className="event-grid">
-              {filtered.map(event => <EventCard key={event.id} event={event} />)}
+            <div>
+              {/* ── Looking for Players section ── */}
+              {(() => {
+                const recruitingPosts = filtered.filter(e => e.isRecruiting);
+                const regularEvents   = filtered.filter(e => !e.isRecruiting);
+                return (
+                  <>
+                    {recruitingPosts.length > 0 && (
+                      <div style={{ marginBottom: 28 }}>
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          marginBottom: 14,
+                        }}>
+                          <span style={{ fontSize: 18 }}>🎯</span>
+                          <span style={{
+                            fontSize: 14, fontWeight: 700, color: "#6ee7b7",
+                            letterSpacing: "0.03em",
+                          }}>
+                            {t.recruitingSection}
+                          </span>
+                          <div style={{ flex: 1, height: 1, background: "rgba(16,185,129,0.2)" }} />
+                        </div>
+                        <div className="event-grid">
+                          {recruitingPosts.map(event => <EventCard key={event.id} event={event} />)}
+                        </div>
+                      </div>
+                    )}
+                    {regularEvents.length > 0 && (
+                      <div className="event-grid">
+                        {regularEvents.map(event => <EventCard key={event.id} event={event} />)}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
         </main>

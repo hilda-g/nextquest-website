@@ -39,6 +39,8 @@ const EMPTY_FORM = {
   status:           "pending",
   format:           "community",
   is_promo:              false,
+  is_recruiting:         false,
+  recruiting_month:      "",
   languages:             [],
   is_recurring:          false,
   recurrence_interval:   "weekly",
@@ -65,7 +67,7 @@ function validate(form) {
   else if (form.description.trim().length > 1000) errs.description = "Max 1000 characters";
   if (!form.cover_image_url?.trim())              errs.cover_url   = "Cover image URL is required";
   if (!form.location_address?.trim())             errs.address     = "Required";
-  if (!form.date_start)                           errs.date_start  = "Required";
+  if (!form.date_start && !form.is_recruiting)            errs.date_start  = "Required";
   if (form.date_end && form.date_start && new Date(`${form.date_end}T${form.time_end || "00:00"}`) <= new Date(`${form.date_start}T${form.time_start || "00:00"}`))
     errs.date_end = "Must be after start date";
   if (form.external_url && !/^https?:\/\/.+/.test(form.external_url))
@@ -307,6 +309,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
           organizer_link:     event.organizer_link     || "",
           format:             event.format             || "community",
           is_promo:              event.is_promo           || false,
+          is_recruiting:         event.is_recruiting      || false,
+          recruiting_month:      event.recruiting_month   || "",
           languages:             event.event_languages    || [],
           is_recurring:          event.is_recurring       || false,
           recurrence_interval:   event.recurrence_interval || "weekly",
@@ -483,6 +487,8 @@ export default function EventDrawer({ event, onSave, onClose }) {
         organizer_link:     form.organizer_link.trim()     || null,
         format:             form.format                    || null,
         is_promo:           form.is_promo                  || false,
+        is_recruiting:      form.is_recruiting             || false,
+        recruiting_month:   form.is_recruiting ? (form.recruiting_month.trim() || null) : null,
         event_languages:    form.languages.length > 0 ? form.languages : null,
         is_recurring:       form.is_recurring               || false,
         recurrence_interval: form.is_recurring ? (form.recurrence_interval || "weekly") : null,
@@ -1133,11 +1139,64 @@ export default function EventDrawer({ event, onSave, onClose }) {
             </div>
           </div>
 
+          {/* ── Looking for players toggle ── */}
+          <div
+            onClick={() => set("is_recruiting", !form.is_recruiting)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "13px 16px", borderRadius: 12, cursor: "pointer",
+              background: form.is_recruiting
+                ? "rgba(16,185,129,0.12)"
+                : "rgba(255,255,255,0.03)",
+              border: form.is_recruiting
+                ? "1px solid rgba(16,185,129,0.4)"
+                : "1px solid rgba(255,255,255,0.08)",
+              transition: "all 0.2s",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: form.is_recruiting ? "#6ee7b7" : "#e8e6f0" }}>
+                🎯 Looking for Players
+              </div>
+              <div style={{ fontSize: 11, color: "#6b6890", marginTop: 2 }}>
+                No fixed date · Upcoming only · Shown in separate section
+              </div>
+            </div>
+            <div style={{
+              width: 38, height: 22, borderRadius: 999, flexShrink: 0,
+              background: form.is_recruiting ? "#10b981" : "rgba(255,255,255,0.1)",
+              position: "relative", transition: "all 0.2s",
+            }}>
+              <div style={{
+                position: "absolute", top: 3,
+                left: form.is_recruiting ? 19 : 3,
+                width: 16, height: 16, borderRadius: "50%",
+                background: "#fff", transition: "left 0.2s",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+              }} />
+            </div>
+          </div>
+
+          {form.is_recruiting && (
+            <div>
+              <span style={{ fontSize: 11, color: "#6b6890", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6, display: "block" }}>
+                Month / Period
+              </span>
+              <input
+                type="text"
+                placeholder="e.g. July 2026"
+                value={form.recruiting_month}
+                onChange={e => set("recruiting_month", e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 14px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#e8e6f0", fontSize: 14, fontFamily: "inherit", outline: "none",
+                }}
+              />
+            </div>
+          )}
+
           {/* ── Event Languages ── */}
-          <div>
-            <span style={{ fontSize: 11, color: "#6b6890", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8, display: "block" }}>
-              Event Languages
-            </span>
             <div style={{ display: "flex", gap: 8 }}>
               {[
                 { code: "el",  label: "EL" },

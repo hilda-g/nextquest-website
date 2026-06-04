@@ -230,6 +230,14 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
               letterSpacing: "0.06em", textTransform: "uppercase",
             }}>⭐ Promo</span>
           )}
+          {event.is_recruiting && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999, flexShrink: 0,
+              background: "rgba(16,185,129,0.1)",
+              border: "1px solid rgba(16,185,129,0.3)", color: "#6ee7b7",
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>🎯 Recruiting</span>
+          )}
           {event.is_recurring && (
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999, flexShrink: 0,
@@ -240,7 +248,10 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
           )}
         </div>
         <div style={{ fontSize: 12, color: "#4a4868" }}>
-          {date} · {event.location_city} · {CATEGORIES[event.category] || event.category}
+          {event.is_recruiting
+            ? `🎯 ${event.recruiting_month || "Open period"} · ${event.location_city} · ${CATEGORIES[event.category] || event.category}`
+            : `${date} · ${event.location_city} · ${CATEGORIES[event.category] || event.category}`
+          }
         </div>
       </div>
 
