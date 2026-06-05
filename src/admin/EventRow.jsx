@@ -233,8 +233,8 @@ export default function EventRow({ event, onEdit, onDelete, onRestore, onStatusC
           {event.is_recruiting && (
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999, flexShrink: 0,
-              background: "rgba(16,185,129,0.1)",
-              border: "1px solid rgba(16,185,129,0.3)", color: "#6ee7b7",
+              background: "rgba(251,146,60,0.1)",
+              border: "1px solid rgba(251,146,60,0.3)", color: "#fb923c",
               letterSpacing: "0.06em", textTransform: "uppercase",
             }}>🎯 Recruiting</span>
           )}
