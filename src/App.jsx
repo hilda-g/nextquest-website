@@ -759,14 +759,14 @@ export default function NextQuest() {
             <LangBadges languages={event.languages} />
           </div>
 
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : event.isRecruiting ? { color: "#6ee7b7" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : event.isRecruiting ? { color: "#fb923c" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
             {event.maxParticipants ? (
               <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
             ) : null}
             {event.isRecruiting ? (
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.4)" }}>● Call for players</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(251,146,60,0.15)", color: "#fb923c", border: "1px solid rgba(251,146,60,0.4)" }}>● Call for players</span>
             ) : event.registrationClosed ? (
               <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
             ) : (
