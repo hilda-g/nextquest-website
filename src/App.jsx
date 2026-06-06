@@ -679,12 +679,12 @@ export default function NextQuest() {
           background: event.isPromo
             ? "linear-gradient(145deg, #1a1030 0%, #0f1f2e 100%)"
             : event.isRecruiting
-              ? "linear-gradient(145deg, #0a1828 0%, #0d1a2e 100%)"
+              ? "linear-gradient(145deg, #0a1f18 0%, #0d1f16 100%)"
               : "#13131f",
           border: event.isPromo
             ? "1px solid rgba(124,58,237,0.55)"
             : event.isRecruiting
-              ? "1px solid rgba(56,189,248,0.35)"
+              ? "1px solid rgba(16,185,129,0.35)"
               : "1px solid rgba(255,255,255,0.06)",
           borderRadius: 16, overflow: "hidden",
           opacity: event.status === "cancelled" ? 0.6 : 1,
@@ -693,7 +693,7 @@ export default function NextQuest() {
           boxShadow: event.isPromo
             ? "0 0 0 1px rgba(6,182,212,0.18), 0 8px 32px rgba(124,58,237,0.18)"
             : event.isRecruiting
-              ? "0 0 0 1px rgba(56,189,248,0.1), 0 8px 24px rgba(56,189,248,0.1)"
+              ? "0 0 0 1px rgba(16,185,129,0.1), 0 8px 24px rgba(16,185,129,0.1)"
               : "none",
         }}>
 
@@ -759,14 +759,14 @@ export default function NextQuest() {
             <LangBadges languages={event.languages} />
           </div>
 
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : event.isRecruiting ? { color: "#38bdf8" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, lineHeight: 1.3, textAlign: "left", ...(event.isPromo ? { background: "linear-gradient(135deg, #c4b5fd, #67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : event.isRecruiting ? { color: "#6ee7b7" } : { color: "#fff" }) }}>{({ ru: event.title_ru, el: event.title_el, uk: event.title_uk })[lang] || event.title}</h3>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
             {event.maxParticipants ? (
               <span style={{ fontSize: 11, color: "#6b6890" }}>👥 {event.maxParticipants} {t.participants}</span>
             ) : null}
             {event.isRecruiting ? (
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(56,189,248,0.15)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.4)" }}>● Call for players</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.4)" }}>● Call for players</span>
             ) : event.registrationClosed ? (
               <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>{t.statusFull}</span>
             ) : (
@@ -1214,7 +1214,7 @@ export default function NextQuest() {
           {/* ── CALENDAR TAB ── */}
           {tab === "calendar" && !loading && (
             <CalendarTab
-              events={events.filter(e => e.status !== "cancelled" && !e.isPromo)}
+              events={events.filter(e => e.status !== "cancelled" && !e.isPromo && !e.isRecruiting)}
               lang={lang}
               t={t}
               onSelect={setSelected}
