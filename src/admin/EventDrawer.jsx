@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL     || "";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const NOTIFIER_URL    = import.meta.env.VITE_NOTIFIER_URL    || "";
+const NOTIFIER_SECRET = import.meta.env.VITE_NOTIFIER_SECRET || "";
 
 const CATEGORIES = [
   { id: "boardgames", label: "🎲 Board Games"  },
@@ -279,6 +281,7 @@ export default function EventDrawer({ event, onSave, onClose }) {
   const [orgProfiles, setOrgProfiles] = useState([]);
   const [uploading, setUploading]     = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [channelFit, setChannelFit] = useState(null); // live "fits Telegram post?" check
   const initialForm = useRef(null);
 
   useEffect(() => {
@@ -356,6 +359,58 @@ export default function EventDrawer({ event, onSave, onClose }) {
       })
       .catch(() => {});
   }, []);
+
+  // Live "will this fit the Telegram channel post?" check.
+  // Recomputed (debounced) whenever a field that affects the post's fixed
+  // header/footer length changes — not just the description — since a long
+  // title, extra languages, or a registration link eat into the same budget.
+  useEffect(() => {
+    if (!NOTIFIER_URL) { setChannelFit(null); return; }
+    if (!form.title.trim() || !form.date_start || !form.time_start ||
+        !form.location_city || !form.location_address.trim()) {
+      setChannelFit(null);
+      return;
+    }
+    const draftEv = {
+      id: event?.id || "draft",
+      title: form.title,
+      title_ru: form.title_ru,
+      description: form.description,
+      description_ru: form.description_ru,
+      location_city: form.location_city,
+      location_address: form.location_address,
+      date_start: `${form.date_start}T${form.time_start}:00`,
+      date_end: multiDay && form.date_end && form.time_end
+        ? `${form.date_end}T${form.time_end}:00`
+        : (!multiDay && form.time_end && form.date_start ? `${form.date_start}T${form.time_end}:00` : null),
+      max_participants: form.max_participants ? parseInt(form.max_participants) : null,
+      external_url: form.external_url || null,
+      organizer_username: form.organizer_username || null,
+      organizer_contacts: form.organizer_contacts || null,
+      organizer_link: form.organizer_link || null,
+      event_languages: form.languages.length > 0 ? form.languages : null,
+    };
+
+    const timer = setTimeout(() => {
+      fetch(`${NOTIFIER_URL}/post/check-length`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Webhook-Secret": NOTIFIER_SECRET },
+        body: JSON.stringify({ record: draftEv }),
+      })
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => setChannelFit(data))
+        .catch(() => setChannelFit(null));
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [
+    form.title, form.title_ru, form.description, form.description_ru,
+    form.location_city, form.location_address,
+    form.date_start, form.time_start, form.date_end, form.time_end, multiDay,
+    form.max_participants, form.external_url,
+    form.organizer_username, form.organizer_contacts, form.organizer_link,
+    form.languages, event,
+  ]);
 
   async function handleUpload(e) {
     const file = e.target.files?.[0];
@@ -839,6 +894,16 @@ export default function EventDrawer({ event, onSave, onClose }) {
               <span>{errors.description || ""}</span>
               <span>{form.description.length}/1000</span>
             </div>
+            {channelFit && (
+              <div style={{
+                fontSize: 11, marginTop: 4,
+                color: channelFit.fits ? "#6ee7a8" : "#fca5a5",
+              }}>
+                {channelFit.fits
+                  ? `✓ Fits Telegram channel post (${channelFit.description_length}/${channelFit.available_for_description} chars used)`
+                  : `⚠️ ${channelFit.overflow} characters too long for the Telegram channel post — shorten the description (or title/links) by ${channelFit.overflow} chars, or it will be cut off with "…"`}
+              </div>
+            )}
           </div>
 
           {/* ── Category + City ── */}
