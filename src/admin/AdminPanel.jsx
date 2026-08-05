@@ -275,6 +275,32 @@ export default function AdminPanel() {
     }
   }
 
+  // Verify with channel_notifier that this event's text fits Telegram's
+  // caption limit before actually posting. Throws if it doesn't fit (or if
+  // the check itself fails) — callers should NOT post when this throws, so
+  // a post is never sent silently truncated.
+  async function assertChannelFit(record) {
+    const res = await fetch(`${NOTIFIER_URL}/post/check-length`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Webhook-Secret": NOTIFIER_SECRET,
+      },
+      body: JSON.stringify({ record }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Length check failed (HTTP ${res.status})`);
+    }
+    const fit = await res.json();
+    if (!fit.fits) {
+      throw new Error(
+        `Text is ${fit.overflow} characters too long for the Telegram post. ` +
+        `Shorten the description (or title/links) and try again.`
+      );
+    }
+  }
+
   // ── Create Post ──────────────────────────────────────────
   async function handleCreatePost() {
     if (!postTarget) return;
@@ -286,6 +312,8 @@ export default function AdminPanel() {
     }
 
     try {
+      await assertChannelFit(postTarget);
+
       const res = await fetch(`${NOTIFIER_URL}/post/manual`, {
         method: "POST",
         headers: {
@@ -315,6 +343,8 @@ export default function AdminPanel() {
       return;
     }
     try {
+      await assertChannelFit(postTarget);
+
       const res = await fetch(`${NOTIFIER_URL}/post/test`, {
         method: "POST",
         headers: {
