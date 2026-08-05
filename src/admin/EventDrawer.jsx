@@ -897,11 +897,11 @@ export default function EventDrawer({ event, onSave, onClose }) {
             {channelFit && (
               <div style={{
                 fontSize: 11, marginTop: 4,
-                color: channelFit.fits ? "#6ee7a8" : "#fca5a5",
+                color: channelFit.fits ? "#6ee7a8" : "#8b88ad",
               }}>
                 {channelFit.fits
-                  ? `✓ Fits Telegram channel post (${channelFit.description_length}/${channelFit.available_for_description} chars used)`
-                  : `⚠️ ${channelFit.overflow} characters too long for the Telegram channel post — shorten the description (or title/links) by ${channelFit.overflow} chars, or it will be cut off with "…"`}
+                  ? `✓ Fits as a single Telegram photo post (${channelFit.description_length}/${channelFit.available_for_description} chars used)`
+                  : `ℹ️ ${channelFit.overflow} chars over the photo-caption limit — will post as photo + a separate follow-up message with the full text`}
               </div>
             )}
           </div>
